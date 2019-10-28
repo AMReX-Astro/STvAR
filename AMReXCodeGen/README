@@ -1,0 +1,5 @@
+This directory contains the first AMReX code generator for the wave and/or heat equation. It is written as a Jupyter notebook which can be executed.
+
+For now the code is generated from my interpretation of a symbolic form of the equations of motion. In the future this syntax will be changed so that it may be used with NRPy+.
+
+For a quick example, you can use this code to modify the existing advance_phi.cpp file.  In the source directory open the advance_phi.cpp.  In the "AMREX_FOR_4D" block add a line at the beginning "rhs_fab(i,j,k,n)='generated output from WaveEquationCodeGenerator' ". In the 'generated output...' location paste the output from the last line in WaveEquationCodeGenerator.
