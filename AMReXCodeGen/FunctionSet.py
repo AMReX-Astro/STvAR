@@ -98,7 +98,7 @@ def LapTen(E):
         retLapE += np.array(Dc2Ten(E,directions[itr]))
     return retLapE
 
-def AMReXcode(expr, varnames):
+def AMReXcode(expr, varnames, declarevar = False, varnew = ""):
     str_expr = str(expr)
     for name in varnames:
         str_expr = str_expr.replace(name,name+"_old_fab")
@@ -110,6 +110,9 @@ def AMReXcode(expr, varnames):
     str_expr = str_expr.replace("dx[1]**2","(dx[1]*dx[1])")
     str_expr = str_expr.replace("dx[2]**2","(dx[2]*dx[2])")
     str_expr = str_expr+";"
+    
+    if declarevar == True:
+        str_expr = varnew+"_new_fab(i, j, k, n) = " + str_expr
         
     return str_expr
     
