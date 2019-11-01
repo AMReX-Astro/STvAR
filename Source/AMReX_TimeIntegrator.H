@@ -14,7 +14,7 @@ private:
     amrex::Vector<amrex::MultiFab> S_val;
     amrex::Vector<amrex::Vector<amrex::Real> > tableau;
     amrex::Vector<amrex::Real> weights;
-    amrex::Vector<amrex::Real> nodes; 
+    amrex::Vector<amrex::Real> nodes;
 
 public:
     TimeIntegrator(const BoxArray& ba, const DistributionMapping& dm, const int Ncomp, const int Nghost);
