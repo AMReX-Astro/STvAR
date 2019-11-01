@@ -3,3 +3,4 @@ CEXE_sources += init_phi.cpp
 CEXE_sources += rhs_phi.cpp
 CEXE_sources += advance_phi.cpp
 CEXE_headers += ET_Integration.H
+CEXE_headers += ET_Integration_K.H
