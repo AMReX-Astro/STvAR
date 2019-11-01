@@ -1,28 +1,6 @@
-
-#include <AMReX_PlotFileUtil.H>
-#include <AMReX_ParmParse.H>
-#include <AMReX_Print.H>
+#include "ET_Integration.H"
 
 using namespace amrex;
-
-void fill_phi_rhs (MultiFab& phi_rhs_mf, MultiFab& phi_old_mf, const Real* dx)
-{
-    for ( MFIter mfi(phi_rhs_mf); mfi.isValid(); ++mfi )
-    {
-      const Box& bx = mfi.validbox();
-      const auto ncomp = phi_old_mf.nComp();
-
-      const auto& phi_rhs_fab = phi_rhs_mf.array(mfi);
-      const auto& phi_old_fab = phi_old_mf.array(mfi);
-
-      // For each grid, loop over all the valid points
-      AMREX_FOR_4D(bx, ncomp, i, j, k, n,
-      {
-         // Set phi_rhs_fab = 1.0
-         phi_rhs_fab(i, j, k, n) = 1.0;
-      });
-    }
-}
 
 void advance_phi (MultiFab& phi_new_mf, MultiFab& phi_old_mf, Real time, Real dt, const Real* dx)
 {

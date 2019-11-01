@@ -1,14 +1,6 @@
-
-#include <AMReX_PlotFileUtil.H>
-#include <AMReX_ParmParse.H>
-#include <AMReX_Print.H>
+#include "ET_Integration.H"
 
 using namespace amrex;
-
-void main_main    ();
-
-void init_phi    (MultiFab& phi_new, Real time, const Real* dx);
-void advance_phi (MultiFab& phi_new, MultiFab& phi_old, Real time, Real dt, const Real* dx);
 
 int main (int argc, char* argv[])
 {
