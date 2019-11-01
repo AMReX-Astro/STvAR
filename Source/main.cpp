@@ -1,14 +1,6 @@
-
-#include <AMReX_PlotFileUtil.H>
-#include <AMReX_ParmParse.H>
-#include <AMReX_Print.H>
+#include "ET_Integration.H"
 
 using namespace amrex;
-
-void main_main    ();
-
-void init_phi    (MultiFab& phi_new, Real time, const Real* dx);
-void advance_phi (MultiFab& phi_new, MultiFab& phi_old, Real time, Real dt, const Real* dx);
 
 int main (int argc, char* argv[])
 {
@@ -93,7 +85,7 @@ void main_main ()
     Real time = 0.0;
 
     // Initialize phi_new by calling a C++ initializing routine.
-    init_phi(phi_new, time, dx);
+    init_phi(phi_new, time, geom);
 
     // Compute the time step
     Real dt = 0.9*dx[0]*dx[0] / (2.0*AMREX_SPACEDIM);
@@ -111,7 +103,7 @@ void main_main ()
         MultiFab::Copy(phi_old, phi_new, 0, 0, 1, 0);
 
         // new_phi = old_phi + dt * rhs
-        advance_phi(phi_new, phi_old, time, dt, dx);
+        advance_phi(phi_new, phi_old, time, dt, geom);
 
         // Advance the time variable 
         time = time + dt;

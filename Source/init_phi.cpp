@@ -1,12 +1,10 @@
-
-#include <AMReX_PlotFileUtil.H>
-#include <AMReX_ParmParse.H>
-#include <AMReX_Print.H>
+#include "ET_Integration.H"
 
 using namespace amrex;
 
-void init_phi (MultiFab& phi_mf, Real time, const Real* dx)
+void init_phi (MultiFab& phi_mf, Real time, const Geometry& geom)
 {
+    const auto dx = geom.CellSizeArray();
     int ncomp = phi_mf.nComp();
 
     // Loop over grids 
