@@ -85,7 +85,7 @@ void main_main ()
     Real time = 0.0;
 
     // Initialize phi_new by calling a C++ initializing routine.
-    init_phi(phi_new, time, dx);
+    init_phi(phi_new, time, geom);
 
     // Compute the time step
     Real dt = 0.9*dx[0]*dx[0] / (2.0*AMREX_SPACEDIM);
@@ -103,7 +103,7 @@ void main_main ()
         MultiFab::Copy(phi_old, phi_new, 0, 0, 1, 0);
 
         // new_phi = old_phi + dt * rhs
-        advance_phi(phi_new, phi_old, time, dt, dx);
+        advance_phi(phi_new, phi_old, time, dt, geom);
 
         // Advance the time variable 
         time = time + dt;

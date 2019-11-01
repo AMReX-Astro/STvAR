@@ -2,7 +2,7 @@
 
 using namespace amrex;
 
-void advance_phi (MultiFab& phi_new_mf, MultiFab& phi_old_mf, Real time, Real dt, const Real* dx)
+void advance_phi (MultiFab& phi_new_mf, MultiFab& phi_old_mf, Real time, Real dt, const Geometry& geom)
 {
     int ncomp = phi_new_mf.nComp();
 
@@ -11,7 +11,7 @@ void advance_phi (MultiFab& phi_new_mf, MultiFab& phi_old_mf, Real time, Real dt
 
     // Create a MultiFab containing the time integration RHS
     MultiFab rhs_mf(phi_new_mf.boxArray(), phi_new_mf.DistributionMap(), ncomp, 0);
-    fill_phi_rhs(rhs_mf, phi_old_mf, dx);
+    fill_phi_rhs(rhs_mf, phi_old_mf, geom);
 
     // Loop over grids to do a forward euler integration in time
     for ( MFIter mfi(phi_new_mf); mfi.isValid(); ++mfi )
