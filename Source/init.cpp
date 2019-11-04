@@ -1,9 +1,9 @@
 #include "ET_Integration.H"
-#include "ET_Integration_Indexes.H"
+#include "ET_Integration_K.H"
 
 using namespace amrex;
 
-void init_phi (MultiFab& state_mf, Real time, const Geometry& geom)
+void init(MultiFab& state_mf, Real time, const Geometry& geom)
 {
     const auto dx = geom.CellSizeArray();
     int ncomp = state_mf.nComp();
@@ -17,14 +17,10 @@ void init_phi (MultiFab& state_mf, Real time, const Geometry& geom)
       const auto& state_fab = state_mf.array(mfi);
 
       // For each grid, loop over all the valid points
-      AMREX_FOR_3D(bx, i, j, k,
+      amrex::ParallelFor(bx,
+      [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
-         // init phi
-         Real x = (i+0.5) * dx[0];
-         state_fab(i, j, k, IPHI) = sin(2.0*M_PI*(x - time));
-         // init pi
-         /* state_fab(i, j, k, IPI) = -2.0*M_PI*cos(2.0*M_PI*(x-time)); */
-         state_fab(i, j, k, IPI) = +2.0*M_PI*cos(2.0*M_PI*(x-time));
+        state_init(i, j, k, state_fab, time, dx);
       });
     }
 
