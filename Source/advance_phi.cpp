@@ -7,11 +7,11 @@ void advance_phi (MultiFab& phi_new_mf, MultiFab& phi_old_mf, Real time, Real dt
     int ncomp = phi_new_mf.nComp();
 
     // Fill ghost cells for each grid from valid regions of another grid
-    phi_old_mf.FillBoundary();
+    phi_old_mf.FillBoundary(geom.periodicity());
 
     // Create a MultiFab containing the time integration RHS
     MultiFab rhs_mf(phi_new_mf.boxArray(), phi_new_mf.DistributionMap(), ncomp, 0);
-    fill_phi_rhs(rhs_mf, phi_old_mf, geom);
+    fill_state_rhs(rhs_mf, phi_old_mf, geom);
 
     // Loop over grids to do a forward euler integration in time
     for ( MFIter mfi(phi_new_mf); mfi.isValid(); ++mfi )
@@ -31,5 +31,5 @@ void advance_phi (MultiFab& phi_new_mf, MultiFab& phi_old_mf, Real time, Real dt
     }
 
     // Fill ghost cells for each grid from valid regions of another grid
-    phi_new_mf.FillBoundary();
+    phi_new_mf.FillBoundary(geom.periodicity());
 }

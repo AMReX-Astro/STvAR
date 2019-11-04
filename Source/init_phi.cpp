@@ -1,30 +1,35 @@
 #include "ET_Integration.H"
+#include "ET_Integration_Indexes.H"
 
 using namespace amrex;
 
-void init_phi (MultiFab& phi_mf, Real time, const Geometry& geom)
+void init_phi (MultiFab& state_mf, Real time, const Geometry& geom)
 {
     const auto dx = geom.CellSizeArray();
-    int ncomp = phi_mf.nComp();
+    int ncomp = state_mf.nComp();
 
     // Loop over grids 
-    for ( MFIter mfi(phi_mf); mfi.isValid(); ++mfi )
+    for ( MFIter mfi(state_mf); mfi.isValid(); ++mfi )
     {
 
       const Box& bx = mfi.validbox();
 
-      const auto& phi_fab = phi_mf.array(mfi);
+      const auto& state_fab = state_mf.array(mfi);
 
       // For each grid, loop over all the valid points
-      AMREX_FOR_4D(bx, ncomp, i, j, k, n,
+      AMREX_FOR_3D(bx, i, j, k,
       {
+         // init phi
          Real x = (i+0.5) * dx[0];
-         phi_fab(i,j,k,n) = sin(2.0*M_PI*(x - time));
+         state_fab(i, j, k, IPHI) = sin(2.0*M_PI*(x - time));
+         // init pi
+         /* state_fab(i, j, k, IPI) = -2.0*M_PI*cos(2.0*M_PI*(x-time)); */
+         state_fab(i, j, k, IPI) = +2.0*M_PI*cos(2.0*M_PI*(x-time));
       });
     }
 
     // Fill ghost cells for each grid from valid regions of another grid
-    phi_mf.FillBoundary();
+    state_mf.FillBoundary();
 
-    std::cout << "Phi has been initialized" << std::endl;
+    std::cout << "Phi and Pi have been initialized" << std::endl;
 }
