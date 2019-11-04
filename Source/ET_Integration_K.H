@@ -5,8 +5,10 @@
 #include <AMReX_Array4.H>
 
 namespace Idx {
-    enum ETIndexes {Phi = 0, Pi};
+    enum ETIndexes {Phi = 0, Pi, NumScalars};
 };
+
+#define NUM_GHOST_CELLS 1
 
 AMREX_GPU_DEVICE
 inline
