@@ -1,4 +1,5 @@
 #include "ET_Integration.H"
+#include "ET_Integration_K.H"
 
 using namespace amrex;
 
@@ -73,10 +74,10 @@ void main_main ()
     const Real* dx = geom.CellSize();
 
     // Nghost = number of ghost cells for each array 
-    int Nghost = 1;
+    int Nghost = NUM_GHOST_CELLS;
     
     // Ncomp = number of components for each array
-    int Ncomp  = 2;
+    int Ncomp  = Idx::NumScalars;
   
     // How Boxes are distrubuted among MPI processes
     DistributionMapping dm(ba);
