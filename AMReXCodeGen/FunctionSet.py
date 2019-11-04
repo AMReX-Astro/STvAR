@@ -85,6 +85,9 @@ def grad(phi):
     for itr in range(len(directions)):
         retGradPhi[itr] = Dc(phi, directions[itr])
     return retGradPhi
+
+def Lap(phi):
+    return Dc2(phi,'x')+Dc2(phi,'y')+Dc2(phi,'z') 
     
 def div(E):
     div = 0
