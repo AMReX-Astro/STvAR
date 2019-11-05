@@ -1,5 +1,5 @@
-#ifndef ET_INTEGRATION_K_H
-#define ET_INTEGRATION_K_H
+#ifndef ET_INTEGRATION_K_WAVEEQ_H
+#define ET_INTEGRATION_K_WAVEEQ_H
 
 #include <AMReX_REAL.H>
 #include <AMReX_Array4.H>

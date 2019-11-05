@@ -4,3 +4,5 @@ CEXE_sources += rhs.cpp
 CEXE_sources += advance.cpp
 CEXE_headers += ET_Integration.H
 CEXE_headers += ET_Integration_K.H
+CEXE_headers += ET_Integration_K_WaveEq.H
+CEXE_headers += ET_Integration_K_Default.H
