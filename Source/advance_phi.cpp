@@ -1,4 +1,5 @@
 #include "ET_Integration.H"
+#include "AMReX_FEIntegrator.H"
 
 using namespace amrex;
 
@@ -9,6 +10,18 @@ void advance_phi (MultiFab& phi_new_mf, MultiFab& phi_old_mf, Real time, Real dt
     // Fill ghost cells for each grid from valid regions of another grid
     phi_old_mf.FillBoundary();
 
+    // Make a time integrator
+    FEIntegrator integrator(phi_old_mf, phi_new_mf);
+
+    // Create a RHS source function
+    auto source_fun = [&](MultiFab& rhs, MultiFab& state, const Real time){
+      fill_phi_rhs(rhs, state, geom);
+    };
+
+    // Call the time integrator advance
+    integrator.advance(source_fun, time, dt);
+
+    /*
     // Create a MultiFab containing the time integration RHS
     MultiFab rhs_mf(phi_new_mf.boxArray(), phi_new_mf.DistributionMap(), ncomp, 0);
     fill_phi_rhs(rhs_mf, phi_old_mf, geom);
@@ -29,6 +42,7 @@ void advance_phi (MultiFab& phi_new_mf, MultiFab& phi_old_mf, Real time, Real dt
          phi_new_fab(i,j,k,n) = phi_old_fab(i,j,k,n) + dt * rhs_fab(i,j,k,n);
       });
     }
+    */
 
     // Fill ghost cells for each grid from valid regions of another grid
     phi_new_mf.FillBoundary();
