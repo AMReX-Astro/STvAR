@@ -7,9 +7,6 @@ void advance(MultiFab& state_new_mf, MultiFab& state_old_mf, Real time, Real dt,
 {
     int ncomp = state_new_mf.nComp();
 
-    // Fill ghost cells for each grid from valid regions of another grid
-    state_old_mf.FillBoundary(geom.periodicity());
-
     // Make a time integrator
     FEIntegrator integrator(state_old_mf, state_new_mf);
 
