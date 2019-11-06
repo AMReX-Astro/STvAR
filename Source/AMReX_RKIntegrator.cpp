@@ -66,56 +66,6 @@ void TimeIntegrator::initialize_parameters()
     }
 }
 
-void TimeIntegrator::initialize_parameters()
-{
-    ParmParse pp("integration");
-
-    // Read an integrator type, if not recognized, then read weights/nodes/butcher tableau
-
-    // Read weights/nodes/butcher tableau
-    pp.queryarr("weights", weights);
-    pp.queryarr("nodes", nodes);
-
-    Vector<Real> btable; // flattened into row major format
-    pp.queryarr("tableau", btable);
-
-    // Sanity check the inputs
-    if (weights.size() != nodes.size())
-    {
-        Error("integration.weights should be the same length as integration.nodes");
-    } else {
-        number_nodes = weights.size();
-        const int nTableau = (number_nodes * (number_nodes + 1)) / 2; // includes diagonal
-        if (btable.size() != nTableau)
-        {
-            Error("integration.tableau incorrect length - should include the Butcher Tableau diagonal.");
-        }
-    }
-
-    // Fill tableau from the flattened entries
-    int k = 0;
-    for (int i = 0; i < number_nodes; ++i)
-    {
-        Vector<Real> stage_row;
-        for (int j = 0; j < i; ++j)
-        {
-            stage_row.push_back(btable[k]);
-            ++k;
-        }
-
-        tableau.push_back(stage_row);
-    }
-
-    // Check that this is an explicit method
-    for (const auto& astage : tableau)
-    {
-        if (astage[-1] != 0.0)
-        {
-            Error("TimeIntegrator currently only supports explicit Butcher tableaus.");
-        }
-    }
-}
-
 void TimeIntegrator::initialize_stages()
 {
     // Create MultiFabs for stages
