@@ -111,8 +111,6 @@ void main_main ()
             stop_advance = true;
         }
 
-        MultiFab::Copy(state_old, state_new, 0, 0, state_new.nComp(), 0);
-
         // state_new = state_old + dt * rhs
         advance(state_new, state_old, time, dt, geom);
 
@@ -121,9 +119,6 @@ void main_main ()
         
         // Tell the I/O Processor to write out which step we're doing
         amrex::Print() << "Advanced step " << n << "\n";
-
-        // Copy new state into old state before we take the next time step
-        MultiFab::Copy(state_old, state_new, 0, 0, state_new.nComp(), 0);
 
         // Write a plotfile of the current data (plot_int was defined in the inputs file)
         if (plot_int > 0 && n%plot_int == 0)
