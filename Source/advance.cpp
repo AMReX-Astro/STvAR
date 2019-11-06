@@ -11,7 +11,7 @@ void advance(MultiFab& state_new_mf, MultiFab& state_old_mf, Real time, Real dt,
     state_old_mf.FillBoundary(geom.periodicity());
 
     // Make a time integrator
-    FEIntegrator integrator(phi_old_mf, phi_new_mf);
+    FEIntegrator integrator(state_old_mf, state_new_mf);
 
     // Create a RHS source function
     auto source_fun = [&](MultiFab& rhs, MultiFab& state, const Real time){
