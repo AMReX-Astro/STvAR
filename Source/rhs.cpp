@@ -3,7 +3,7 @@
 
 using namespace amrex;
 
-void fill_state_rhs (MultiFab& rhs_mf, MultiFab& state_mf, const amrex::Geometry& geom)
+void fill_state_rhs (MultiFab& rhs_mf, const MultiFab& state_mf, const amrex::Geometry& geom)
 {
   const auto dx = geom.CellSizeArray();
 

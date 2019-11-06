@@ -105,7 +105,7 @@ void main_main ()
     }
 
     // Create a RHS source function we will integrate
-    auto source_fun = [&](MultiFab& rhs, MultiFab& state, const Real time){
+    auto source_fun = [&](MultiFab& rhs, const MultiFab& state, const Real time){
       fill_state_rhs(rhs, state, geom);
     };
 

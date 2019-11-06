@@ -9,5 +9,5 @@
 void main_main();
 void init(amrex::MultiFab& phi_new, amrex::Real time, const amrex::Geometry& geom);
 void advance(amrex::MultiFab& phi_new, amrex::MultiFab& phi_old, amrex::Real time, amrex::Real dt, const amrex::Geometry& geom);
-void fill_state_rhs(amrex::MultiFab& phi_rhs_mf, amrex::MultiFab& phi_old_mf, const amrex::Geometry& geom);
+void fill_state_rhs(amrex::MultiFab& phi_rhs_mf, const amrex::MultiFab& phi_old_mf, const amrex::Geometry& geom);
 #endif
