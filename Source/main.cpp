@@ -1,5 +1,6 @@
 #include "ET_Integration.H"
 #include "ET_Integration_K.H"
+#include "AMReX_FEIntegrator.H"
 
 using namespace amrex;
 
@@ -103,6 +104,14 @@ void main_main ()
         WriteSingleLevelPlotfile(pltfile, state_new, {"phi", "pi"}, geom, time, 0);
     }
 
+    // Create a RHS source function we will integrate
+    auto source_fun = [&](MultiFab& rhs, MultiFab& state, const Real time){
+      fill_state_rhs(rhs, state, geom);
+    };
+
+    // Create integrator
+    FEIntegrator integrator(source_fun, state_old, state_new, time);
+
     bool stop_advance = false;
     for (int n = 1; n <= nsteps && !stop_advance; ++n)
     {
@@ -111,11 +120,14 @@ void main_main ()
             stop_advance = true;
         }
 
-        // state_new = state_old + dt * rhs
-        advance(state_new, state_old, time, dt, geom);
+        // Call the time integrator advance
+        integrator.advance(dt);
 
-        // Advance the time variable 
-        time = time + dt;
+        // Fill ghost cells for each grid from valid regions of another grid
+        integrator.get_new_data().FillBoundary(geom.periodicity());
+
+        // Update our time variable 
+        time = integrator.get_time();
         
         // Tell the I/O Processor to write out which step we're doing
         amrex::Print() << "Advanced step " << n << "\n";

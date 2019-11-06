@@ -11,10 +11,15 @@ private:
     std::unique_ptr<amrex::MultiFab> F_tmp_ptr;
     amrex::MultiFab& S_old;
     amrex::MultiFab& S_new;
+    std::function<void(amrex::MultiFab&, amrex::MultiFab&, amrex::Real)> Fun;
+    amrex::Real time;
 
 public:
-    FEIntegrator(amrex::MultiFab& S_old_external, amrex::MultiFab& S_new_external);
-    amrex::Real advance(std::function<void(amrex::MultiFab&, amrex::MultiFab&, amrex::Real)> f, const amrex::Real time, const amrex::Real timestep);
+    FEIntegrator(std::function<void(amrex::MultiFab&, amrex::MultiFab&, amrex::Real)> F, amrex::MultiFab& S_old_external, amrex::MultiFab& S_new_external, amrex::Real time);
+    amrex::Real advance(const amrex::Real timestep);
+    amrex::MultiFab& get_new_data();
+    amrex::MultiFab& get_old_data();
+    amrex::Real get_time();
 };
 
 #endif
