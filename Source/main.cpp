@@ -1,4 +1,5 @@
 #include "ET_Integration.H"
+#include "ET_Integration_K.H"
 
 using namespace amrex;
 
@@ -20,6 +21,7 @@ void main_main ()
     // AMREX_SPACEDIM: number of dimensions
     int n_cell, max_grid_size, nsteps, plot_int;
     Vector<int> is_periodic(AMREX_SPACEDIM,1);  // periodic in all direction by default
+    Real end_time = 1.0;
 
     // inputs parameters
     {
@@ -41,6 +43,9 @@ void main_main ()
         // Default nsteps to 10, allow us to set it to something else in the inputs file
         nsteps = 10;
         pp.query("nsteps",nsteps);
+
+        // Stopping criteria
+        pp.query("end_time",end_time);
 
         pp.queryarr("is_periodic", is_periodic);
     }
@@ -69,23 +74,23 @@ void main_main ()
     const Real* dx = geom.CellSize();
 
     // Nghost = number of ghost cells for each array 
-    int Nghost = 1;
+    int Nghost = NUM_GHOST_CELLS;
     
     // Ncomp = number of components for each array
-    int Ncomp  = 1;
+    int Ncomp  = Idx::NumScalars;
   
     // How Boxes are distrubuted among MPI processes
     DistributionMapping dm(ba);
 
-    // we allocate two phi multifabs; one will store the old state, the other the new.
-    MultiFab phi_old(ba, dm, Ncomp, Nghost);
-    MultiFab phi_new(ba, dm, Ncomp, Nghost);
+    // we allocate two state multifabs; one will store the old state, the other the new.
+    MultiFab state_old(ba, dm, Ncomp, Nghost);
+    MultiFab state_new(ba, dm, Ncomp, Nghost);
 
     // time = starting time in the simulation
     Real time = 0.0;
 
-    // Initialize phi_new by calling a C++ initializing routine.
-    init_phi(phi_new, time, geom);
+    // Initialize state_new by calling a C++ initializing routine.
+    init(state_new, time, geom);
 
     // Compute the time step
     Real dt = 0.9*dx[0]*dx[0] / (2.0*AMREX_SPACEDIM);
@@ -94,16 +99,22 @@ void main_main ()
     if (plot_int > 0)
     {
         int n = 0;
-        const std::string& pltfile = amrex::Concatenate("plt",n,5);
-        WriteSingleLevelPlotfile(pltfile, phi_new, {"phi"}, geom, time, 0);
+        const std::string& pltfile = amrex::Concatenate("plt",n,7);
+        WriteSingleLevelPlotfile(pltfile, state_new, {"phi", "pi"}, geom, time, 0);
     }
 
-    for (int n = 1; n <= nsteps; ++n)
+    bool stop_advance = false;
+    for (int n = 1; n <= nsteps && !stop_advance; ++n)
     {
-        MultiFab::Copy(phi_old, phi_new, 0, 0, 1, 0);
+        if (end_time - time < dt) {
+            dt = end_time - time;
+            stop_advance = true;
+        }
 
-        // new_phi = old_phi + dt * rhs
-        advance_phi(phi_new, phi_old, time, dt, geom);
+        MultiFab::Copy(state_old, state_new, 0, 0, state_new.nComp(), 0);
+
+        // state_new = state_old + dt * rhs
+        advance(state_new, state_old, time, dt, geom);
 
         // Advance the time variable 
         time = time + dt;
@@ -111,14 +122,14 @@ void main_main ()
         // Tell the I/O Processor to write out which step we're doing
         amrex::Print() << "Advanced step " << n << "\n";
 
-        // Copy new phi into old phi before we take the next time step
-        MultiFab::Copy(phi_old, phi_new, 0, 0, phi_new.nComp(), 0);
+        // Copy new state into old state before we take the next time step
+        MultiFab::Copy(state_old, state_new, 0, 0, state_new.nComp(), 0);
 
         // Write a plotfile of the current data (plot_int was defined in the inputs file)
         if (plot_int > 0 && n%plot_int == 0)
         {
-            const std::string& pltfile = amrex::Concatenate("plt",n,5);
-            WriteSingleLevelPlotfile(pltfile, phi_new, {"phi"}, geom, time, n);
+            const std::string& pltfile = amrex::Concatenate("plt",n,7);
+            WriteSingleLevelPlotfile(pltfile, state_new, {"phi", "pi"}, geom, time, n);
         }
     }
 

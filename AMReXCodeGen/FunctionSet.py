@@ -85,6 +85,9 @@ def grad(phi):
     for itr in range(len(directions)):
         retGradPhi[itr] = Dc(phi, directions[itr])
     return retGradPhi
+
+def Lap(phi):
+    return Dc2(phi,'x')+Dc2(phi,'y')+Dc2(phi,'z') 
     
 def div(E):
     div = 0
@@ -98,10 +101,9 @@ def LapTen(E):
         retLapE += np.array(Dc2Ten(E,directions[itr]))
     return retLapE
 
-def AMReXcode(expr, varnames, declarevar = False, varnew = ""):
+def AMReXcode(expr, varnames, declare_rhs = False, rhsname = ""):
     str_expr = str(expr)
-    for name in varnames:
-        str_expr = str_expr.replace(name,name+"_old_fab")
+    
     str_expr = str_expr.replace("[","(").replace("]",")")
     str_expr = str_expr.replace("dx","dx[0]")
     str_expr = str_expr.replace("dy","dx[1]")
@@ -110,9 +112,11 @@ def AMReXcode(expr, varnames, declarevar = False, varnew = ""):
     str_expr = str_expr.replace("dx[1]**2","(dx[1]*dx[1])")
     str_expr = str_expr.replace("dx[2]**2","(dx[2]*dx[2])")
     str_expr = str_expr+";"
+    for name in varnames:
+        str_expr = str_expr.replace(name,"Idx::"+name)
     
-    if declarevar == True:
-        str_expr = varnew+"_new_fab(i, j, k, n) = " + str_expr
+    if declare_rhs == True:
+        str_expr = "rhs_fab(i, j, k, Idx::"+rhsname+ ") = " + str_expr
         
     return str_expr
     
