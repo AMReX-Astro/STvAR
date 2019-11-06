@@ -1,24 +1,22 @@
-#include "AMReX_TimeIntegrator.H"
+#include "AMReX_RKIntegrator.H"
 
 using namespace amrex;
 
-TimeIntegrator::TimeIntegrator(MultiFab const& S_old_external, MultiFab const& S_new_external)
+RKIntegrator::RKIntegrator(std::function<void(amrex::MultiFab&, const amrex::MultiFab&, const amrex::Real)> F,
+                             amrex::MultiFab& S_old_external, 
+                             amrex::MultiFab& S_new_external, 
+                             amrex::Real initial_time) : IntegratorBase(F, S_old_external, S_new_external, initial_time)
 {
     initialize_parameters();
     initialize_stages();
 
-    // Create temporary MultiFab and store a reference to it
-    S_tmp_ptr = std::make_unique<MultiFab>(ba, dm, Ncomp, Nghost);
-    S_tmp = *S_tmp_ptr;
-
-    // Store references to new/old state MultiFabs
-    S_old = S_old_external;
-    S_new = S_new_external;
+    // Create temporary State MultiFab
+    S_tmp_ptr = std::make_unique<MultiFab>(S_old.boxArray(), S_old.DistributionMap(), S_old.nComp(), S_old.nGrow());
 }
 
-void TimeIntegrator::initialize_parameters()
+void RKIntegrator::initialize_parameters()
 {
-    ParmParse pp("integration");
+    ParmParse pp("integration.rk");
 
     // Read an integrator type, if not recognized, then read weights/nodes/butcher tableau
 
@@ -47,7 +45,7 @@ void TimeIntegrator::initialize_parameters()
     for (int i = 0; i < number_nodes; ++i)
     {
         Vector<Real> stage_row;
-        for (int j = 0; j < i; ++j)
+        for (int j = 0; j <= i; ++j)
         {
             stage_row.push_back(btable[k]);
             ++k;
@@ -59,24 +57,27 @@ void TimeIntegrator::initialize_parameters()
     // Check that this is an explicit method
     for (const auto& astage : tableau)
     {
-        if (astage[-1] != 0.0)
+        if (astage.back() != 0.0)
         {
             Error("TimeIntegrator currently only supports explicit Butcher tableaus.");
         }
     }
 }
 
-void TimeIntegrator::initialize_stages()
+void RKIntegrator::initialize_stages()
 {
     // Create MultiFabs for stages
     for (int i = 0; i < number_nodes; ++i)
     {
-        F_nodes.emplace_back(ba, dm, Ncomp, Nghost);
+        F_nodes.emplace_back(S_old.boxArray(), S_old.DistributionMap(), S_old.nComp(), S_old.nGrow());
     }
 }
 
-Real TimeIntegrator::advance(std::function<void(MultiFab&, const MultiFab&, const Real)> F, const Real time, const Real timestep)
+Real RKIntegrator::advance(const Real timestep)
 {
+    // Get a reference to our temporary State workspace
+    auto& S_tmp = *S_tmp_ptr;
+
     // Assume before advance() that S_new is valid data at the current time ("time" argument)
     // So we update S_old by copying the current state.
     MultiFab::Copy(S_old, S_new, 0, 0, S_old.nComp(), S_old.nGrow());
@@ -102,7 +103,7 @@ Real TimeIntegrator::advance(std::function<void(MultiFab&, const MultiFab&, cons
 
         // Fill F[i], the RHS at the current stage
         // F[i] = RHS(y, t) at y = S_tmp, t = stage_time
-        F(F_nodes[i], S_tmp, stage_time);
+        rhs(F_nodes[i], S_tmp, stage_time);
     }
 
     // Fill new State. S_new = S_old already, so we add the stage contributions.
@@ -112,6 +113,9 @@ Real TimeIntegrator::advance(std::function<void(MultiFab&, const MultiFab&, cons
     {
         MultiFab::Saxpy(S_new, timestep * weights[i], F_nodes[i], 0, 0, S_new.nComp(), S_new.nGrow());
     }
+
+    // Update time
+    time += timestep;
 
     // If we are working with an extended Butcher tableau, we can estimate the error in S_tmp here,
     // and then calculate an adaptive timestep.
