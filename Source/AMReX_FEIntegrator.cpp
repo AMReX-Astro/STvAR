@@ -4,7 +4,7 @@ using namespace amrex;
 
 FEIntegrator::FEIntegrator(MultiFab& S_old_external, MultiFab& S_new_external) : S_old(S_old_external), S_new(S_new_external)
 {
-    // Create temporary MultiFab and store a reference to it
+    // Create temporary MultiFab
     F_tmp_ptr = std::make_unique<MultiFab>(S_old.boxArray(), S_old.DistributionMap(), S_old.nComp(), S_old.nGrow());
 }
 
