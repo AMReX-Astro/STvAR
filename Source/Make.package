@@ -4,3 +4,5 @@ CEXE_sources += rhs_phi.cpp
 CEXE_sources += advance_phi.cpp
 CEXE_headers += ET_Integration.H
 CEXE_headers += ET_Integration_K.H
+CEXE_sources += AMReX_FEIntegrator.cpp
+CEXE_headers += AMReX_FEIntegrator.H
