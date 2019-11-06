@@ -1,8 +1,22 @@
-#include AMReX_TimeIntegrator.H
+#include "AMReX_TimeIntegrator.H"
 
 using namespace amrex;
 
-TimeIntegrator::TimeIntegrator(const BoxArray& ba, const DistributionMapping& dm, const int Ncomp, const int Nghost)
+TimeIntegrator::TimeIntegrator(MultiFab const& S_old_external, MultiFab const& S_new_external)
+{
+    initialize_parameters();
+    initialize_stages();
+
+    // Create temporary MultiFab and store a reference to it
+    S_tmp_ptr = std::make_unique<MultiFab>(ba, dm, Ncomp, Nghost);
+    S_tmp = *S_tmp_ptr;
+
+    // Store references to new/old state MultiFabs
+    S_old = S_old_external;
+    S_new = S_new_external;
+}
+
+void TimeIntegrator::initialize_parameters()
 {
     ParmParse pp("integration");
 
@@ -50,57 +64,69 @@ TimeIntegrator::TimeIntegrator(const BoxArray& ba, const DistributionMapping& dm
             Error("TimeIntegrator currently only supports explicit Butcher tableaus.");
         }
     }
+}
 
+void TimeIntegrator::initialize_parameters()
+{
+    ParmParse pp("integration");
+
+    // Read an integrator type, if not recognized, then read weights/nodes/butcher tableau
+
+    // Read weights/nodes/butcher tableau
+    pp.queryarr("weights", weights);
+    pp.queryarr("nodes", nodes);
+
+    Vector<Real> btable; // flattened into row major format
+    pp.queryarr("tableau", btable);
+
+    // Sanity check the inputs
+    if (weights.size() != nodes.size())
+    {
+        Error("integration.weights should be the same length as integration.nodes");
+    } else {
+        number_nodes = weights.size();
+        const int nTableau = (number_nodes * (number_nodes + 1)) / 2; // includes diagonal
+        if (btable.size() != nTableau)
+        {
+            Error("integration.tableau incorrect length - should include the Butcher Tableau diagonal.");
+        }
+    }
+
+    // Fill tableau from the flattened entries
+    int k = 0;
+    for (int i = 0; i < number_nodes; ++i)
+    {
+        Vector<Real> stage_row;
+        for (int j = 0; j < i; ++j)
+        {
+            stage_row.push_back(btable[k]);
+            ++k;
+        }
+
+        tableau.push_back(stage_row);
+    }
+
+    // Check that this is an explicit method
+    for (const auto& astage : tableau)
+    {
+        if (astage[-1] != 0.0)
+        {
+            Error("TimeIntegrator currently only supports explicit Butcher tableaus.");
+        }
+    }
+}
+
+void TimeIntegrator::initialize_stages()
+{
     // Create MultiFabs for stages
     for (int i = 0; i < number_nodes; ++i)
     {
         F_nodes.emplace_back(ba, dm, Ncomp, Nghost);
     }
-
-    // Create MultiFabs for solution
-    for (int i = 0; i < 3; ++i)
-    {
-        S_val.emplace_back(ba, dm, Ncomp, Nghost);
-    }
-}
-
-amrex::MultiFab& TimeIntegrator::get_old()
-{
-    if (S_val.size() == 0)
-    {
-        Error("Time integrator has not been initialized.")
-    }
-
-    return S_val[StateTimes::Old];
-}
-
-amrex::MultiFab& TimeIntegrator::get_new()
-{
-    if (S_val.size() == 0)
-    {
-        Error("Time integrator has not been initialized.")
-    }
-
-    return S_val[StateTimes::New];
-}
-
-amrex::MultiFab& TimeIntegrator::get_tmp()
-{
-    if (S_val.size() == 0)
-    {
-        Error("Time integrator has not been initialized.")
-    }
-
-    return S_val[StateTimes::Tmp];
 }
 
 Real TimeIntegrator::advance(std::function<void(MultiFab&, const MultiFab&, const Real)> F, const Real time, const Real timestep)
 {
-    // References to our state solution data
-    MultiFab& S_old = get_old();
-    MultiFab& S_tmp = get_tmp();
-    MultiFab& S_new = get_new();
-
     // Assume before advance() that S_new is valid data at the current time ("time" argument)
     // So we update S_old by copying the current state.
     MultiFab::Copy(S_old, S_new, 0, 0, S_old.nComp(), S_old.nGrow());

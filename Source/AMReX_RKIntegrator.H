@@ -8,19 +8,18 @@
 class TimeIntegrator
 {
 private:
-    enum StateTimes {Old = 0, Tmp, New, NumStates};
     int number_nodes;
     amrex::Vector<amrex::MultiFab> F_nodes;
-    amrex::Vector<amrex::MultiFab> S_val;
+    std::unique_pointer<amrex::MultiFab> S_tmp_ptr;
+    amrex::MultiFab& S_old;
+    amrex::MultiFab& S_new;
+    amrex::MultiFab& S_tmp;
     amrex::Vector<amrex::Vector<amrex::Real> > tableau;
     amrex::Vector<amrex::Real> weights;
     amrex::Vector<amrex::Real> nodes;
 
 public:
-    TimeIntegrator(const BoxArray& ba, const DistributionMapping& dm, const int Ncomp, const int Nghost);
-    amrex::MultiFab& get_old();
-    amrex::MultiFab& get_new();
-    amrex::MultiFab& get_tmp();
+    TimeIntegrator(MultiFab const& S_old_external, MultiFab const& S_new_external);
     Real advance(std::function<void(MultiFab&, const MultiFab&, const Real)> F, const Real time, const Real timestep);
 };
 
