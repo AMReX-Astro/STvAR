@@ -1,6 +1,7 @@
 #include "ET_Integration.H"
 #include "ET_Integration_K.H"
 #include "AMReX_FEIntegrator.H"
+#include "AMReX_RKIntegrator.H"
 
 using namespace amrex;
 
@@ -110,7 +111,7 @@ void main_main ()
     };
 
     // Create integrator
-    FEIntegrator integrator(source_fun, state_old, state_new, time);
+    RKIntegrator integrator(source_fun, state_old, state_new, time);
 
     bool stop_advance = false;
     for (int n = 1; n <= nsteps && !stop_advance; ++n)
