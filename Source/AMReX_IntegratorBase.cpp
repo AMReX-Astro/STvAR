@@ -2,8 +2,8 @@
 
 using namespace amrex;
 
-IntegratorBase::IntegratorBase(amrex::MultiFab& S_old_external, 
-                               amrex::MultiFab& S_new_external, 
+IntegratorBase::IntegratorBase(amrex::MultiFab& S_old_external,
+                               amrex::MultiFab& S_new_external,
                                amrex::Real initial_time) : time(initial_time),
                                                            S_old(S_old_external),
                                                            S_new(S_new_external) {}

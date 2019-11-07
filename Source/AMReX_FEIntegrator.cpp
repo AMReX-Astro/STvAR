@@ -23,6 +23,9 @@ Real FEIntegrator::advance(const Real timestep)
     // S_new += timestep * dS/dt
     MultiFab::Saxpy(S_new, timestep, F_tmp, 0, 0, S_new.nComp(), S_new.nGrow());
 
+    // Call the post-update hook for S_new
+    post_update(S_new);
+
     // Update time
     time += timestep;
 
