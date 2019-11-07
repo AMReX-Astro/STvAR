@@ -117,7 +117,7 @@ void main_main ()
         if (plot_int > 0 && n % plot_int == 0)
         {
             const std::string& pltfile = amrex::Concatenate("plt",n,7);
-            WriteSingleLevelPlotfile(pltfile, state_new, {"phi", "pi"}, geom, time, n);
+            WriteSingleLevelPlotfile(pltfile, integrator.get_new_data(), {"phi", "pi"}, geom, integrator.get_time(), n);
         }
     };
 
