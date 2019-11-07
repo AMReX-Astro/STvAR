@@ -109,11 +109,14 @@ void main_main ()
         fill_state_rhs(rhs, state, geom);
     };
 
+    // Create a function to call after updating a state
+    auto post_update_fun = [&](MultiFab& S_data){
+        // Fill ghost cells for S_data from interior & periodic BCs
+        S_data.FillBoundary(geom.periodicity());
+    };
+
     // Create a post-timestep function
     auto post_timestep_fun = [&](){
-        // Fill ghost cells for each grid from valid regions of another grid
-        integrator.get_new_data().FillBoundary(geom.periodicity());
-
         // Tell the I/O Processor to write out which step we're doing
         const int n = integrator.get_step_number();
         amrex::Print() << "Advanced step " << n << "\n";
@@ -127,6 +130,7 @@ void main_main ()
     };
 
     integrator.set_rhs(source_fun);
+    integrator.set_post_update(post_update_fun);
     integrator.set_post_timestep(post_timestep_fun);
     integrator.integrate(dt);
 
