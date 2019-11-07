@@ -22,8 +22,9 @@ void main_main ()
     // AMREX_SPACEDIM: number of dimensions
     int n_cell, max_grid_size, plot_int;
     Vector<int> is_periodic(AMREX_SPACEDIM,1);  // periodic in all direction by default
+    Vector<std::string> field_names;
+    for (int i = 0; i < Idx::NumScalars; ++i) field_names.push_back("phi" + std::to_string(i));
 
-    // inputs parameters
     {
         // ParmParse is way of reading inputs from the inputs file
         ParmParse pp;
@@ -40,7 +41,11 @@ void main_main ()
         plot_int = -1;
         pp.query("plot_int",plot_int);
 
+        // Query domain periodicity
         pp.queryarr("is_periodic", is_periodic);
+
+        // Read component names for this problem from inputs file
+        pp.queryarr("field_names", field_names);
     }
 
     // make BoxArray and Geometry
@@ -93,7 +98,7 @@ void main_main ()
     {
         int n = 0;
         const std::string& pltfile = amrex::Concatenate("plt",n,7);
-        WriteSingleLevelPlotfile(pltfile, state_new, {"phi", "pi"}, geom, time, 0);
+        WriteSingleLevelPlotfile(pltfile, state_new, field_names, geom, time, 0);
     }
 
     // Create integrator with the old state, new state, and new state time
@@ -117,7 +122,7 @@ void main_main ()
         if (plot_int > 0 && n % plot_int == 0)
         {
             const std::string& pltfile = amrex::Concatenate("plt",n,7);
-            WriteSingleLevelPlotfile(pltfile, integrator.get_new_data(), {"phi", "pi"}, geom, integrator.get_time(), n);
+            WriteSingleLevelPlotfile(pltfile, integrator.get_new_data(), field_names, geom, integrator.get_time(), n);
         }
     };
 
