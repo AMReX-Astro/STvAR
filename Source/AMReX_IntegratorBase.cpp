@@ -2,11 +2,9 @@
 
 using namespace amrex;
 
-IntegratorBase::IntegratorBase(std::function<void(amrex::MultiFab&, const amrex::MultiFab&, const amrex::Real)> F,
-                               amrex::MultiFab& S_old_external, 
+IntegratorBase::IntegratorBase(amrex::MultiFab& S_old_external, 
                                amrex::MultiFab& S_new_external, 
-                               amrex::Real initial_time) : Fun(F),
-                                                           time(initial_time),
+                               amrex::Real initial_time) : time(initial_time),
                                                            S_old(S_old_external),
                                                            S_new(S_new_external) {}
 

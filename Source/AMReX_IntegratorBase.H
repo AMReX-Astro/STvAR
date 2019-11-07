@@ -16,7 +16,8 @@ protected:
     amrex::Real time;
 
 public:
-    IntegratorBase(std::function<void(amrex::MultiFab&, const amrex::MultiFab&, const amrex::Real)> F, amrex::MultiFab& S_old_external, amrex::MultiFab& S_new_external, amrex::Real time);
+    IntegratorBase(amrex::MultiFab& S_old_external, amrex::MultiFab& S_new_external, amrex::Real time);
+    void set_rhs(std::function<void(amrex::MultiFab&, const amrex::MultiFab&, const amrex::Real)> F) { Fun = F; }
     virtual amrex::Real advance(const amrex::Real timestep) { return timestep; }
     void rhs(amrex::MultiFab& S_rhs, const amrex::MultiFab& S_data, const amrex::Real time);
     amrex::MultiFab& get_new_data();
