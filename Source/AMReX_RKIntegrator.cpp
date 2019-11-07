@@ -18,49 +18,87 @@ void RKIntegrator::initialize_parameters()
     ParmParse pp("integration.rk");
 
     // Read an integrator type, if not recognized, then read weights/nodes/butcher tableau
+    tableau_type = 0;
+    pp.query("type", tableau_type);
 
-    // Read weights/nodes/butcher tableau
-    pp.queryarr("weights", weights);
-    pp.queryarr("nodes", nodes);
-
-    Vector<Real> btable; // flattened into row major format
-    pp.queryarr("tableau", btable);
-
-    // Sanity check the inputs
-    if (weights.size() != nodes.size())
+    if (tableau_type == ButcherTableauTypes::User)
     {
-        Error("integration.weights should be the same length as integration.nodes");
+        // Read weights/nodes/butcher tableau"
+        pp.queryarr("weights", weights);
+        pp.queryarr("nodes", nodes);
+
+        Vector<Real> btable; // flattened into row major format
+        pp.queryarr("tableau", btable);
+
+        // Sanity check the inputs
+        if (weights.size() != nodes.size())
+        {
+            Error("integration.rk.weights should be the same length as integration.rk.nodes");
+        } else {
+            number_nodes = weights.size();
+            const int nTableau = (number_nodes * (number_nodes + 1)) / 2; // includes diagonal
+            if (btable.size() != nTableau)
+            {
+                Error("integration.rk.tableau incorrect length - should include the Butcher Tableau diagonal.");
+            }
+        }
+
+        // Fill tableau from the flattened entries
+        int k = 0;
+        for (int i = 0; i < number_nodes; ++i)
+        {
+            Vector<Real> stage_row;
+            for (int j = 0; j <= i; ++j)
+            {
+                stage_row.push_back(btable[k]);
+                ++k;
+            }
+
+            tableau.push_back(stage_row);
+        }
+
+        // Check that this is an explicit method
+        for (const auto& astage : tableau)
+        {
+            if (astage.back() != 0.0)
+            {
+                Error("RKIntegrator currently only supports explicit Butcher tableaus.");
+            }
+        }
+    } else if (tableau_type > ButcherTableauTypes::User && tableau_type < ButcherTableauTypes::NumTypes)
+    {
+        initialize_preset_tableau();
     } else {
-        number_nodes = weights.size();
-        const int nTableau = (number_nodes * (number_nodes + 1)) / 2; // includes diagonal
-        if (btable.size() != nTableau)
-        {
-            Error("integration.tableau incorrect length - should include the Butcher Tableau diagonal.");
-        }
+        Error("RKIntegrator received invalid input for integration.rk.type");
     }
+}
 
-    // Fill tableau from the flattened entries
-    int k = 0;
-    for (int i = 0; i < number_nodes; ++i)
+void RKIntegrator::initialize_preset_tableau()
+{
+    switch (tableau_type)
     {
-        Vector<Real> stage_row;
-        for (int j = 0; j <= i; ++j)
-        {
-            stage_row.push_back(btable[k]);
-            ++k;
-        }
-
-        tableau.push_back(stage_row);
+        case ButcherTableauTypes::ForwardEuler:
+            nodes = {0.0};
+            tableau = {{0.0}};
+            weights = {1.0};
+            break;
+        case ButcherTableauTypes::RK4:
+            nodes = {0.0,
+                     0.5,
+                     0.5,
+                     1.0};
+            tableau = {{0.0},
+                       {0.5, 0.0},
+                       {0.0, 0.5, 0.0},
+                       {0.0, 0.0, 1.0, 0.0}};
+            weights = {1./6., 1./3., 1./3., 1./6.};
+            break;
+        default:
+            Error("Invalid RK Integrator tableau type");
+            break;
     }
 
-    // Check that this is an explicit method
-    for (const auto& astage : tableau)
-    {
-        if (astage.back() != 0.0)
-        {
-            Error("TimeIntegrator currently only supports explicit Butcher tableaus.");
-        }
-    }
+    number_nodes = weights.size();
 }
 
 void RKIntegrator::initialize_stages()
@@ -98,6 +136,9 @@ Real RKIntegrator::advance(const Real timestep)
             {
                 MultiFab::Saxpy(S_tmp, timestep * tableau[i][j], F_nodes[j], 0, 0, S_tmp.nComp(), S_tmp.nGrow());
             }
+
+            // Call the post-update hook for S_tmp
+            post_update(S_tmp);
         }
 
         // Fill F[i], the RHS at the current stage
@@ -112,6 +153,9 @@ Real RKIntegrator::advance(const Real timestep)
     {
         MultiFab::Saxpy(S_new, timestep * weights[i], F_nodes[i], 0, 0, S_new.nComp(), S_new.nGrow());
     }
+
+    // Call the post-update hook for S_new
+    post_update(S_new);
 
     // Update time
     time += timestep;
