@@ -20,7 +20,7 @@ private:
     void initialize_stages();
 
 public:
-    RKIntegrator(std::function<void(amrex::MultiFab&, const amrex::MultiFab&, const amrex::Real)> F, amrex::MultiFab& S_old_external, amrex::MultiFab& S_new_external, amrex::Real time);
+    RKIntegrator(amrex::MultiFab& S_old_external, amrex::MultiFab& S_new_external, amrex::Real time);
     amrex::Real advance(const amrex::Real timestep);
 };
 

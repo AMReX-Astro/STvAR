@@ -2,10 +2,9 @@
 
 using namespace amrex;
 
-RKIntegrator::RKIntegrator(std::function<void(amrex::MultiFab&, const amrex::MultiFab&, const amrex::Real)> F,
-                             amrex::MultiFab& S_old_external, 
-                             amrex::MultiFab& S_new_external, 
-                             amrex::Real initial_time) : IntegratorBase(F, S_old_external, S_new_external, initial_time)
+RKIntegrator::RKIntegrator(amrex::MultiFab& S_old_external,
+                           amrex::MultiFab& S_new_external,
+                           amrex::Real initial_time) : IntegratorBase(S_old_external, S_new_external, initial_time)
 {
     initialize_parameters();
     initialize_stages();
