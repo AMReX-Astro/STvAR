@@ -2,10 +2,9 @@
 
 using namespace amrex;
 
-FEIntegrator::FEIntegrator(std::function<void(amrex::MultiFab&, const amrex::MultiFab&, const amrex::Real)> F,
-                           amrex::MultiFab& S_old_external, 
-                           amrex::MultiFab& S_new_external, 
-                           amrex::Real initial_time) : IntegratorBase(F, S_old_external, S_new_external, initial_time)
+FEIntegrator::FEIntegrator(amrex::MultiFab& S_old_external,
+                           amrex::MultiFab& S_new_external,
+                           amrex::Real initial_time) : IntegratorBase(S_old_external, S_new_external, initial_time)
 {
     // Create temporary MultiFab
     F_tmp_ptr = std::make_unique<MultiFab>(S_old.boxArray(), S_old.DistributionMap(), S_old.nComp(), S_old.nGrow());

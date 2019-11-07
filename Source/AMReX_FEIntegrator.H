@@ -12,7 +12,7 @@ private:
     std::unique_ptr<amrex::MultiFab> F_tmp_ptr;
 
 public:
-    FEIntegrator(std::function<void(amrex::MultiFab&, const amrex::MultiFab&, const amrex::Real)> F, amrex::MultiFab& S_old_external, amrex::MultiFab& S_new_external, amrex::Real time);
+    FEIntegrator(amrex::MultiFab& S_old_external, amrex::MultiFab& S_new_external, amrex::Real time);
     amrex::Real advance(const amrex::Real timestep);
 };
 
