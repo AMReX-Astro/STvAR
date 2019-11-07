@@ -1,16 +1,15 @@
 #include "ET_Integration.H"
 #include "ET_Integration_K.H"
-#include "AMReX_FEIntegrator.H"
-#include "AMReX_RKIntegrator.H"
+#include "AMReX_TimeIntegrator.H"
 
 using namespace amrex;
 
 int main (int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
-    
+
     main_main();
-    
+
     amrex::Finalize();
     return 0;
 }
@@ -21,16 +20,15 @@ void main_main ()
     Real strt_time = amrex::second();
 
     // AMREX_SPACEDIM: number of dimensions
-    int n_cell, max_grid_size, nsteps, plot_int;
+    int n_cell, max_grid_size, plot_int;
     Vector<int> is_periodic(AMREX_SPACEDIM,1);  // periodic in all direction by default
-    Real end_time = 1.0;
 
     // inputs parameters
     {
         // ParmParse is way of reading inputs from the inputs file
         ParmParse pp;
 
-        // We need to get n_cell from the inputs file - this is the number of cells on each side of 
+        // We need to get n_cell from the inputs file - this is the number of cells on each side of
         //   a square (or cubic) domain.
         pp.get("n_cell",n_cell);
 
@@ -41,13 +39,6 @@ void main_main ()
         //  If plot_int < 0 then no plot files will be writtenq
         plot_int = -1;
         pp.query("plot_int",plot_int);
-
-        // Default nsteps to 10, allow us to set it to something else in the inputs file
-        nsteps = 10;
-        pp.query("nsteps",nsteps);
-
-        // Stopping criteria
-        pp.query("end_time",end_time);
 
         pp.queryarr("is_periodic", is_periodic);
     }
@@ -75,12 +66,12 @@ void main_main ()
 
     const Real* dx = geom.CellSize();
 
-    // Nghost = number of ghost cells for each array 
+    // Nghost = number of ghost cells for each array
     int Nghost = NUM_GHOST_CELLS;
-    
+
     // Ncomp = number of components for each array
     int Ncomp  = Idx::NumScalars;
-  
+
     // How Boxes are distrubuted among MPI processes
     DistributionMapping dm(ba);
 
@@ -105,41 +96,34 @@ void main_main ()
         WriteSingleLevelPlotfile(pltfile, state_new, {"phi", "pi"}, geom, time, 0);
     }
 
+    // Create integrator with the old state, new state, and new state time
+    TimeIntegrator integrator(state_old, state_new, time);
+
     // Create a RHS source function we will integrate
     auto source_fun = [&](MultiFab& rhs, const MultiFab& state, const Real time){
-      fill_state_rhs(rhs, state, geom);
+        fill_state_rhs(rhs, state, geom);
     };
 
-    // Create integrator
-    RKIntegrator integrator(source_fun, state_old, state_new, time);
-
-    bool stop_advance = false;
-    for (int n = 1; n <= nsteps && !stop_advance; ++n)
-    {
-        if (end_time - time < dt) {
-            dt = end_time - time;
-            stop_advance = true;
-        }
-
-        // Call the time integrator advance
-        integrator.advance(dt);
-
+    // Create a post-timestep function
+    auto post_timestep_fun = [&](){
         // Fill ghost cells for each grid from valid regions of another grid
         integrator.get_new_data().FillBoundary(geom.periodicity());
 
-        // Update our time variable 
-        time = integrator.get_time();
-        
         // Tell the I/O Processor to write out which step we're doing
+        const int n = integrator.get_step_number();
         amrex::Print() << "Advanced step " << n << "\n";
 
         // Write a plotfile of the current data (plot_int was defined in the inputs file)
-        if (plot_int > 0 && n%plot_int == 0)
+        if (plot_int > 0 && n % plot_int == 0)
         {
             const std::string& pltfile = amrex::Concatenate("plt",n,7);
             WriteSingleLevelPlotfile(pltfile, state_new, {"phi", "pi"}, geom, time, n);
         }
-    }
+    };
+
+    integrator.set_rhs(source_fun);
+    integrator.set_post_timestep(post_timestep_fun);
+    integrator.integrate(dt);
 
     // Call the timer again and compute the maximum difference between the start time and stop time
     //   over all processors

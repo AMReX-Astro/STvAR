@@ -1,5 +1,17 @@
-nsteps = 10000
-end_time = 1.0
 plot_int = 1000
 n_cell = 256
 max_grid_size = 64
+
+# Integrator
+integration.nsteps = 10000
+integration.end_time = 1.0
+
+## integration.type can take on the following values:
+## 0 = Forward Euler integration
+## 1 = Explicit Runge Kutta with user-specified Butcher tableau
+integration.type = 0
+
+# Butcher Tableau (Forward Euler) used if integration.type = 1
+integration.rk.weights = 1
+integration.rk.nodes = 0
+integration.rk.tableau = 0.0
