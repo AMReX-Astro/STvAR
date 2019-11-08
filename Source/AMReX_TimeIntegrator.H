@@ -18,10 +18,8 @@ class TimeIntegrator
 {
 private:
     amrex::Real time;
-    amrex::Real end_time;
     amrex::Real timestep;
     int step_number;
-    int max_num_steps;
     std::unique_ptr<IntegratorBase> integrator_ptr;
     std::function<void ()> post_timestep;
 
@@ -30,7 +28,7 @@ public:
     void set_post_timestep(std::function<void ()> F);
     void set_post_update(std::function<void (amrex::MultiFab&)> F);
     void set_rhs(std::function<void(amrex::MultiFab&, const amrex::MultiFab&, const amrex::Real)> F);
-    void integrate(const amrex::Real start_timestep);
+    void integrate(const amrex::Real start_timestep, const amrex::Real end_time, const int nsteps);
     amrex::MultiFab& get_new_data();
     amrex::MultiFab& get_old_data();
     amrex::Real get_time();

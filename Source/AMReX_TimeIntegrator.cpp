@@ -24,14 +24,6 @@ TimeIntegrator::TimeIntegrator(amrex::MultiFab& S_old_external,
             break;
     }
 
-    // Default nsteps to 10, allow us to set it to something else in the inputs file
-    max_num_steps = 10;
-    pp.query("nsteps", max_num_steps);
-
-    // Stopping criteria
-    end_time = 1.0;
-    pp.query("end_time", end_time);
-
     // By default, do nothing post-timestep
     set_post_timestep([](){});
 
@@ -47,11 +39,11 @@ TimeIntegrator::TimeIntegrator(amrex::MultiFab& S_old_external,
     step_number = 0;
 }
 
-void TimeIntegrator::integrate(const amrex::Real start_timestep)
+void TimeIntegrator::integrate(const amrex::Real start_timestep, const amrex::Real end_time, const int nsteps)
 {
     Real timestep = start_timestep;
     bool stop_advance = false;
-    for (step_number = 1; step_number <= max_num_steps && !stop_advance; ++step_number)
+    for (step_number = 1; step_number <= nsteps && !stop_advance; ++step_number)
     {
         if (end_time - time < timestep) {
             timestep = end_time - time;

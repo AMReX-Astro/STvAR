@@ -20,8 +20,9 @@ void main_main ()
     Real strt_time = amrex::second();
 
     // AMREX_SPACEDIM: number of dimensions
-    int n_cell, max_grid_size, plot_int;
+    int n_cell, max_grid_size, plot_int, nsteps;
     Real cfl = 0.9;
+    Real end_time = 1.0;
     Vector<int> is_periodic(AMREX_SPACEDIM,1);  // periodic in all direction by default
     Vector<std::string> field_names;
     for (int i = 0; i < Idx::NumScalars; ++i) field_names.push_back("phi" + std::to_string(i));
@@ -50,6 +51,13 @@ void main_main ()
 
         // Read CFL number
         pp.query("cfl", cfl);
+
+        // Default nsteps to 10, allow us to set it to something else in the inputs file
+        nsteps = 10;
+        pp.query("nsteps", nsteps);
+
+        // Time at end of simulation
+        pp.query("end_time", end_time);
     }
 
     // make BoxArray and Geometry
@@ -136,7 +144,7 @@ void main_main ()
     integrator.set_rhs(source_fun);
     integrator.set_post_update(post_update_fun);
     integrator.set_post_timestep(post_timestep_fun);
-    integrator.integrate(dt);
+    integrator.integrate(dt, end_time, nsteps);
 
     // Call the timer again and compute the maximum difference between the start time and stop time
     //   over all processors
