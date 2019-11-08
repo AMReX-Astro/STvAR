@@ -113,6 +113,8 @@ def AMReXcode(expr, varnames, declare_rhs = False, rhsname = ""):
     str_expr = str_expr.replace("dx[2]**2","(dx[2]*dx[2])")
     str_expr = str_expr+";"
     for name in varnames:
+        str_expr = str_expr.replace('state_fab'+name,'state_fab')
+    for name in varnames:
         str_expr = str_expr.replace(name,"Idx::"+name)
     
     if declare_rhs == True:
