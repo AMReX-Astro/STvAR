@@ -5,16 +5,32 @@ max_grid_size = 64
 # Problem-dependent field names
 field_names = phi pi
 
-# Integrator
-integration.nsteps = 10000
-integration.end_time = 1.0
+# CFL
+cfl = 1.0
+
+# Stopping Criteria
+nsteps = 10000
+end_time = 1.0
 
 ## integration.type can take on the following values:
-## 0 = Forward Euler integration
-## 1 = Explicit Runge Kutta with user-specified Butcher tableau
+## 0 = Forward Euler
+## 1 = Explicit Runge Kutta
 integration.type = 0
 
-# Butcher Tableau (Forward Euler) used if integration.type = 1
+## Explicit Runge-Kuta parameters
+#
+## integration.rk.type can take the following values:
+### 0 = User-specified Butcher Tableau
+### 1 = Forward Euler
+### 2 = RK4 Method
+integration.rk.type = 0
+
+## If using a user-specified Butcher Tableau, then
+## set nodes, weights, and table entries here:
+#
+## The Butcher Tableau is read as a flattened,
+## lower triangular matrix (but including the diagonal)
+## in row major format.
 integration.rk.weights = 1
 integration.rk.nodes = 0
 integration.rk.tableau = 0.0
