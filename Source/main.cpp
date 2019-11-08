@@ -146,6 +146,12 @@ void main_main ()
     integrator.set_post_timestep(post_timestep_fun);
     integrator.integrate(dt, end_time, nsteps);
 
+    // Write a final plotfile
+    {
+        const std::string& pltfile = "plt_End_Simulation";
+        WriteSingleLevelPlotfile(pltfile, integrator.get_new_data(), field_names, geom, integrator.get_time(), integrator.get_step_number());
+    }
+
     // Call the timer again and compute the maximum difference between the start time and stop time
     //   over all processors
     Real stop_time = amrex::second() - strt_time;
