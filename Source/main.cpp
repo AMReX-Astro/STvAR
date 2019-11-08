@@ -21,6 +21,7 @@ void main_main ()
 
     // AMREX_SPACEDIM: number of dimensions
     int n_cell, max_grid_size, plot_int;
+    Real cfl = 0.9;
     Vector<int> is_periodic(AMREX_SPACEDIM,1);  // periodic in all direction by default
     Vector<std::string> field_names;
     for (int i = 0; i < Idx::NumScalars; ++i) field_names.push_back("phi" + std::to_string(i));
@@ -46,6 +47,9 @@ void main_main ()
 
         // Read component names for this problem from inputs file
         pp.queryarr("field_names", field_names);
+
+        // Read CFL number
+        pp.query("cfl", cfl);
     }
 
     // make BoxArray and Geometry
@@ -91,7 +95,7 @@ void main_main ()
     init(state_new, time, geom);
 
     // Compute the time step
-    Real dt = 0.9*dx[0]*dx[0] / (2.0*AMREX_SPACEDIM);
+    Real dt = cfl*dx[0]*dx[0] / (2.0*AMREX_SPACEDIM);
 
     // Write a plotfile of the initial data if plot_int > 0 (plot_int was defined in the inputs file)
     if (plot_int > 0)
