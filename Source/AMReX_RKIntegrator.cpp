@@ -82,6 +82,22 @@ void RKIntegrator::initialize_preset_tableau()
             tableau = {{0.0}};
             weights = {1.0};
             break;
+        case ButcherTableauTypes::Trapezoid:
+            nodes = {0.0,
+                     1.0};
+            tableau = {{0.0},
+                       {1.0, 0.0}};
+            weights = {0.5, 0.5};
+            break;
+        case ButcherTableauTypes::SSPRK3:
+            nodes = {0.0,
+                     1.0,
+                     0.5};
+            tableau = {{0.0},
+                       {1.0, 0.0},
+                       {0.25, 0.25, 0.0}};
+            weights = {1./6., 1./6., 2./3.};
+            break;
         case ButcherTableauTypes::RK4:
             nodes = {0.0,
                      0.5,
@@ -92,6 +108,17 @@ void RKIntegrator::initialize_preset_tableau()
                        {0.0, 0.5, 0.0},
                        {0.0, 0.0, 1.0, 0.0}};
             weights = {1./6., 1./3., 1./3., 1./6.};
+            break;
+        case ButcherTableauTypes::Ralston4:
+            nodes = {0.0,
+                     0.4,
+                     0.45573725,
+                     1.0};
+            tableau = {{0.0},
+                       {0.4, 0.0},
+                       {0.29697761, 0.15875964, 0.0},
+                       {0.21810040, -3.05096516, 3.83286476, 0.0}};
+            weights = {0.17476028, -0.55148066, 1.20553560, 0.17118478};
             break;
         default:
             Error("Invalid RK Integrator tableau type");

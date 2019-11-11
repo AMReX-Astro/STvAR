@@ -22,7 +22,9 @@ integration.type = 0
 ## integration.rk.type can take the following values:
 ### 0 = User-specified Butcher Tableau
 ### 1 = Forward Euler
-### 2 = RK4 Method
+### 2 = Trapezoid Method
+### 3 = SSPRK3 Method
+### 4 = RK4 Method
 integration.rk.type = 0
 
 ## If using a user-specified Butcher Tableau, then

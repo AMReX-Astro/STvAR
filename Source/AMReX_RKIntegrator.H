@@ -8,7 +8,7 @@
 #include "AMReX_IntegratorBase.H"
 
 namespace ButcherTableauTypes {
-    enum ButcherTypes {User = 0, ForwardEuler, RK4, NumTypes};
+    enum ButcherTypes {User = 0, ForwardEuler, Trapezoid, SSPRK3, RK4, Ralston4, NumTypes};
 };
 
 class RKIntegrator : public IntegratorBase
