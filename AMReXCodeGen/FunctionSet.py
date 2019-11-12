@@ -101,7 +101,7 @@ def LapTen(E):
         retLapE += np.array(Dc2Ten(E,directions[itr]))
     return retLapE
 
-def AMReXcode(expr, varnames, declare_rhs = False, rhsname = ""):
+def AMReXcode(expr, varnames, declare_rhs = False, rhsname = "", declare_state = False, statename = ""):
     str_expr = str(expr)
     
     str_expr = str_expr.replace("[","(").replace("]",")")
@@ -111,6 +111,7 @@ def AMReXcode(expr, varnames, declare_rhs = False, rhsname = ""):
     str_expr = str_expr.replace("dx[0]**2","(dx[0]*dx[0])")
     str_expr = str_expr.replace("dx[1]**2","(dx[1]*dx[1])")
     str_expr = str_expr.replace("dx[2]**2","(dx[2]*dx[2])")
+    str_expr = str_expr.replace("pi","M_PI")
     str_expr = str_expr+";"
     for name in varnames:
         str_expr = str_expr.replace('state_fab'+name,'state_fab')
@@ -120,9 +121,91 @@ def AMReXcode(expr, varnames, declare_rhs = False, rhsname = ""):
     if declare_rhs == True:
         str_expr = "rhs_fab(i, j, k, Idx::"+rhsname+ ") = " + str_expr
         
+    if declare_state == True:
+        str_expr = "state_fab(i, j, k, Idx::"+statename+ ") = " + str_expr
+        
     return str_expr
     
+def createSETUP(name, varnames, nghostcells):
+    fileSETUP = open(name, "w+")
+    fileSETUP.write("#ifndef ET_INTEGRATION_SETUP_K_H \n")
+    fileSETUP.write("#define ET_INTEGRATION_SETUP_K_H \n\n")
+
+    fileSETUP.write("#include <AMReX_REAL.H> \n")
+    fileSETUP.write("#include <AMReX_Array4.H> \n\n")
     
+    fileSETUP.write("namespace Idx { \n")
+    fileSETUP.write("         enum ETIndexes {")
+    
+    Idx_string = ""
+    for itr in varnames:
+        Idx_string += itr+", "
+    Idx_string += "NumScalars"
+    
+    fileSETUP.write(Idx_string)
+    fileSETUP.write("}; \n};\n\n")
+    fileSETUP.write("#define NUM_GHOST_CELLS "+str(nghostcells)+"\n\n")
+    fileSETUP.write("#endif")
+
+    fileSETUP.close()
+
+def createRHS(name):
+    fileRHS = open(name, "w+")
+    fileRHS.write("#ifndef ET_INTEGRATION_RHS_K_H \n")
+    fileRHS.write("#define ET_INTEGRATION_RHS_K_H \n\n")
+
+    fileRHS.write("#include <AMReX_REAL.H> \n")
+    fileRHS.write("#include <AMReX_Array4.H> \n")
+    fileRHS.write("#include <ET_Integration_Setup.H> \n\n")
+
+    fileRHS.write("AMREX_GPU_DEVICE \ninline \nvoid \n")
+    fileRHS.write("state_rhs(int i, int j, int k, \n")
+    fileRHS.write("        amrex::Array4<amrex::Real> const& rhs_fab, \n")
+    fileRHS.write("        amrex::Array4<amrex::Real const> const& state_fab, \n")
+    fileRHS.write("        amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dx) noexcept \n{\n")
+    fileRHS.close()
+
+def addRHS(name,RHS):
+    fileRHS = open(name,"a+")
+    fileRHS.write("         "+RHS+"\n\n")
+    fileRHS.close()
+    
+def finishRHS(name):
+    fileRHS = open(name, "a+")
+    fileRHS.write("}\n")
+    fileRHS.write("#endif")
+    fileRHS.close()
+    
+    
+def createINIT(name):
+    fileINIT = open(name, "w+")
+    fileINIT.write("#ifndef ET_INTEGRATION_INIT_K_H \n")
+    fileINIT.write("#define ET_INTEGRATION_INIT_K_H \n\n")
+
+    fileINIT.write("#include <AMReX_REAL.H> \n")
+    fileINIT.write("#include <AMReX_Array4.H> \n")
+    fileINIT.write("#include <ET_Integration_Setup.H> \n\n")
+
+    fileINIT.write("AMREX_GPU_DEVICE \ninline \nvoid \n")
+    fileINIT.write("state_init(int i, int j, int k, \n")
+    fileINIT.write("        amrex::Array4<amrex::Real> const& state_fab, \n")
+    fileINIT.write("        amrex::Real time, \n")
+    fileINIT.write("        amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dx) noexcept \n{\n")
+    fileINIT.write("        amrex::Real x = (i + 0.5)*dx[0];\n")
+    fileINIT.write("        amrex::Real y = (j + 0.5)*dx[1];\n")
+    fileINIT.write("        amrex::Real z = (k + 0.5)*dx[2];\n\n")
+    fileINIT.close()
+
+def addINIT(name,INIT):
+    fileINIT = open(name,"a+")
+    fileINIT.write("        "+INIT+"\n\n")
+    fileINIT.close()
+    
+def finishINIT(name):
+    fileINIT = open(name, "a+")
+    fileINIT.write("}\n")
+    fileINIT.write("#endif")
+    fileINIT.close()
     
     
     
