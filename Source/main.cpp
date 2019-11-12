@@ -1,5 +1,4 @@
 #include "ET_Integration.H"
-#include "ET_Integration_K.H"
 #include "AMReX_TimeIntegrator.H"
 
 using namespace amrex;

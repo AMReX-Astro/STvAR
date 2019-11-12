@@ -1,5 +1,4 @@
 #include "ET_Integration.H"
-#include "ET_Integration_K.H"
 
 using namespace amrex;
 
