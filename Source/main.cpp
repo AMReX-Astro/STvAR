@@ -1,13 +1,14 @@
 #include "ET_Integration.H"
+#include "AMReX_TimeIntegrator.H"
 
 using namespace amrex;
 
 int main (int argc, char* argv[])
 {
     amrex::Initialize(argc,argv);
-    
+
     main_main();
-    
+
     amrex::Finalize();
     return 0;
 }
@@ -18,16 +19,16 @@ void main_main ()
     Real strt_time = amrex::second();
 
     // AMREX_SPACEDIM: number of dimensions
-    int n_cell, max_grid_size, nsteps, plot_int;
-    Vector<int> is_periodic(AMREX_SPACEDIM,1);  // periodic in all direction by default
+    int n_cell, max_grid_size, plot_int, nsteps;
+    Real cfl = 0.9;
     Real end_time = 1.0;
+    Vector<int> is_periodic(AMREX_SPACEDIM,1);  // periodic in all direction by default
 
-    // inputs parameters
     {
         // ParmParse is way of reading inputs from the inputs file
         ParmParse pp;
 
-        // We need to get n_cell from the inputs file - this is the number of cells on each side of 
+        // We need to get n_cell from the inputs file - this is the number of cells on each side of
         //   a square (or cubic) domain.
         pp.get("n_cell",n_cell);
 
@@ -39,14 +40,18 @@ void main_main ()
         plot_int = -1;
         pp.query("plot_int",plot_int);
 
+        // Query domain periodicity
+        pp.queryarr("is_periodic", is_periodic);
+
+        // Read CFL number
+        pp.query("cfl", cfl);
+
         // Default nsteps to 10, allow us to set it to something else in the inputs file
         nsteps = 10;
-        pp.query("nsteps",nsteps);
+        pp.query("nsteps", nsteps);
 
-        // Stopping criteria
-        pp.query("end_time",end_time);
-
-        pp.queryarr("is_periodic", is_periodic);
+        // Time at end of simulation
+        pp.query("end_time", end_time);
     }
 
     // make BoxArray and Geometry
@@ -72,12 +77,15 @@ void main_main ()
 
     const Real* dx = geom.CellSize();
 
-    // Nghost = number of ghost cells for each array 
+    // Nghost = number of ghost cells for each array
     int Nghost = NUM_GHOST_CELLS;
-    
+
     // Ncomp = number of components for each array
     int Ncomp  = Idx::NumScalars;
-  
+
+    // Initialize variable names
+    Variable::Initialize();
+
     // How Boxes are distrubuted among MPI processes
     DistributionMapping dm(ba);
 
@@ -92,44 +100,53 @@ void main_main ()
     init(state_new, time, geom);
 
     // Compute the time step
-    Real dt = 0.9*dx[0]*dx[0] / (2.0*AMREX_SPACEDIM);
+    Real dt = cfl*dx[0]*dx[0] / (2.0*AMREX_SPACEDIM);
 
     // Write a plotfile of the initial data if plot_int > 0 (plot_int was defined in the inputs file)
     if (plot_int > 0)
     {
         int n = 0;
         const std::string& pltfile = amrex::Concatenate("plt",n,7);
-        WriteSingleLevelPlotfile(pltfile, state_new, {"phi", "pi"}, geom, time, 0);
+        WriteSingleLevelPlotfile(pltfile, state_new, Variable::names, geom, time, 0);
     }
 
-    bool stop_advance = false;
-    for (int n = 1; n <= nsteps && !stop_advance; ++n)
-    {
-        if (end_time - time < dt) {
-            dt = end_time - time;
-            stop_advance = true;
-        }
+    // Create integrator with the old state, new state, and new state time
+    TimeIntegrator integrator(state_old, state_new, time);
 
-        MultiFab::Copy(state_old, state_new, 0, 0, state_new.nComp(), 0);
+    // Create a RHS source function we will integrate
+    auto source_fun = [&](MultiFab& rhs, const MultiFab& state, const Real time){
+        fill_state_rhs(rhs, state, geom);
+    };
 
-        // state_new = state_old + dt * rhs
-        advance(state_new, state_old, time, dt, geom);
+    // Create a function to call after updating a state
+    auto post_update_fun = [&](MultiFab& S_data){
+        // Fill ghost cells for S_data from interior & periodic BCs
+        S_data.FillBoundary(geom.periodicity());
+    };
 
-        // Advance the time variable 
-        time = time + dt;
-        
+    // Create a post-timestep function
+    auto post_timestep_fun = [&](){
         // Tell the I/O Processor to write out which step we're doing
+        const int n = integrator.get_step_number();
         amrex::Print() << "Advanced step " << n << "\n";
 
-        // Copy new state into old state before we take the next time step
-        MultiFab::Copy(state_old, state_new, 0, 0, state_new.nComp(), 0);
-
         // Write a plotfile of the current data (plot_int was defined in the inputs file)
-        if (plot_int > 0 && n%plot_int == 0)
+        if (plot_int > 0 && n % plot_int == 0)
         {
             const std::string& pltfile = amrex::Concatenate("plt",n,7);
-            WriteSingleLevelPlotfile(pltfile, state_new, {"phi", "pi"}, geom, time, n);
+            WriteSingleLevelPlotfile(pltfile, integrator.get_new_data(), Variable::names, geom, integrator.get_time(), n);
         }
+    };
+
+    integrator.set_rhs(source_fun);
+    integrator.set_post_update(post_update_fun);
+    integrator.set_post_timestep(post_timestep_fun);
+    integrator.integrate(dt, end_time, nsteps);
+
+    // Write a final plotfile
+    {
+        const std::string& pltfile = "plt_End_Simulation";
+        WriteSingleLevelPlotfile(pltfile, integrator.get_new_data(), Variable::names, geom, integrator.get_time(), integrator.get_step_number());
     }
 
     // Call the timer again and compute the maximum difference between the start time and stop time
