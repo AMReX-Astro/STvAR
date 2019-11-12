@@ -1,0 +1,30 @@
+USE_WAVE_EQ ?= FALSE
+USE_MAXWELL ?= FALSE
+USE_ADM     ?= FALSE
+
+include $(AMREX_HOME)/Tools/GNUMake/Make.defs
+
+include $(ETI_HOME)/Source/Make.package
+
+ETI_SOURCE_DIR = $(ETI_HOME)/Source
+
+VPATH_LOCATIONS   += $(ETI_SOURCE_DIR)
+INCLUDE_LOCATIONS += $(ETI_SOURCE_DIR)
+
+ifeq ($(USE_WAVE_EQ), TRUE)
+  DEFINES += -DWAVEEQ
+  VPATH_LOCATIONS += $(ETI_SOURCE_DIR)/WaveEquation
+  INCLUDE_LOCATIONS += $(ETI_SOURCE_DIR)/WaveEquation
+else ifeq ($(USE_MAXWELL), TRUE)
+  DEFINES += -DMAXWELL
+  VPATH_LOCATIONS += $(ETI_SOURCE_DIR)/MaxwellEquations
+  INCLUDE_LOCATIONS += $(ETI_SOURCE_DIR)/MaxwellEquations
+else ifeq ($(USE_ADM), TRUE)
+  DEFINES += -DADM
+  VPATH_LOCATIONS += $(ETI_SOURCE_DIR)/ADM
+  INCLUDE_LOCATIONS += $(ETI_SOURCE_DIR)/ADM
+endif
+
+include $(AMREX_HOME)/Src/Base/Make.package
+
+include $(AMREX_HOME)/Tools/GNUMake/Make.rules
