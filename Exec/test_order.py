@@ -79,7 +79,7 @@ if __name__ == "__main__":
     parser.add_argument('-fc', '--fcompare', type=str, help='Name of fcompare executable (in PATH)', default='fcompare')
     args = parser.parse_args()
 
-    run = "./main2d.gnu.ex inputs_waveeq nsteps=10000000 plot_int=100000000"
+    run = "./main2d.gnu.ex inputs nsteps=10000000 plot_int=100000000"
     output_plt = "plt_End_Simulation"
     initial_plt = "plt0000000"
 
