@@ -21,10 +21,16 @@ void RKIntegrator::initialize_parameters()
     tableau_type = 0;
     pp.query("type", tableau_type);
 
+    // By default, define no extended weights and no adaptive timestepping
+    extended_weights = {};
+    use_adaptive_timestep = false;
+    pp.query("use_adaptive_timestep", use_adaptive_timestep);
+
     if (tableau_type == ButcherTableauTypes::User)
     {
         // Read weights/nodes/butcher tableau"
         pp.queryarr("weights", weights);
+        pp.queryarr("extended_weights", extended_weights);
         pp.queryarr("nodes", nodes);
 
         Vector<Real> btable; // flattened into row major format
@@ -120,6 +126,63 @@ void RKIntegrator::initialize_preset_tableau()
                        {0.21810040, -3.05096516, 3.83286476, 0.0}};
             weights = {0.17476028, -0.55148066, 1.20553560, 0.17118478};
             break;
+        case ButcherTableauTypes::HeunEuler21:
+            nodes = {0.0,
+                     1.0};
+            tableau = {{0.0},
+                       {1.0, 0.0}};
+            weights = {0.5, 0.5};
+            extended_weights = {1.0, 0.0};
+        case ButcherTableauTypes::Fehlberg21:
+            nodes = {0.0,
+                     0.5,
+                     1.0};
+            tableau = {{0.0},
+                       {0.5, 0.0},
+                       {1./256., 255./256., 0.0}};
+            weights = {1./256., 255./256., 0.0};
+            extended_weights = {1./512., 255./256., 1./512.};
+        case ButcherTableauTypes::BogackiShampine32:
+            nodes = {0.0,
+                     0.5,
+                     0.75,
+                     1.0};
+            tableau = {{0.0},
+                       {0.5, 0.0},
+                       {0.0, 0.75, 0.0},
+                       {2./9., 1./3., 4./9., 0.0}};
+            weights = {2./9., 1./3., 4./9., 0.0};
+            extended_weights = {7./24., 1./4., 1./3., 1./8.};
+        case ButcherTableauTypes::Fehlberg54:
+            nodes = {0.0,
+                     0.25,
+                     3./8.,
+                     12./13.,
+                     1.0,
+                     0.5};
+            tableau = {{0.0},
+                       {1./4., 0.0},
+                       {3./32., 9./32., 0.0},
+                       {1932./2197., -7200./2197., 7296./2197., 0.0},
+                       {439./216., -8.0, 3680./513., -845./4104., 0.0},
+                       {-8./27., 2.0, -3544./2565., 1859./4104., -11./40., 0.0}};
+            weights = {16./135., 0.0, 6656./12825., 28561./56430., -9./50., 2./55.};
+            extended_weights = {25./216., 0.0, 1408./2565., 2197./4104., -1./5., 0.0};
+        case ButcherTableauTypes::CashKarp54:
+            nodes = {0.0,
+                     1./5.,
+                     3./10.,
+                     3./5.,
+                     1.0,
+                     7./8.};
+            tableau = {{0.0},
+                       {1./5., 0.0},
+                       {3./40., 9./40., 0.0},
+                       {3./10., -9./10., 6./5., 0.0},
+                       {-11./54., 5./2., -70./27., 35./27., 0.0},
+                       {1631./55296., 175./512., 575./13824., 44275./110592., 253./4096., 0.0}};
+            weights = {37./378., 0.0, 250./621., 125./594., 0.0, 512./1771.};
+            extended_weights = {2825./27648., 0.0, 18575./48384., 13525./55296., 277./14336., 1./4.};
         default:
             Error("Invalid RK Integrator tableau type");
             break;

@@ -8,7 +8,7 @@
 #include "AMReX_IntegratorBase.H"
 
 namespace ButcherTableauTypes {
-    enum ButcherTypes {User = 0, ForwardEuler, Trapezoid, SSPRK3, RK4, Ralston4, NumTypes};
+    enum ButcherTypes {User = 0, ForwardEuler, Trapezoid, SSPRK3, RK4, Ralston4, HeunEuler21, Fehlberg21, BogackiShampine32, Fehlberg54, CashKarp54, NumTypes};
 };
 
 class RKIntegrator : public IntegratorBase
@@ -16,10 +16,12 @@ class RKIntegrator : public IntegratorBase
 private:
     int tableau_type;
     int number_nodes;
+    bool use_adaptive_timestep;
     amrex::Vector<amrex::MultiFab> F_nodes;
     std::unique_ptr<amrex::MultiFab> S_tmp_ptr;
     amrex::Vector<amrex::Vector<amrex::Real> > tableau;
     amrex::Vector<amrex::Real> weights;
+    amrex::Vector<amrex::Real> extended_weights;
     amrex::Vector<amrex::Real> nodes;
     void initialize_preset_tableau();
     void initialize_parameters();
