@@ -9,6 +9,12 @@
 #include <ET_Integration_Init_K.H>
 #include <ET_Integration_Rhs_K.H>
 
+namespace Variable
+{
+    extern amrex::Vector<std::string> names;
+    void Initialize();
+}
+
 void main_main();
 void init(amrex::MultiFab& phi_new, amrex::Real time, const amrex::Geometry& geom);
 void advance(amrex::MultiFab& phi_new, amrex::MultiFab& phi_old, amrex::Real time, amrex::Real dt, const amrex::Geometry& geom);
