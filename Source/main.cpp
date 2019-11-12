@@ -23,8 +23,6 @@ void main_main ()
     Real cfl = 0.9;
     Real end_time = 1.0;
     Vector<int> is_periodic(AMREX_SPACEDIM,1);  // periodic in all direction by default
-    Vector<std::string> field_names;
-    for (int i = 0; i < Idx::NumScalars; ++i) field_names.push_back("phi" + std::to_string(i));
 
     {
         // ParmParse is way of reading inputs from the inputs file
@@ -44,9 +42,6 @@ void main_main ()
 
         // Query domain periodicity
         pp.queryarr("is_periodic", is_periodic);
-
-        // Read component names for this problem from inputs file
-        pp.queryarr("field_names", field_names);
 
         // Read CFL number
         pp.query("cfl", cfl);
@@ -88,6 +83,9 @@ void main_main ()
     // Ncomp = number of components for each array
     int Ncomp  = Idx::NumScalars;
 
+    // Initialize variable names
+    Variable::Initialize();
+
     // How Boxes are distrubuted among MPI processes
     DistributionMapping dm(ba);
 
@@ -109,7 +107,7 @@ void main_main ()
     {
         int n = 0;
         const std::string& pltfile = amrex::Concatenate("plt",n,7);
-        WriteSingleLevelPlotfile(pltfile, state_new, field_names, geom, time, 0);
+        WriteSingleLevelPlotfile(pltfile, state_new, Variable::names, geom, time, 0);
     }
 
     // Create integrator with the old state, new state, and new state time
@@ -136,7 +134,7 @@ void main_main ()
         if (plot_int > 0 && n % plot_int == 0)
         {
             const std::string& pltfile = amrex::Concatenate("plt",n,7);
-            WriteSingleLevelPlotfile(pltfile, integrator.get_new_data(), field_names, geom, integrator.get_time(), n);
+            WriteSingleLevelPlotfile(pltfile, integrator.get_new_data(), Variable::names, geom, integrator.get_time(), n);
         }
     };
 
@@ -148,7 +146,7 @@ void main_main ()
     // Write a final plotfile
     {
         const std::string& pltfile = "plt_End_Simulation";
-        WriteSingleLevelPlotfile(pltfile, integrator.get_new_data(), field_names, geom, integrator.get_time(), integrator.get_step_number());
+        WriteSingleLevelPlotfile(pltfile, integrator.get_new_data(), Variable::names, geom, integrator.get_time(), integrator.get_step_number());
     }
 
     // Call the timer again and compute the maximum difference between the start time and stop time
