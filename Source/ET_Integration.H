@@ -5,6 +5,9 @@
 #include <AMReX_PlotFileUtil.H>
 #include <AMReX_ParmParse.H>
 #include <AMReX_Print.H>
+#include <ET_Integration_Setup.H>
+#include <ET_Integration_Init_K.H>
+#include <ET_Integration_Rhs_K.H>
 
 void main_main();
 void init(amrex::MultiFab& phi_new, amrex::Real time, const amrex::Geometry& geom);
