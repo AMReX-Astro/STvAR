@@ -11,6 +11,7 @@ DIM       = 3
 
 USE_WAVE_EQ ?= FALSE
 USE_MAXWELL ?= FALSE
+USE_ADM     ?= TRUE
 
 include $(AMREX_HOME)/Tools/GNUMake/Make.defs
 
@@ -18,6 +19,8 @@ ifeq ($(USE_WAVE_EQ), TRUE)
   DEFINES += -DWAVEEQ
 else ifeq ($(USE_MAXWELL), TRUE)
   DEFINES += -DMAXWELL
+else ifeq ($(USE_ADM), TRUE)
+  DEFINES += -DADM
 endif
 
 include ../Source/Make.package

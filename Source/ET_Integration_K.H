@@ -5,6 +5,8 @@
 #include "ET_Integration_K_WaveEq.H"
 #elif defined(MAXWELL)
 #include "ET_Integration_K_Maxwell.H"
+#elif defined(ADM)
+#include "ET_Integration_K_ADM.H"
 #else
 #include "ET_Integration_K_Default.H"
 #endif
