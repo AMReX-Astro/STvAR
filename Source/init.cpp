@@ -26,5 +26,5 @@ void init(MultiFab& state_mf, Real time, const Geometry& geom)
     // Fill ghost cells for each grid from valid regions of another grid
     state_mf.FillBoundary(geom.periodicity());
 
-    std::cout << "Phi and Pi have been initialized" << std::endl;
+    Print() << "Domain initialized\n";
 }
