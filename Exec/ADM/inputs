@@ -2,9 +2,6 @@ plot_int = 1000
 n_cell = 256
 max_grid_size = 64
 
-# Problem-dependent field names
-field_names = phi pi
-
 # CFL
 cfl = 1.0
 
