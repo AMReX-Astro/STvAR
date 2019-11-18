@@ -149,6 +149,16 @@ def createSETUP(name, varnames, nghostcells):
 
     fileSETUP.close()
 
+def createVARIABLES(name,varnames):
+    fileVARS = open(name,"w+")
+    fileVARS.write("names = {")
+    for itr in range(len(varnames)-1):
+        fileVARS.write("\""+varnames[itr].lower()+"\", ")
+    fileVARS.write("\""+varnames[len(varnames)-1].lower()+"\"")
+    fileVARS.write("};")
+    fileVARS.close()
+    
+
 def createRHS(name):
     fileRHS = open(name, "w+")
     fileRHS.write("#ifndef ET_INTEGRATION_RHS_K_H \n")
