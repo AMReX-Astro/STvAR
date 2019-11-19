@@ -23,6 +23,8 @@ void main_main ()
     Real cfl = 0.9;
     Real end_time = 1.0;
     Vector<int> is_periodic(AMREX_SPACEDIM,1);  // periodic in all direction by default
+    Vector<int> domain_lo_bc_types(AMREX_SPACEDIM, BCType::int_dir);
+    Vector<int> domain_hi_bc_types(AMREX_SPACEDIM, BCType::int_dir);
 
     {
         // ParmParse is way of reading inputs from the inputs file
@@ -42,6 +44,8 @@ void main_main ()
 
         // Query domain periodicity
         pp.queryarr("is_periodic", is_periodic);
+        pp.queryarr("domain_lo_bc_types", domain_lo_bc_types);
+        pp.queryarr("domain_hi_bc_types", domain_hi_bc_types);
 
         // Read CFL number
         pp.query("cfl", cfl);
@@ -83,6 +87,25 @@ void main_main ()
     // Ncomp = number of components for each array
     int Ncomp  = Idx::NumScalars;
 
+    Vector<BCRec> state_bc(Ncomp);
+    for (int n = 0; n < Ncomp; ++n)
+    {
+        for (int i = 0; i < AMREX_SPACEDIM; ++i)
+        {
+            // is_periodic overrides inputs in domain_(lo/hi)_bc_type
+            if (geom.isPeriodic(i))
+            {
+                state_bc[n].setLo(i, BCType::int_dir);
+                state_bc[n].setHi(i, BCType::int_dir);
+            }
+            else
+            {
+                state_bc[n].setLo(i, domain_lo_bc_types[i]);
+                state_bc[n].setHi(i, domain_hi_bc_types[i]);
+            }
+        }
+    }
+
     // Initialize variable names
     Variable::Initialize();
 
@@ -122,6 +145,7 @@ void main_main ()
     auto post_update_fun = [&](MultiFab& S_data){
         // Fill ghost cells for S_data from interior & periodic BCs
         S_data.FillBoundary(geom.periodicity());
+        FillDomainBoundary(S_data, geom, state_bc);
     };
 
     // Create a post-timestep function
