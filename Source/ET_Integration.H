@@ -5,6 +5,9 @@
 #include <AMReX_PlotFileUtil.H>
 #include <AMReX_ParmParse.H>
 #include <AMReX_Print.H>
+#include <AMReX_BC_TYPES.H>
+#include <AMReX_BCRec.H>
+#include <AMReX_BCUtil.H>
 #include <ET_Integration_Setup.H>
 #include <ET_Integration_Init_K.H>
 #include <ET_Integration_Rhs_K.H>
