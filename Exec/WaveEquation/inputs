@@ -2,6 +2,22 @@ plot_int = 1000
 n_cell = 256
 max_grid_size = 64
 
+# Periodicity and Domain Boundary Conditions
+#
+# For a given dimension, if is_periodic[i] = 1,
+# then the lo/hi BC type should be BCType::int_dir.
+#
+# Here are the supported boundary conditions in AMReX:
+# BCType::reflect_odd  = -1
+# BCType::int_dir      =  0
+# BCType::reflect_even =  1
+# BCType::foextrap     =  2
+# BCType::ext_dir      =  3
+# BCType::hoextrap     =  4
+is_periodic = 1 1 1
+domain_lo_bc_types = 0 0 0
+domain_hi_bc_types = 0 0 0
+
 # CFL
 cfl = 1.0
 
