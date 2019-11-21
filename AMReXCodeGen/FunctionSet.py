@@ -153,8 +153,8 @@ def createVARIABLES(name,varnames):
     fileVARS = open(name,"w+")
     fileVARS.write("names = {")
     for itr in range(len(varnames)-1):
-        fileVARS.write("\""+varnames[itr].lower()+"\", ")
-    fileVARS.write("\""+varnames[len(varnames)-1].lower()+"\"")
+        fileVARS.write("\""+varnames[itr]+"\", ")
+    fileVARS.write("\""+varnames[len(varnames)-1]+"\"")
     fileVARS.write("};")
     fileVARS.close()
     
