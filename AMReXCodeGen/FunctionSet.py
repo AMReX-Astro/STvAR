@@ -9,6 +9,12 @@ import sympy
 from sympy import symbols, IndexedBase, Indexed, Idx, preorder_traversal
 import numpy as np
 
+from sympy.printing.cxxcode import *
+from sympy.printing.fcode import FCodePrinter
+
+class CustomCXX17Printer(CXX17CodePrinter):
+    def _print_Indexed(self, expr):
+        return FCodePrinter._print_Indexed(self, expr)
 
 Nx, Ny, Nz, Nn= symbols('Nx Ny Nz Nn', integer=True)
 i = Idx('i', Nx)
@@ -101,7 +107,7 @@ def LapTen(E):
         retLapE += np.array(Dc2Ten(E,directions[itr]))
     return retLapE
 
-def AMReXcode(expr, varnames, declare_rhs = False, rhsname = "", declare_state = False, statename = ""):
+def AMReXcode(expr, varnames= "", declare_rhs = False, rhsname = "", declare_state = False, statename = ""):
     str_expr = str(expr)
     
     str_expr = str_expr.replace("[","(").replace("]",")")
