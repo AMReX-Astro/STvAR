@@ -15,6 +15,8 @@ from sympy.printing.fcode import FCodePrinter
 class CustomCXX17Printer(CXX17CodePrinter):
     def _print_Indexed(self, expr):
         return FCodePrinter._print_Indexed(self, expr)
+    
+printer = CustomCXX17Printer()
 
 Nx, Ny, Nz, Nn= symbols('Nx Ny Nz Nn', integer=True)
 i = Idx('i', Nx)
@@ -107,10 +109,14 @@ def LapTen(E):
         retLapE += np.array(Dc2Ten(E,directions[itr]))
     return retLapE
 
+def der(var,direction):
+    dvar = symbols('d'+str(var)+str(direction))
+    return dvar
+
 def AMReXcode(expr, varnames= "", declare_rhs = False, rhsname = "", declare_state = False, statename = ""):
-    str_expr = str(expr)
+    str_expr = str(printer.doprint(expr))
     
-    str_expr = str_expr.replace("[","(").replace("]",")")
+    #str_expr = str_expr.replace("[","(").replace("]",")")
     str_expr = str_expr.replace("dx","dx[0]")
     str_expr = str_expr.replace("dy","dx[1]")
     str_expr = str_expr.replace("dz","dx[2]")
