@@ -4,6 +4,7 @@ import indexedexp as ixp
 # The grid module defines various parameters related to a numerical grid or the dimensionality of indexed expressions
 # For example, it declares the parameter DIM, which specifies the dimensionality of the indexed expression
 import grid as gri
+import finite_difference as fin
 from outputC import *
 import sympy
 from sympy import symbols, IndexedBase, Indexed, Idx, preorder_traversal
@@ -43,6 +44,42 @@ def shift(E, idx_shift):
         return base[indices]
 
     return E.replace(lambda expr: type(expr) == Indexed, lambda expr: shift_indexed(expr, idx_shift))
+
+def Diff1(E, difftype, order):
+    fdcoeffs, fdstencl = fin.compute_fdcoeffs_fdstencl(difftype,FDORDER=order)
+    if int(difftype[2]) == 0:
+        delta = dx
+    elif int(difftype[2]) == 1:
+        delta = dy
+    elif int(difftype[2]) == 2:
+        delta = dy
+        
+    shiftE = 0
+    for i in range(len(fdcoeffs)):
+        shiftE += fdcoeffs[i]*shift(E,fdstencl[i])
+    shiftE = shiftE/delta
+    return shiftE
+
+def Diff2(E, difftype, order):
+    fdcoeffs, fdstencl = fin.compute_fdcoeffs_fdstencl(difftype,FDORDER=order)
+    if int(difftype[3]) == 0:
+        delta = dx
+    elif int(difftype[3]) == 1:
+        delta = dy
+    elif int(difftype[3]) == 2:
+        delta = dy
+    if int(difftype[4]) == 0:
+        delta *= dx
+    elif int(difftype[4]) == 1:
+        delta *= dy
+    elif int(difftype[4]) == 2:
+        delta *= dy
+        
+    shiftE = 0
+    for i in range(len(fdcoeffs)):
+        shiftE += fdcoeffs[i]*shift(E,fdstencl[i])
+    shiftE = shiftE/delta
+    return shiftE
 
 def Dc(E, direction):
     assert(direction == 'x' or direction == 'y' or direction == 'z')
