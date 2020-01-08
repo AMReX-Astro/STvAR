@@ -1,0 +1,108 @@
+#ifndef ET_INTEGRATION_RHS_K_H 
+#define ET_INTEGRATION_RHS_K_H 
+
+#include <AMReX_REAL.H> 
+#include <AMReX_Array4.H> 
+#include <ET_Integration_Setup.H> 
+
+AMREX_GPU_DEVICE 
+inline 
+void 
+state_rhs(int i, int j, int k, 
+        amrex::Array4<amrex::Real> const& rhs_fab, 
+        amrex::Array4<amrex::Real const> const& state_fab, 
+        amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dx) noexcept 
+{
+         amrex::Real phi = state_fab(i, j, k, Idx::phi);
+         amrex::Real gbar00 = state_fab(i, j, k, Idx::gbar00);
+         amrex::Real gbar01 = state_fab(i, j, k, Idx::gbar01);
+         amrex::Real gbar02 = state_fab(i, j, k, Idx::gbar02);
+         amrex::Real gbar11 = state_fab(i, j, k, Idx::gbar11);
+         amrex::Real gbar12 = state_fab(i, j, k, Idx::gbar12);
+         amrex::Real gbar22 = state_fab(i, j, k, Idx::gbar22);
+         amrex::Real Ksclr = state_fab(i, j, k, Idx::Ksclr);
+         amrex::Real Abar00 = state_fab(i, j, k, Idx::Abar00);
+         amrex::Real Abar01 = state_fab(i, j, k, Idx::Abar01);
+         amrex::Real Abar02 = state_fab(i, j, k, Idx::Abar02);
+         amrex::Real Abar11 = state_fab(i, j, k, Idx::Abar11);
+         amrex::Real Abar12 = state_fab(i, j, k, Idx::Abar12);
+         amrex::Real Abar22 = state_fab(i, j, k, Idx::Abar22);
+         amrex::Real GambarU0 = state_fab(i, j, k, Idx::GambarU0);
+         amrex::Real GambarU1 = state_fab(i, j, k, Idx::GambarU1);
+         amrex::Real GambarU2 = state_fab(i, j, k, Idx::GambarU2);
+         amrex::Real alpha = state_fab(i, j, k, Idx::alpha);
+         amrex::Real betaU0 = state_fab(i, j, k, Idx::betaU0);
+         amrex::Real betaU1 = state_fab(i, j, k, Idx::betaU1);
+         amrex::Real betaU2 = state_fab(i, j, k, Idx::betaU2);
+         amrex::Real BU0 = state_fab(i, j, k, Idx::BU0);
+         amrex::Real BU1 = state_fab(i, j, k, Idx::BU1);
+         amrex::Real BU2 = state_fab(i, j, k, Idx::BU2);
+         amrex::Real gbarinv00 = (gbar11*gbar22 - std::pow(gbar12, 2))/(gbar00*gbar11*gbar22 - gbar00*std::pow(gbar12, 2) - std::pow(gbar01, 2)*gbar22 + 2*gbar01*gbar02*gbar12 - std::pow(gbar02, 2)*gbar11);
+         amrex::Real gbarinv01 = (-gbar01*gbar22 + gbar02*gbar12)/(gbar00*gbar11*gbar22 - gbar00*std::pow(gbar12, 2) - std::pow(gbar01, 2)*gbar22 + 2*gbar01*gbar02*gbar12 - std::pow(gbar02, 2)*gbar11);
+         amrex::Real gbarinv02 = (gbar01*gbar12 - gbar02*gbar11)/(gbar00*gbar11*gbar22 - gbar00*std::pow(gbar12, 2) - std::pow(gbar01, 2)*gbar22 + 2*gbar01*gbar02*gbar12 - std::pow(gbar02, 2)*gbar11);
+         amrex::Real gbarinv11 = gbar00*(gbar00*gbar22 - std::pow(gbar02, 2))/((gbar00*gbar11 - std::pow(gbar01, 2))*(gbar00*gbar22 - std::pow(gbar02, 2)) - std::pow(gbar00*gbar12 - gbar01*gbar02, 2));
+         amrex::Real gbarinv12 = -gbar00*(gbar00*gbar12 - gbar01*gbar02)/((gbar00*gbar11 - std::pow(gbar01, 2))*(gbar00*gbar22 - std::pow(gbar02, 2)) - std::pow(gbar00*gbar12 - gbar01*gbar02, 2));
+         amrex::Real gbarinv22 = gbar00*(gbar00*gbar11 - std::pow(gbar01, 2))/((gbar00*gbar11 - std::pow(gbar01, 2))*(gbar00*gbar22 - std::pow(gbar02, 2)) - std::pow(gbar00*gbar12 - gbar01*gbar02, 2));
+         amrex::Real dphi0 = (1.0/2.0)*(state_fab(i + 1, j, k, Idx::phi) - state_fab(i - 1, j, k, Idx::phi))/dx[0];
+         amrex::Real dphi1 = (1.0/2.0)*(state_fab(i, j + 1, k, Idx::phi) - state_fab(i, j - 1, k, Idx::phi))/dx[1];
+         amrex::Real dphi2 = (1.0/2.0)*(state_fab(i, j, k + 1, Idx::phi) - state_fab(i, j, k - 1, Idx::phi))/dx[2];
+         amrex::Real ddphi00 = (1.0/2.0)*((1.0/2.0)*(state_fab(i + 2, j, k, Idx::phi) - state_fab(i, j, k, Idx::phi))/dx[0] - 1.0/2.0*(-state_fab(i - 2, j, k, Idx::phi) + state_fab(i, j, k, Idx::phi))/dx[0])/dx[0];
+         amrex::Real ddphi01 = (1.0/2.0)*((1.0/2.0)*(state_fab(i + 1, j + 1, k, Idx::phi) - state_fab(i - 1, j + 1, k, Idx::phi))/dx[0] - 1.0/2.0*(state_fab(i + 1, j - 1, k, Idx::phi) - state_fab(i - 1, j - 1, k, Idx::phi))/dx[0])/dx[1];
+         amrex::Real ddphi02 = (1.0/2.0)*((1.0/2.0)*(state_fab(i + 1, j, k + 1, Idx::phi) - state_fab(i - 1, j, k + 1, Idx::phi))/dx[0] - 1.0/2.0*(state_fab(i + 1, j, k - 1, Idx::phi) - state_fab(i - 1, j, k - 1, Idx::phi))/dx[0])/dx[2];
+         amrex::Real ddphi11 = (1.0/2.0)*((1.0/2.0)*(state_fab(i, j + 2, k, Idx::phi) - state_fab(i, j, k, Idx::phi))/dx[1] - 1.0/2.0*(-state_fab(i, j - 2, k, Idx::phi) + state_fab(i, j, k, Idx::phi))/dx[1])/dx[1];
+         amrex::Real ddphi12 = (1.0/2.0)*((1.0/2.0)*(state_fab(i, j + 1, k + 1, Idx::phi) - state_fab(i, j - 1, k + 1, Idx::phi))/dx[1] - 1.0/2.0*(state_fab(i, j + 1, k - 1, Idx::phi) - state_fab(i, j - 1, k - 1, Idx::phi))/dx[1])/dx[2];
+         amrex::Real ddphi22 = (1.0/2.0)*((1.0/2.0)*(state_fab(i, j, k + 2, Idx::phi) - state_fab(i, j, k, Idx::phi))/dx[2] - 1.0/2.0*(-state_fab(i, j, k - 2, Idx::phi) + state_fab(i, j, k, Idx::phi))/dx[2])/dx[2];
+         amrex::Real dalpha0 = (1.0/2.0)*(state_fab(i + 1, j, k, Idx::alpha) - state_fab(i - 1, j, k, Idx::alpha))/dx[0];
+         amrex::Real dalpha1 = (1.0/2.0)*(state_fab(i, j + 1, k, Idx::alpha) - state_fab(i, j - 1, k, Idx::alpha))/dx[1];
+         amrex::Real dalpha2 = (1.0/2.0)*(state_fab(i, j, k + 1, Idx::alpha) - state_fab(i, j, k - 1, Idx::alpha))/dx[2];
+         amrex::Real ddalpha00 = (1.0/2.0)*((1.0/2.0)*(state_fab(i + 2, j, k, Idx::alpha) - state_fab(i, j, k, Idx::alpha))/dx[0] - 1.0/2.0*(-state_fab(i - 2, j, k, Idx::alpha) + state_fab(i, j, k, Idx::alpha))/dx[0])/dx[0];
+         amrex::Real ddalpha01 = (1.0/2.0)*((1.0/2.0)*(state_fab(i + 1, j + 1, k, Idx::alpha) - state_fab(i - 1, j + 1, k, Idx::alpha))/dx[0] - 1.0/2.0*(state_fab(i + 1, j - 1, k, Idx::alpha) - state_fab(i - 1, j - 1, k, Idx::alpha))/dx[0])/dx[1];
+         amrex::Real ddalpha02 = (1.0/2.0)*((1.0/2.0)*(state_fab(i + 1, j, k + 1, Idx::alpha) - state_fab(i - 1, j, k + 1, Idx::alpha))/dx[0] - 1.0/2.0*(state_fab(i + 1, j, k - 1, Idx::alpha) - state_fab(i - 1, j, k - 1, Idx::alpha))/dx[0])/dx[2];
+         amrex::Real ddalpha11 = (1.0/2.0)*((1.0/2.0)*(state_fab(i, j + 2, k, Idx::alpha) - state_fab(i, j, k, Idx::alpha))/dx[1] - 1.0/2.0*(-state_fab(i, j - 2, k, Idx::alpha) + state_fab(i, j, k, Idx::alpha))/dx[1])/dx[1];
+         amrex::Real ddalpha12 = (1.0/2.0)*((1.0/2.0)*(state_fab(i, j + 1, k + 1, Idx::alpha) - state_fab(i, j - 1, k + 1, Idx::alpha))/dx[1] - 1.0/2.0*(state_fab(i, j + 1, k - 1, Idx::alpha) - state_fab(i, j - 1, k - 1, Idx::alpha))/dx[1])/dx[2];
+         amrex::Real ddalpha22 = (1.0/2.0)*((1.0/2.0)*(state_fab(i, j, k + 2, Idx::alpha) - state_fab(i, j, k, Idx::alpha))/dx[2] - 1.0/2.0*(-state_fab(i, j, k - 2, Idx::alpha) + state_fab(i, j, k, Idx::alpha))/dx[2])/dx[2];
+         amrex::Real dbetaU00 = (1.0/2.0)*(state_fab(i + 1, j, k, Idx::betaU0) - state_fab(i - 1, j, k, Idx::betaU0))/dx[0];
+         amrex::Real dbetaU01 = (1.0/2.0)*(state_fab(i, j + 1, k, Idx::betaU0) - state_fab(i, j - 1, k, Idx::betaU0))/dx[1];
+         amrex::Real dbetaU02 = (1.0/2.0)*(state_fab(i, j, k + 1, Idx::betaU0) - state_fab(i, j, k - 1, Idx::betaU0))/dx[2];
+         amrex::Real dbetaU10 = (1.0/2.0)*(state_fab(i + 1, j, k, Idx::betaU1) - state_fab(i - 1, j, k, Idx::betaU1))/dx[0];
+         amrex::Real dbetaU11 = (1.0/2.0)*(state_fab(i, j + 1, k, Idx::betaU1) - state_fab(i, j - 1, k, Idx::betaU1))/dx[1];
+         amrex::Real dbetaU12 = (1.0/2.0)*(state_fab(i, j, k + 1, Idx::betaU1) - state_fab(i, j, k - 1, Idx::betaU1))/dx[2];
+         amrex::Real dbetaU20 = (1.0/2.0)*(state_fab(i + 1, j, k, Idx::betaU2) - state_fab(i - 1, j, k, Idx::betaU2))/dx[0];
+         amrex::Real dbetaU21 = (1.0/2.0)*(state_fab(i, j + 1, k, Idx::betaU2) - state_fab(i, j - 1, k, Idx::betaU2))/dx[1];
+         amrex::Real dbetaU22 = (1.0/2.0)*(state_fab(i, j, k + 1, Idx::betaU2) - state_fab(i, j, k - 1, Idx::betaU2))/dx[2];
+         amrex::Real dgbar000 = (1.0/2.0)*(state_fab(i + 1, j, k, Idx::gbar00) - state_fab(i - 1, j, k, Idx::gbar00))/dx[0];
+         amrex::Real dgbar001 = (1.0/2.0)*(state_fab(i, j + 1, k, Idx::gbar00) - state_fab(i, j - 1, k, Idx::gbar00))/dx[1];
+         amrex::Real dgbar002 = (1.0/2.0)*(state_fab(i, j, k + 1, Idx::gbar00) - state_fab(i, j, k - 1, Idx::gbar00))/dx[2];
+         amrex::Real dgbar010 = (1.0/2.0)*(state_fab(i + 1, j, k, Idx::gbar01) - state_fab(i - 1, j, k, Idx::gbar01))/dx[0];
+         amrex::Real dgbar011 = (1.0/2.0)*(state_fab(i, j + 1, k, Idx::gbar01) - state_fab(i, j - 1, k, Idx::gbar01))/dx[1];
+         amrex::Real dgbar012 = (1.0/2.0)*(state_fab(i, j, k + 1, Idx::gbar01) - state_fab(i, j, k - 1, Idx::gbar01))/dx[2];
+         amrex::Real dgbar020 = (1.0/2.0)*(state_fab(i + 1, j, k, Idx::gbar02) - state_fab(i - 1, j, k, Idx::gbar02))/dx[0];
+         amrex::Real dgbar021 = (1.0/2.0)*(state_fab(i, j + 1, k, Idx::gbar02) - state_fab(i, j - 1, k, Idx::gbar02))/dx[1];
+         amrex::Real dgbar022 = (1.0/2.0)*(state_fab(i, j, k + 1, Idx::gbar02) - state_fab(i, j, k - 1, Idx::gbar02))/dx[2];
+         amrex::Real dgbar110 = (1.0/2.0)*(state_fab(i + 1, j, k, Idx::gbar11) - state_fab(i - 1, j, k, Idx::gbar11))/dx[0];
+         amrex::Real dgbar111 = (1.0/2.0)*(state_fab(i, j + 1, k, Idx::gbar11) - state_fab(i, j - 1, k, Idx::gbar11))/dx[1];
+         amrex::Real dgbar112 = (1.0/2.0)*(state_fab(i, j, k + 1, Idx::gbar11) - state_fab(i, j, k - 1, Idx::gbar11))/dx[2];
+         amrex::Real dgbar120 = (1.0/2.0)*(state_fab(i + 1, j, k, Idx::gbar12) - state_fab(i - 1, j, k, Idx::gbar12))/dx[0];
+         amrex::Real dgbar121 = (1.0/2.0)*(state_fab(i, j + 1, k, Idx::gbar12) - state_fab(i, j - 1, k, Idx::gbar12))/dx[1];
+         amrex::Real dgbar122 = (1.0/2.0)*(state_fab(i, j, k + 1, Idx::gbar12) - state_fab(i, j, k - 1, Idx::gbar12))/dx[2];
+         amrex::Real dgbar220 = (1.0/2.0)*(state_fab(i + 1, j, k, Idx::gbar22) - state_fab(i - 1, j, k, Idx::gbar22))/dx[0];
+         amrex::Real dgbar221 = (1.0/2.0)*(state_fab(i, j + 1, k, Idx::gbar22) - state_fab(i, j - 1, k, Idx::gbar22))/dx[1];
+         amrex::Real dgbar222 = (1.0/2.0)*(state_fab(i, j, k + 1, Idx::gbar22) - state_fab(i, j, k - 1, Idx::gbar22))/dx[2];
+         rhs_fab(i, j, k, Idx::phi) = -0.16666666666666666*Ksclr*alpha + betaU0*dphi0 + betaU1*dphi1 + betaU2*dphi2 + 0.16666666666666666*dbetaU00 + 0.16666666666666666*dbetaU11 + 0.16666666666666666*dbetaU22;
+
+         rhs_fab(i, j, k, Idx::gbar00) = -2*Abar00*alpha + betaU0*dgbar000 + betaU1*dgbar001 + betaU2*dgbar002 + 1.3333333333333335*dbetaU00*gbar00 + 2*dbetaU10*gbar01 - 0.66666666666666663*dbetaU11*gbar00 + 2*dbetaU20*gbar02 - 0.66666666666666663*dbetaU22*gbar00;
+
+         rhs_fab(i, j, k, Idx::gbar01) = -2*Abar01*alpha + betaU0*dgbar010 + betaU1*dgbar011 + betaU2*dgbar012 + 0.33333333333333337*dbetaU00*gbar01 + dbetaU01*gbar00 + dbetaU10*gbar11 + 0.33333333333333337*dbetaU11*gbar01 + dbetaU20*gbar12 + dbetaU21*gbar02 - 0.66666666666666663*dbetaU22*gbar01;
+
+         rhs_fab(i, j, k, Idx::gbar02) = -2*Abar02*alpha + betaU0*dgbar020 + betaU1*dgbar021 + betaU2*dgbar022 + 0.33333333333333337*dbetaU00*gbar02 + dbetaU02*gbar00 + dbetaU10*gbar12 - 0.66666666666666663*dbetaU11*gbar02 + dbetaU12*gbar01 + dbetaU20*gbar22 + 0.33333333333333337*dbetaU22*gbar02;
+
+         rhs_fab(i, j, k, Idx::gbar11) = -2*Abar11*alpha + betaU0*dgbar110 + betaU1*dgbar111 + betaU2*dgbar112 - 0.66666666666666663*dbetaU00*gbar11 + 2*dbetaU01*gbar01 + 1.3333333333333335*dbetaU11*gbar11 + 2*dbetaU21*gbar12 - 0.66666666666666663*dbetaU22*gbar11;
+
+         rhs_fab(i, j, k, Idx::gbar12) = -2*Abar12*alpha + betaU0*dgbar120 + betaU1*dgbar121 + betaU2*dgbar122 - 0.66666666666666663*dbetaU00*gbar12 + dbetaU01*gbar02 + dbetaU02*gbar01 + 0.33333333333333337*dbetaU11*gbar12 + dbetaU12*gbar11 + dbetaU21*gbar22 + 0.33333333333333337*dbetaU22*gbar12;
+
+         rhs_fab(i, j, k, Idx::gbar22) = -2*Abar22*alpha + betaU0*dgbar220 + betaU1*dgbar221 + betaU2*dgbar222 - 0.66666666666666663*dbetaU00*gbar22 + 2*dbetaU02*gbar02 - 0.66666666666666663*dbetaU11*gbar22 + 2*dbetaU12*gbar12 + 1.3333333333333335*dbetaU22*gbar22;
+
+         rhs_fab(i, j, k, Idx::Ksclr) = alpha*(Abar00*(Abar00*std::pow(gbarinv00, 2) + 2*Abar01*gbarinv00*gbarinv01 + 2*Abar02*gbarinv00*gbarinv02 + Abar11*std::pow(gbarinv01, 2) + 2*Abar12*gbarinv01*gbarinv02 + Abar22*std::pow(gbarinv02, 2)) + 0.33333333333333331*std::pow(Ksclr, 2)) + 2*alpha*(Abar01*(Abar00*gbarinv00*gbarinv01 + Abar01*gbarinv00*gbarinv11 + Abar01*std::pow(gbarinv01, 2) + Abar02*gbarinv00*gbarinv12 + Abar02*gbarinv01*gbarinv02 + Abar11*gbarinv01*gbarinv11 + Abar12*gbarinv01*gbarinv12 + Abar12*gbarinv02*gbarinv11 + Abar22*gbarinv02*gbarinv12) + 0.33333333333333331*std::pow(Ksclr, 2)) + 2*alpha*(Abar02*(Abar00*gbarinv00*gbarinv02 + Abar01*gbarinv00*gbarinv12 + Abar01*gbarinv01*gbarinv02 + Abar02*gbarinv00*gbarinv22 + Abar02*std::pow(gbarinv02, 2) + Abar11*gbarinv01*gbarinv12 + Abar12*gbarinv01*gbarinv22 + Abar12*gbarinv02*gbarinv12 + Abar22*gbarinv02*gbarinv22) + 0.33333333333333331*std::pow(Ksclr, 2)) + alpha*(Abar11*(Abar00*std::pow(gbarinv01, 2) + 2*Abar01*gbarinv01*gbarinv11 + 2*Abar02*gbarinv01*gbarinv12 + Abar11*std::pow(gbarinv11, 2) + 2*Abar12*gbarinv11*gbarinv12 + Abar22*std::pow(gbarinv12, 2)) + 0.33333333333333331*std::pow(Ksclr, 2)) + 2*alpha*(Abar12*(Abar00*gbarinv01*gbarinv02 + Abar01*gbarinv01*gbarinv12 + Abar01*gbarinv02*gbarinv11 + Abar02*gbarinv01*gbarinv22 + Abar02*gbarinv02*gbarinv12 + Abar11*gbarinv11*gbarinv12 + Abar12*gbarinv11*gbarinv22 + Abar12*std::pow(gbarinv12, 2) + Abar22*gbarinv12*gbarinv22) + 0.33333333333333331*std::pow(Ksclr, 2)) + alpha*(Abar22*(Abar00*std::pow(gbarinv02, 2) + 2*Abar01*gbarinv02*gbarinv12 + 2*Abar02*gbarinv02*gbarinv22 + Abar11*std::pow(gbarinv12, 2) + 2*Abar12*gbarinv12*gbarinv22 + Abar22*std::pow(gbarinv22, 2)) + 0.33333333333333331*std::pow(Ksclr, 2)) + betaU0*dKsclr0 + betaU1*dKsclr1 + betaU2*dKsclr2 - gbar00*(dalpha0*(-0.5*dgbar000*gbarinv00 + 2*dphi0*gbar00*gbarinv00 - 4*dphi0 + 2*dphi1*gbar00*gbarinv01 + 2*dphi2*gbar00*gbarinv02 - 0.5*gbarinv01*(-dgbar001 + 2*dgbar010) - 0.5*gbarinv02*(-dgbar002 + 2*dgbar020)) + dalpha1*(-0.5*dgbar000*gbarinv01 + 2*dphi0*gbar00*gbarinv01 + 2*dphi1*gbar00*gbarinv11 + 2*dphi2*gbar00*gbarinv12 - 0.5*gbarinv11*(-dgbar001 + 2*dgbar010) - 0.5*gbarinv12*(-dgbar002 + 2*dgbar020)) + dalpha2*(-0.5*dgbar000*gbarinv02 + 2*dphi0*gbar00*gbarinv02 + 2*dphi1*gbar00*gbarinv12 + 2*dphi2*gbar00*gbarinv22 - 0.5*gbarinv12*(-dgbar001 + 2*dgbar010) - 0.5*gbarinv22*(-dgbar002 + 2*dgbar020)) + ddalpha00)*std::exp(4*phi) - gbar01*(dalpha0*(-0.5*dgbar001*gbarinv00 - 0.5*dgbar110*gbarinv01 + 2*dphi0*gbar01*gbarinv00 + 2*dphi1*gbar01*gbarinv01 - 2*dphi1 + 2*dphi2*gbar01*gbarinv02 - 0.5*gbarinv02*(-dgbar012 + dgbar021 + dgbar120)) + dalpha1*(-0.5*dgbar001*gbarinv01 - 0.5*dgbar110*gbarinv11 + 2*dphi0*gbar01*gbarinv01 - 2*dphi0 + 2*dphi1*gbar01*gbarinv11 + 2*dphi2*gbar01*gbarinv12 - 0.5*gbarinv12*(-dgbar012 + dgbar021 + dgbar120)) + dalpha2*(-0.5*dgbar001*gbarinv02 - 0.5*dgbar110*gbarinv12 + 2*dphi0*gbar01*gbarinv02 + 2*dphi1*gbar01*gbarinv12 + 2*dphi2*gbar01*gbarinv22 - 0.5*gbarinv22*(-dgbar012 + dgbar021 + dgbar120)) + ddalpha01)*std::exp(4*phi) - gbar01*(dalpha0*(-0.5*dgbar001*gbarinv00 - 0.5*dgbar110*gbarinv01 + 2*dphi0*gbar01*gbarinv00 + 2*dphi1*gbar01*gbarinv01 - 2*dphi1 + 2*dphi2*gbar01*gbarinv02 - 0.5*gbarinv02*(-dgbar012 + dgbar021 + dgbar120)) + dalpha1*(-0.5*dgbar001*gbarinv01 - 0.5*dgbar110*gbarinv11 + 2*dphi0*gbar01*gbarinv01 - 2*dphi0 + 2*dphi1*gbar01*gbarinv11 + 2*dphi2*gbar01*gbarinv12 - 0.5*gbarinv12*(-dgbar012 + dgbar021 + dgbar120)) + dalpha2*(-0.5*dgbar001*gbarinv02 - 0.5*dgbar110*gbarinv12 + 2*dphi0*gbar01*gbarinv02 + 2*dphi1*gbar01*gbarinv12 + 2*dphi2*gbar01*gbarinv22 - 0.5*gbarinv22*(-dgbar012 + dgbar021 + dgbar120)) + ddalpha10)*std::exp(4*phi) - gbar02*(dalpha0*(-0.5*dgbar002*gbarinv00 - 0.5*dgbar220*gbarinv02 + 2*dphi0*gbar02*gbarinv00 + 2*dphi1*gbar02*gbarinv01 + 2*dphi2*gbar02*gbarinv02 - 2*dphi2 - 0.5*gbarinv01*(dgbar012 - dgbar021 + dgbar120)) + dalpha1*(-0.5*dgbar002*gbarinv01 - 0.5*dgbar220*gbarinv12 + 2*dphi0*gbar02*gbarinv01 + 2*dphi1*gbar02*gbarinv11 + 2*dphi2*gbar02*gbarinv12 - 0.5*gbarinv11*(dgbar012 - dgbar021 + dgbar120)) + dalpha2*(-0.5*dgbar002*gbarinv02 - 0.5*dgbar220*gbarinv22 + 2*dphi0*gbar02*gbarinv02 - 2*dphi0 + 2*dphi1*gbar02*gbarinv12 + 2*dphi2*gbar02*gbarinv22 - 0.5*gbarinv12*(dgbar012 - dgbar021 + dgbar120)) + ddalpha02)*std::exp(4*phi) - gbar02*(dalpha0*(-0.5*dgbar002*gbarinv00 - 0.5*dgbar220*gbarinv02 + 2*dphi0*gbar02*gbarinv00 + 2*dphi1*gbar02*gbarinv01 + 2*dphi2*gbar02*gbarinv02 - 2*dphi2 - 0.5*gbarinv01*(dgbar012 - dgbar021 + dgbar120)) + dalpha1*(-0.5*dgbar002*gbarinv01 - 0.5*dgbar220*gbarinv12 + 2*dphi0*gbar02*gbarinv01 + 2*dphi1*gbar02*gbarinv11 + 2*dphi2*gbar02*gbarinv12 - 0.5*gbarinv11*(dgbar012 - dgbar021 + dgbar120)) + dalpha2*(-0.5*dgbar002*gbarinv02 - 0.5*dgbar220*gbarinv22 + 2*dphi0*gbar02*gbarinv02 - 2*dphi0 + 2*dphi1*gbar02*gbarinv12 + 2*dphi2*gbar02*gbarinv22 - 0.5*gbarinv12*(dgbar012 - dgbar021 + dgbar120)) + ddalpha20)*std::exp(4*phi) - gbar11*(dalpha0*(-0.5*dgbar111*gbarinv01 + 2*dphi0*gbar11*gbarinv00 + 2*dphi1*gbar11*gbarinv01 + 2*dphi2*gbar11*gbarinv02 - 0.5*gbarinv00*(2*dgbar011 - dgbar110) - 0.5*gbarinv02*(-dgbar112 + 2*dgbar121)) + dalpha1*(-0.5*dgbar111*gbarinv11 + 2*dphi0*gbar11*gbarinv01 + 2*dphi1*gbar11*gbarinv11 - 4*dphi1 + 2*dphi2*gbar11*gbarinv12 - 0.5*gbarinv01*(2*dgbar011 - dgbar110) - 0.5*gbarinv12*(-dgbar112 + 2*dgbar121)) + dalpha2*(-0.5*dgbar111*gbarinv12 + 2*dphi0*gbar11*gbarinv02 + 2*dphi1*gbar11*gbarinv12 + 2*dphi2*gbar11*gbarinv22 - 0.5*gbarinv02*(2*dgbar011 - dgbar110) - 0.5*gbarinv22*(-dgbar112 + 2*dgbar121)) + ddalpha11)*std::exp(4*phi) - gbar12*(dalpha0*(-0.5*dgbar112*gbarinv01 - 0.5*dgbar221*gbarinv02 + 2*dphi0*gbar12*gbarinv00 + 2*dphi1*gbar12*gbarinv01 + 2*dphi2*gbar12*gbarinv02 - 0.5*gbarinv00*(dgbar012 + dgbar021 - dgbar120)) + dalpha1*(-0.5*dgbar112*gbarinv11 - 0.5*dgbar221*gbarinv12 + 2*dphi0*gbar12*gbarinv01 + 2*dphi1*gbar12*gbarinv11 + 2*dphi2*gbar12*gbarinv12 - 2*dphi2 - 0.5*gbarinv01*(dgbar012 + dgbar021 - dgbar120)) + dalpha2*(-0.5*dgbar112*gbarinv12 - 0.5*dgbar221*gbarinv22 + 2*dphi0*gbar12*gbarinv02 + 2*dphi1*gbar12*gbarinv12 - 2*dphi1 + 2*dphi2*gbar12*gbarinv22 - 0.5*gbarinv02*(dgbar012 + dgbar021 - dgbar120)) + ddalpha12)*std::exp(4*phi) - gbar12*(dalpha0*(-0.5*dgbar112*gbarinv01 - 0.5*dgbar221*gbarinv02 + 2*dphi0*gbar12*gbarinv00 + 2*dphi1*gbar12*gbarinv01 + 2*dphi2*gbar12*gbarinv02 - 0.5*gbarinv00*(dgbar012 + dgbar021 - dgbar120)) + dalpha1*(-0.5*dgbar112*gbarinv11 - 0.5*dgbar221*gbarinv12 + 2*dphi0*gbar12*gbarinv01 + 2*dphi1*gbar12*gbarinv11 + 2*dphi2*gbar12*gbarinv12 - 2*dphi2 - 0.5*gbarinv01*(dgbar012 + dgbar021 - dgbar120)) + dalpha2*(-0.5*dgbar112*gbarinv12 - 0.5*dgbar221*gbarinv22 + 2*dphi0*gbar12*gbarinv02 + 2*dphi1*gbar12*gbarinv12 - 2*dphi1 + 2*dphi2*gbar12*gbarinv22 - 0.5*gbarinv02*(dgbar012 + dgbar021 - dgbar120)) + ddalpha21)*std::exp(4*phi) - gbar22*(dalpha0*(-0.5*dgbar222*gbarinv02 + 2*dphi0*gbar22*gbarinv00 + 2*dphi1*gbar22*gbarinv01 + 2*dphi2*gbar22*gbarinv02 - 0.5*gbarinv00*(2*dgbar022 - dgbar220) - 0.5*gbarinv01*(2*dgbar122 - dgbar221)) + dalpha1*(-0.5*dgbar222*gbarinv12 + 2*dphi0*gbar22*gbarinv01 + 2*dphi1*gbar22*gbarinv11 + 2*dphi2*gbar22*gbarinv12 - 0.5*gbarinv01*(2*dgbar022 - dgbar220) - 0.5*gbarinv11*(2*dgbar122 - dgbar221)) + dalpha2*(-0.5*dgbar222*gbarinv22 + 2*dphi0*gbar22*gbarinv02 + 2*dphi1*gbar22*gbarinv12 + 2*dphi2*gbar22*gbarinv22 - 4*dphi2 - 0.5*gbarinv02*(2*dgbar022 - dgbar220) - 0.5*gbarinv12*(2*dgbar122 - dgbar221)) + ddalpha22)*std::exp(4*phi);
+
+}
+#endif
