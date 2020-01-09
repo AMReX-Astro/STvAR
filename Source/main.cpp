@@ -26,6 +26,9 @@ void main_main ()
     Vector<int> domain_lo_bc_types(AMREX_SPACEDIM, BCType::int_dir);
     Vector<int> domain_hi_bc_types(AMREX_SPACEDIM, BCType::int_dir);
 
+    Vector<Real> domain_lo(AMREX_SPACEDIM,0.0);
+    Vector<Real> domain_hi(AMREX_SPACEDIM,1.0);
+
     {
         // ParmParse is way of reading inputs from the inputs file
         ParmParse pp;
@@ -47,6 +50,10 @@ void main_main ()
         pp.queryarr("domain_lo_bc_types", domain_lo_bc_types);
         pp.queryarr("domain_hi_bc_types", domain_hi_bc_types);
 
+        // Query domain physical lo, hi bounds
+        pp.queryarr("domain_lo", domain_lo);
+        pp.queryarr("domain_hi", domain_hi);
+
         // Read CFL number
         pp.query("cfl", cfl);
 
@@ -62,18 +69,17 @@ void main_main ()
     BoxArray ba;
     Geometry geom;
     {
-        IntVect dom_lo(AMREX_D_DECL(       0,        0,        0));
-        IntVect dom_hi(AMREX_D_DECL(n_cell-1, n_cell-1, n_cell-1));
-        Box domain(dom_lo, dom_hi);
+        IntVect dom_index_lo(AMREX_D_DECL(       0,        0,        0));
+        IntVect dom_index_hi(AMREX_D_DECL(n_cell-1, n_cell-1, n_cell-1));
+        Box domain(dom_index_lo, dom_index_hi);
 
         // Initialize the boxarray "ba" from the single box "bx"
         ba.define(domain);
         // Break up boxarray "ba" into chunks no larger than "max_grid_size" along a direction
         ba.maxSize(max_grid_size);
 
-       // This defines the physical box, [-1,1] in each direction.
-        RealBox real_box({AMREX_D_DECL(0.0,0.0,0.0)},
-                         {AMREX_D_DECL(1.0,1.0,1.0)});
+       // This defines the physical box in each direction.
+        RealBox real_box(domain_lo.dataPtr(), domain_hi.dataPtr());
 
         // This defines a Geometry object
         geom.define(domain,&real_box,CoordSys::cartesian,is_periodic.data());
