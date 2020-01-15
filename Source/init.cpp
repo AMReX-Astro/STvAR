@@ -8,10 +8,13 @@ void init(MultiFab& state_mf, Real time, const Geometry& geom)
     int ncomp = state_mf.nComp();
 
     // Loop over grids 
-    for ( MFIter mfi(state_mf); mfi.isValid(); ++mfi )
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+    for ( MFIter mfi(state_mf, TilingIfNotGPU()); mfi.isValid(); ++mfi )
     {
 
-      const Box& bx = mfi.validbox();
+      const Box& bx = mfi.tilebox();
 
       const auto& state_fab = state_mf.array(mfi);
 
@@ -19,7 +22,7 @@ void init(MultiFab& state_mf, Real time, const Geometry& geom)
       amrex::ParallelFor(bx,
       [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
-        state_init(i, j, k, state_fab, time, dx);
+        state_init(i, j, k, state_fab, time, geom.data());
       });
     }
 
