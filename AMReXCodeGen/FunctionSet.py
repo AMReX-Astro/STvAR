@@ -52,7 +52,7 @@ def Diff1(E, difftype, order):
     elif int(difftype[2]) == 1:
         delta = dy
     elif int(difftype[2]) == 2:
-        delta = dy
+        delta = dz
         
     shiftE = 0
     for i in range(len(fdcoeffs)):
@@ -67,13 +67,13 @@ def Diff2(E, difftype, order):
     elif int(difftype[3]) == 1:
         delta = dy
     elif int(difftype[3]) == 2:
-        delta = dy
+        delta = dz
     if int(difftype[4]) == 0:
         delta *= dx
     elif int(difftype[4]) == 1:
         delta *= dy
     elif int(difftype[4]) == 2:
-        delta *= dy
+        delta *= dz
         
     shiftE = 0
     for i in range(len(fdcoeffs)):
