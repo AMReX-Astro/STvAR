@@ -13,9 +13,9 @@ state_init(int i, int j, int k,
         amrex::Real time, 
         amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dx) noexcept 
 {
-        amrex::Real x = (i + 0.5)*dx[0];
-        amrex::Real y = (j + 0.5)*dx[1];
-        amrex::Real z = (k + 0.5)*dx[2];
+        amrex::Real x = (i-128 + 0.5)*dx[0];
+        amrex::Real y = (j-128 + 0.5)*dx[1];
+        amrex::Real z = (k-128 + 0.5)*dx[2];
 
         state_fab(i, j, k, Idx::phi) = 0;
 
