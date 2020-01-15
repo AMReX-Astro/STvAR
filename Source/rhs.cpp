@@ -6,9 +6,12 @@ void fill_state_rhs (MultiFab& rhs_mf, const MultiFab& state_mf, const amrex::Ge
 {
   const auto dx = geom.CellSizeArray();
 
-  for ( MFIter mfi(rhs_mf); mfi.isValid(); ++mfi )
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+  for ( MFIter mfi(rhs_mf, TilingIfNotGPU()); mfi.isValid(); ++mfi )
   {
-    const Box& bx = mfi.validbox();
+    const Box& bx = mfi.tilebox();
     const auto ncomp = state_mf.nComp();
 
     const auto& rhs_fab = rhs_mf.array(mfi);
