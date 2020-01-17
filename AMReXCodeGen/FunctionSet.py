@@ -248,11 +248,11 @@ def createINIT(name):
     fileINIT.write("AMREX_GPU_DEVICE \ninline \nvoid \n")
     fileINIT.write("state_init(int i, int j, int k, \n")
     fileINIT.write("        amrex::Array4<amrex::Real> const& state_fab, \n")
-    fileINIT.write("        amrex::Real time, \n")
-    fileINIT.write("        amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dx) noexcept \n{\n")
-    fileINIT.write("        amrex::Real x = (i + 0.5)*dx[0];\n")
-    fileINIT.write("        amrex::Real y = (j + 0.5)*dx[1];\n")
-    fileINIT.write("        amrex::Real z = (k + 0.5)*dx[2];\n\n")
+    fileINIT.write("        amrex::Real time, const amrex::GeometryData& geom) noexcept \n{\n")
+    fileINIT.write("        const auto domain_xlo = geom.ProbLo(); \n\n")
+    fileINIT.write("        amrex::Real x = (i + 0.5)*geom.CellSize(0) + domain_xlo[0];\n")
+    fileINIT.write("        amrex::Real y = (j + 0.5)*geom.CellSize(1) + domain_xlo[1];\n")
+    fileINIT.write("        amrex::Real z = (k + 0.5)*geom.CellSize(2) + domain_xlo[2];\n\n")
     fileINIT.close()
 
 def addINIT(name,INIT):
