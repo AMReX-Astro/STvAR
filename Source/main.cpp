@@ -149,6 +149,9 @@ void main_main ()
 
     // Create a function to call after updating a state
     auto post_update_fun = [&](MultiFab& S_data){
+	// Call user function to rescale state
+	rescale_state(S_data);
+
         // Fill ghost cells for S_data from interior & periodic BCs
         S_data.FillBoundary(geom.periodicity());
         FillDomainBoundary(S_data, geom, state_bc);
