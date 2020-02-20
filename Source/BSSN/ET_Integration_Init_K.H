@@ -10,15 +10,15 @@ inline
 void 
 state_init(int i, int j, int k, 
         amrex::Array4<amrex::Real> const& state_fab, 
-        amrex::Real time, const amrex::GeometryData& geom) noexcept
+        amrex::Real time, const amrex::GeometryData& geom) noexcept 
 {
-        const auto domain_xlo = geom.ProbLo();
+        const auto domain_xlo = geom.ProbLo(); 
 
         amrex::Real x = (i + 0.5)*geom.CellSize(0) + domain_xlo[0];
         amrex::Real y = (j + 0.5)*geom.CellSize(1) + domain_xlo[1];
         amrex::Real z = (k + 0.5)*geom.CellSize(2) + domain_xlo[2];
 
-        state_fab(i, j, k, Idx::phi) = 0;
+        state_fab(i, j, k, Idx::phi) = std::log(1 + (1.0/2.0)/std::sqrt(std::pow(x, 2) + std::pow(y, 2) + std::pow(z, 2)));
 
         state_fab(i, j, k, Idx::gbar00) = 1;
 
@@ -52,7 +52,7 @@ state_init(int i, int j, int k,
 
         state_fab(i, j, k, Idx::GambarU2) = 0;
 
-        state_fab(i, j, k, Idx::alpha) = 1;
+        state_fab(i, j, k, Idx::alpha) = (1 - 1.0/2.0/std::sqrt(std::pow(x, 2) + std::pow(y, 2) + std::pow(z, 2)))/(1 + (1.0/2.0)/std::sqrt(std::pow(x, 2) + std::pow(y, 2) + std::pow(z, 2)));
 
         state_fab(i, j, k, Idx::betaU0) = 0;
 
