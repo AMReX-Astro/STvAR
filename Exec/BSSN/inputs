@@ -1,5 +1,6 @@
 plot_int = 10
-n_cell = 256
+diag_int = 1
+n_cell = 128
 max_grid_size = 64
 
 domain_lo = -10.0 -10.0 -10.0
@@ -9,8 +10,8 @@ domain_hi =  10.0  10.0  10.0
 cfl = 1.0
 
 # Stopping Criteria
-nsteps = 100
-end_time = 1.0
+nsteps = 1000
+end_time = 100.0
 
 ## integration.type can take on the following values:
 ## 0 = Forward Euler
@@ -36,3 +37,5 @@ integration.rk.type = 4
 integration.rk.weights = 1
 integration.rk.nodes = 0
 integration.rk.tableau = 0.0
+
+amrex.fpe_trap_invalid = 1
