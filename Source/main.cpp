@@ -19,7 +19,7 @@ void main_main ()
     Real strt_time = amrex::second();
 
     // AMREX_SPACEDIM: number of dimensions
-    int n_cell, max_grid_size, plot_int, nsteps;
+    int n_cell, max_grid_size, plot_int, diag_int, nsteps;
     Real cfl = 0.9;
     Real end_time = 1.0;
     Vector<int> is_periodic(AMREX_SPACEDIM,1);  // periodic in all direction by default
@@ -41,9 +41,14 @@ void main_main ()
         pp.get("max_grid_size",max_grid_size);
 
         // Default plot_int to -1, allow us to set it to something else in the inputs file
-        //  If plot_int < 0 then no plot files will be writtenq
+        //  If plot_int < 0 then no plot files will be written
         plot_int = -1;
         pp.query("plot_int",plot_int);
+
+        // Default diag_int to -1, allow us to set it to something else in the inputs file
+        //  If diag_int < 0 then no diagnostic files will be written
+        diag_int = -1;
+        pp.query("diag_int",diag_int);
 
         // Query domain periodicity
         pp.queryarr("is_periodic", is_periodic);
@@ -115,12 +120,16 @@ void main_main ()
     // Initialize variable names
     Variable::Initialize();
 
+    // Initialize diagnostics names
+    Diagnostics::Initialize();
+
     // How Boxes are distrubuted among MPI processes
     DistributionMapping dm(ba);
 
     // we allocate two state multifabs; one will store the old state, the other the new.
     MultiFab state_old(ba, dm, Ncomp, Nghost);
     MultiFab state_new(ba, dm, Ncomp, Nghost);
+    MultiFab diagnostics(ba, dm, Diag::NumScalars, 0);
 
     // time = starting time in the simulation
     Real time = 0.0;
@@ -128,8 +137,24 @@ void main_main ()
     // Initialize state_new by calling a C++ initializing routine.
     init(state_new, time, geom);
 
+    // Write diagnostics for step 0
+    {
+        // Fill the diagnostics data
+        fill_state_diagnostics(diagnostics, state_new, geom);
+
+        // Write a plotfile of the diagnostic data
+        const std::string& pltfile = amrex::Concatenate("diag_plt",0,7);
+        WriteSingleLevelPlotfile(pltfile, diagnostics, Diagnostics::names, geom, 0.0, 0);
+    }
+
     // Compute the time step
-    Real dt = cfl*dx[0]*dx[0] / (2.0*AMREX_SPACEDIM);
+    Real dt = cfl*dx[0];
+#if AMREX_SPACEDIM > 1
+    dt = amrex::min(dt, cfl*dx[1]);
+#endif
+#if AMREX_SPACEDIM > 2
+    dt = amrex::min(dt, cfl*dx[2]);
+#endif
 
     // Write a plotfile of the initial data if plot_int > 0 (plot_int was defined in the inputs file)
     if (plot_int > 0)
@@ -149,8 +174,8 @@ void main_main ()
 
     // Create a function to call after updating a state
     auto post_update_fun = [&](MultiFab& S_data){
-	// Call user function to rescale state
-	rescale_state(S_data);
+        // Call user function to rescale state
+        rescale_state(S_data);
 
         // Fill ghost cells for S_data from interior & periodic BCs
         S_data.FillBoundary(geom.periodicity());
@@ -163,11 +188,22 @@ void main_main ()
         const int n = integrator.get_step_number();
         amrex::Print() << "Advanced step " << n << "\n";
 
-        // Write a plotfile of the current data (plot_int was defined in the inputs file)
+        // Write a plotfile of the current data
         if (plot_int > 0 && n % plot_int == 0)
         {
             const std::string& pltfile = amrex::Concatenate("plt",n,7);
             WriteSingleLevelPlotfile(pltfile, integrator.get_new_data(), Variable::names, geom, integrator.get_time(), n);
+        }
+
+        // Calculate diagnostics and write to plotfile
+        if (diag_int > 0 && n % diag_int == 0)
+        {
+            // Fill the diagnostics data
+            fill_state_diagnostics(diagnostics, integrator.get_new_data(), geom);
+
+            // Write a plotfile of the diagnostic data
+            const std::string& pltfile = amrex::Concatenate("diag_plt",n,7);
+            WriteSingleLevelPlotfile(pltfile, diagnostics, Diagnostics::names, geom, integrator.get_time(), n);
         }
     };
 

@@ -1,4 +1,6 @@
 CEXE_headers += ET_Integration_Setup.H
 CEXE_headers += ET_Integration_Variables.H
+CEXE_headers += ET_Integration_Diagnostics.H
 CEXE_headers += ET_Integration_Init_K.H
 CEXE_headers += ET_Integration_Rhs_K.H
+CEXE_headers += ET_Integration_Constraints_K.H
