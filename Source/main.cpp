@@ -137,6 +137,10 @@ void main_main ()
     // Initialize state_new by calling a C++ initializing routine.
     init(state_new, time, geom);
 
+    // Fill ghost cells for state_new from interior & periodic BCs
+    state_new.FillBoundary(geom.periodicity());
+    FillDomainBoundary(state_new, geom, state_bc);
+
     // Write diagnostics for step 0
     {
         // Fill the diagnostics data
