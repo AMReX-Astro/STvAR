@@ -81,6 +81,51 @@ def Diff2(E, difftype, order):
     shiftE = shiftE/delta
     return shiftE
 
+def Diffup1(E, dir, order):
+    fdcoeffs, fdstencl = fin.compute_fdcoeffs_fdstencl('dD'+str(dir),FDORDER=order)
+    if dir == 0:
+        delta = dx
+    elif dir == 1:
+        delta = dy
+    elif dir == 2:
+        delta = dz
+        
+    shiftE = 0
+    for i in range(len(fdcoeffs)):
+        shiftE += fdcoeffs[i]*shift(E,fdstencl[i])
+    shiftE = shiftE/delta
+    return shiftE
+
+def Diffdn1(E, dir, order):
+    fdcoeffs, fdstencl = fin.compute_fdcoeffs_fdstencl('ddnD'+str(dir),FDORDER=order)
+    if dir == 0:
+        delta = dx
+    elif dir == 1:
+        delta = dy
+    elif dir == 2:
+        delta = dz
+        
+    shiftE = 0
+    for i in range(len(fdcoeffs)):
+        shiftE += fdcoeffs[i]*shift(E,fdstencl[i])
+    shiftE = shiftE/delta
+    return shiftE
+
+def KOdiss(E, dir, order, sigma=0.1):
+    if dir == 0:
+        delta = dx
+    elif dir == 1:
+        delta = dy
+    elif dir == 2:
+        delta = dz
+    r = int((2+order)/2)
+    for i in range(r):
+        E = sp.simplify(Diffdn1(E,dir,1))
+    for i in range(r):
+        E = sp.simplify(Diffup1(E,dir,1))        
+    E = (-1)**(r+1)/(2**(2*r))*delta**(2*r-1)*sigma*E
+    return E
+
 def Dc(E, direction):
     assert(direction == 'x' or direction == 'y' or direction == 'z')
     if direction == 'x':
@@ -175,7 +220,7 @@ def AMReXcode(expr, varnames= "", declare_rhs = False, rhsname = "", declare_sta
         
     return str_expr
     
-def createSETUP(name, varnames, nghostcells):
+def createSETUP(name, varnames, diagnames, nghostcells):
     fileSETUP = open(name, "w+")
     fileSETUP.write("#ifndef ET_INTEGRATION_SETUP_K_H \n")
     fileSETUP.write("#define ET_INTEGRATION_SETUP_K_H \n\n")
@@ -193,6 +238,18 @@ def createSETUP(name, varnames, nghostcells):
     
     fileSETUP.write(Idx_string)
     fileSETUP.write("}; \n};\n\n")
+    
+    fileSETUP.write("namespace Diag { \n")
+    fileSETUP.write("         enum DiagnosticIndexes {")
+    
+    Idx_string = ""
+    for itr in diagnames:
+        Idx_string += itr+", "
+    Idx_string += "NumScalars"
+    
+    fileSETUP.write(Idx_string)
+    fileSETUP.write("}; \n};\n\n")
+    
     fileSETUP.write("#define NUM_GHOST_CELLS "+str(nghostcells)+"\n\n")
     fileSETUP.write("#endif")
 
