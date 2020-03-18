@@ -17,20 +17,36 @@ state_init(int i, int j, int k,
         amrex::Real x = (i + 0.5)*geom.CellSize(0) + domain_xlo[0];
         amrex::Real y = (j + 0.5)*geom.CellSize(1) + domain_xlo[1];
         amrex::Real z = (k + 0.5)*geom.CellSize(2) + domain_xlo[2];
+	amrex::Real eps1;
+	amrex::Real eps2;
+	amrex::Real x0 = 1.0;
 
-        state_fab(i, j, k, Idx::phi) = std::log(1 + (1.0/2.0)/std::sqrt(std::pow(x, 2) + std::pow(y, 2) + std::pow(z, 2)));
+	amrex::Real r1 = std::sqrt(std::pow(y, 2) + std::pow(z, 2) + std::pow(x + x0, 2));
+	amrex::Real r2 = std::sqrt(std::pow(y, 2) + std::pow(z, 2) + std::pow(x - x0, 2));
 
-        state_fab(i, j, k, Idx::gbar00) = 1;
+	if(r1<=0.5)
+	  eps1 = 0.01;
+	else
+	  eps1 = 0;
 
-        state_fab(i, j, k, Idx::gbar01) = 0;
+	if(r2<=0.5)
+	  eps2 = 0.01;
+	else
+	  eps2 = 0;
 
-        state_fab(i, j, k, Idx::gbar02) = 0;
+        state_fab(i, j, k, Idx::phi) = std::log(1 + (1.0/2.0)/(r1 + eps1) + (1.0/2.0)/(r2+eps2));
 
-        state_fab(i, j, k, Idx::gbar11) = 1;
+        state_fab(i, j, k, Idx::gambar00) = 1;
 
-        state_fab(i, j, k, Idx::gbar12) = 0;
+        state_fab(i, j, k, Idx::gambar01) = 0;
 
-        state_fab(i, j, k, Idx::gbar22) = 1;
+        state_fab(i, j, k, Idx::gambar02) = 0;
+
+        state_fab(i, j, k, Idx::gambar11) = 1;
+
+        state_fab(i, j, k, Idx::gambar12) = 0;
+
+        state_fab(i, j, k, Idx::gambar22) = 1;
 
         state_fab(i, j, k, Idx::Ksclr) = 0;
 
@@ -52,7 +68,7 @@ state_init(int i, int j, int k,
 
         state_fab(i, j, k, Idx::GambarU2) = 0;
 
-        state_fab(i, j, k, Idx::alpha) = (1 - 1.0/2.0/std::sqrt(std::pow(x, 2) + std::pow(y, 2) + std::pow(z, 2)))/(1 + (1.0/2.0)/std::sqrt(std::pow(x, 2) + std::pow(y, 2) + std::pow(z, 2)));
+        state_fab(i, j, k, Idx::alpha) = std::pow(1 + (1.0/2.0)/(r1+eps1) + (1.0/2.0)/(r2+eps2), -2);
 
         state_fab(i, j, k, Idx::betaU0) = 0;
 
