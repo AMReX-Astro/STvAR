@@ -502,7 +502,7 @@ state_rhs(int i, int j, int k,
 
         rhs_fab(i, j, k, Idx::gamtildeLL22) = -2*AtildeLL22*alpha + KOgamtildeLL22 + betaU0*dgamtildeLL220 + betaU1*dgamtildeLL221 + betaU2*dgamtildeLL222 - 0.66666666666666663*dbetaU00*gamtildeLL22 + 2*dbetaU02*gamtildeLL20 - 0.66666666666666663*dbetaU11*gamtildeLL22 + 2*dbetaU12*gamtildeLL21 + 1.3333333333333335*dbetaU22*gamtildeLL22;
 
-        amrex::Real kappa1 = 0;
+        amrex::Real kappa1 = 0.02;
         amrex::Real kappa2 = 0;
         rhs_fab(i, j, k, Idx::Khat) = 0 + AtildeLL00*AtildeUU00*alpha + AtildeLL01*AtildeUU01*alpha + AtildeLL02*AtildeUU02*alpha + AtildeLL10*AtildeUU10*alpha + AtildeLL11*AtildeUU11*alpha + AtildeLL12*AtildeUU12*alpha + AtildeLL20*AtildeUU20*alpha + AtildeLL21*AtildeUU21*alpha + AtildeLL22*AtildeUU22*alpha - DDalphaLL00*gamUU00 - DDalphaLL01*gamUU10 - DDalphaLL02*gamUU20 - DDalphaLL10*gamUU01 - DDalphaLL11*gamUU11 - DDalphaLL12*gamUU21 - DDalphaLL20*gamUU02 - DDalphaLL21*gamUU12 - DDalphaLL22*gamUU22 + KOKhat + 0.33333333333333331*alpha*(kappa1*theta*(1 - kappa2) + std::pow(Khat + 2*theta, 2)) + betaU0*dKhat0 + betaU1*dKhat1 + betaU2*dKhat2;
 
