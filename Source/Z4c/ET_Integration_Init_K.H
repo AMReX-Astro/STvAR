@@ -19,13 +19,31 @@ state_init(int i, int j, int k,
         amrex::Real z = (k + 0.5)*geom.CellSize(2) + domain_xlo[2];
 
         amrex::Real r = std::sqrt(std::pow(x, 2) + std::pow(y, 2) + std::pow(z, 2));
-        amrex::Real x1 = 0.0;
-        amrex::Real x2 = -3.0;
+        amrex::Real x1 = 2.5;
+        amrex::Real x2 = -2.5;
+        
+        amrex::Real eps1;
+        amrex::Real eps2;
+        
         amrex::Real r1 = std::sqrt(std::pow(y, 2) + std::pow(z, 2) + std::pow(x - x1, 2));
         amrex::Real r2 = std::sqrt(std::pow(y, 2) + std::pow(z, 2) + std::pow(x - x2, 2));
+        
+        if(r1<=0.5)
+          eps1 = 0.01;
+        else
+          eps1 = 0;
+
+        if(r2<=0.5)
+          eps2 = 0.01;
+        else
+          eps2 = 0;
+        
         amrex::Real M1 = 2.0;
         amrex::Real M2 = 2.0;
-        state_fab(i, j, k, Idx::phi) = std::log((1.0/2.0)*M1/r1 + 1);
+        
+        
+        
+        state_fab(i, j, k, Idx::phi) = std::log((1.0/2.0)*M1/(r1+eps1) + (1.0/2.0)*M2/(r2+eps2) + 1);
 
         state_fab(i, j, k, Idx::gamtildeLL00) = 1;
 
@@ -61,7 +79,7 @@ state_init(int i, int j, int k,
 
         state_fab(i, j, k, Idx::GamtildeU2) = 0;
 
-        state_fab(i, j, k, Idx::alpha) = std::pow((1.0/2.0)*M1/r1 + 1, -2);
+        state_fab(i, j, k, Idx::alpha) = std::pow((1.0/2.0)*M1/(r1+eps1) + (1.0/2.0)*M2/(r2+eps2) + 1, -2);
 
         state_fab(i, j, k, Idx::betaU0) = 0;
 
