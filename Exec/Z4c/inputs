@@ -1,0 +1,41 @@
+plot_int = 10
+diag_int = 10
+n_cell = 512
+max_grid_size = 64
+
+domain_lo = -50.0 -50.0 -50.0
+domain_hi =  50.0  50.0  50.0
+
+# CFL
+cfl = 0.25
+
+# Stopping Criteria
+nsteps = 1000
+end_time = 100.0
+
+## integration.type can take on the following values:
+## 0 = Forward Euler
+## 1 = Explicit Runge Kutta
+integration.type = 1
+
+## Explicit Runge-Kuta parameters
+#
+## integration.rk.type can take the following values:
+### 0 = User-specified Butcher Tableau
+### 1 = Forward Euler
+### 2 = Trapezoid Method
+### 3 = SSPRK3 Method
+### 4 = RK4 Method
+integration.rk.type = 4
+
+## If using a user-specified Butcher Tableau, then
+## set nodes, weights, and table entries here:
+#
+## The Butcher Tableau is read as a flattened,
+## lower triangular matrix (but including the diagonal)
+## in row major format.
+integration.rk.weights = 1
+integration.rk.nodes = 0
+integration.rk.tableau = 0.0
+
+amrex.fpe_trap_invalid = 1
