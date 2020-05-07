@@ -20,8 +20,8 @@ state_diagnostics(int i, int j, int k,
         amrex::Real x1 = (j + 0.5)*geom.CellSize(0) + domain_xlo[1]; 
         amrex::Real x2 = (k + 0.5)*geom.CellSize(0) + domain_xlo[2];
         
-        amrex::Real M1 = 1.0;
-        amrex::Real M2 = 1.0;
+        amrex::Real M1 = 0.5;
+        amrex::Real M2 = 0.5;
         
         amrex::Real r = std::sqrt(std::pow(x0, 2) + std::pow(x1, 2) + std::pow(x2, 2));
         amrex::Real c10 = 3.0;
