@@ -129,13 +129,14 @@ void main_main ()
     // we allocate two state multifabs; one will store the old state, the other the new.
     MultiFab state_old(ba, dm, Ncomp, Nghost);
     MultiFab state_new(ba, dm, Ncomp, Nghost);
-    MultiFab diagnostics(ba, dm, Diag::NumScalars, 0);
+    MultiFab diagnostics(ba, dm, Diag::NumScalars, Nghost);
 
     // time = starting time in the simulation
     Real time = 0.0;
 
     // Initialize state_new by calling a C++ initializing routine.
-    init(state_new, time, geom);
+    //init(state_new, time, geom);
+    VisMF::Read(state_new, amrex::MultiFabFileFullPrefix(0, "End_data", "Level_", "Cell"));
 
     // Fill ghost cells for state_new from interior & periodic BCs
     state_new.FillBoundary(geom.periodicity());
@@ -220,6 +221,26 @@ void main_main ()
     {
         const std::string& pltfile = "plt_End_Simulation";
         WriteSingleLevelPlotfile(pltfile, integrator.get_new_data(), Variable::names, geom, integrator.get_time(), integrator.get_step_number());
+        
+        /*
+        const std::string& checkpointname = "End_data";
+
+        amrex::Print() << "Writing checkpoint " << checkpointname << "\n";
+
+        const int nlevels = 1;
+
+        bool callBarrier = true;
+
+        // ---- prebuild a hierarchy of directories
+        // ---- dirName is built first.  if dirName exists, it is renamed.  then build
+        // ---- dirName/subDirPrefix_0 .. dirName/subDirPrefix_nlevels-1
+        // ---- if callBarrier is true, call ParallelDescriptor::Barrier()
+        // ---- after all directories are built
+        // ---- ParallelDescriptor::IOProcessor() creates the directories
+        amrex::PreBuildDirectorHierarchy(checkpointname, "Level_", nlevels, callBarrier);
+        
+        VisMF::Write(diagnostics, amrex::MultiFabFileFullPrefix(0, checkpointname, "Level_", "Cell"));
+        */
     }
 
     // Call the timer again and compute the maximum difference between the start time and stop time
