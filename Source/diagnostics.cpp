@@ -21,7 +21,7 @@ void fill_state_diagnostics (MultiFab& diag_mf, const MultiFab& state_mf, const 
     amrex::ParallelFor(bx,
     [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
-      state_diagnostics(i, j, k, diag_fab, state_fab, dx);
+      state_diagnostics(i, j, k, diag_fab, state_fab, dx, geom.data());
     });
   }
 }
