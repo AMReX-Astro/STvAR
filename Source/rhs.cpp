@@ -21,7 +21,7 @@ void fill_state_rhs (MultiFab& rhs_mf, const MultiFab& state_mf, const amrex::Ge
     amrex::ParallelFor(bx,
     [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
-      state_rhs(i, j, k, rhs_fab, state_fab, dx);
+      state_rhs(i, j, k, rhs_fab, state_fab, dx, geom.data());
     });
   }
 }
