@@ -18,7 +18,7 @@ void rescale_state (MultiFab& state_mf)
     amrex::ParallelFor(bx,
     [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
-	// for example:
+        // for example:
         
         amrex::Real gamtildeLL00 = state_fab(i, j, k, Idx::gamtildeLL00);
         amrex::Real gamtildeLL01 = state_fab(i, j, k, Idx::gamtildeLL01);
@@ -71,13 +71,18 @@ void rescale_state (MultiFab& state_mf)
     
         amrex::Real TrAtilde = 0 + AtildeLL00*gamtildeUU00 + AtildeLL01*gamtildeUU01 + AtildeLL02*gamtildeUU02 + AtildeLL10*gamtildeUU10 + AtildeLL11*gamtildeUU11 + AtildeLL12*gamtildeUU12 + AtildeLL20*gamtildeUU20 + AtildeLL21*gamtildeUU21 + AtildeLL22*gamtildeUU22;
 
-	state_fab(i, j, k, Idx::AtildeLL00) = AtildeLL00 - 1.0/3.0*gamtildeLL00*TrAtilde;
-	state_fab(i, j, k, Idx::AtildeLL01) = AtildeLL01 - 1.0/3.0*gamtildeLL01*TrAtilde;
-	state_fab(i, j, k, Idx::AtildeLL02) = AtildeLL02 - 1.0/3.0*gamtildeLL02*TrAtilde;
-	state_fab(i, j, k, Idx::AtildeLL11) = AtildeLL11 - 1.0/3.0*gamtildeLL11*TrAtilde;
-	state_fab(i, j, k, Idx::AtildeLL12) = AtildeLL12 - 1.0/3.0*gamtildeLL12*TrAtilde;
-	state_fab(i, j, k, Idx::AtildeLL22) = AtildeLL22 - 1.0/3.0*gamtildeLL22*TrAtilde;
-
-	});
+        state_fab(i, j, k, Idx::AtildeLL00) = AtildeLL00 - 1.0/3.0*gamtildeLL00*TrAtilde;
+        state_fab(i, j, k, Idx::AtildeLL01) = AtildeLL01 - 1.0/3.0*gamtildeLL01*TrAtilde;
+        state_fab(i, j, k, Idx::AtildeLL02) = AtildeLL02 - 1.0/3.0*gamtildeLL02*TrAtilde;
+        state_fab(i, j, k, Idx::AtildeLL11) = AtildeLL11 - 1.0/3.0*gamtildeLL11*TrAtilde;
+        state_fab(i, j, k, Idx::AtildeLL12) = AtildeLL12 - 1.0/3.0*gamtildeLL12*TrAtilde;
+        state_fab(i, j, k, Idx::AtildeLL22) = AtildeLL22 - 1.0/3.0*gamtildeLL22*TrAtilde;
+        
+        if (state_fab(i, j, k, Idx::alpha) < 0)
+        {
+            state_fab(i, j, k, Idx::alpha) = 0.01;
+        }
+        
+    });
   }
 }
