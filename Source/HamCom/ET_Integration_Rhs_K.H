@@ -34,10 +34,10 @@ state_rhs(int i, int j, int k,
         amrex::Real ddu21 = ((1.0/4.0)*state_fab(i, j + 1, k + 1, Idx::u) - 1.0/4.0*state_fab(i, j + 1, k - 1, Idx::u) - 1.0/4.0*state_fab(i, j - 1, k + 1, Idx::u) + (1.0/4.0)*state_fab(i, j - 1, k - 1, Idx::u))/(dx[1]*dx[2]);
         amrex::Real ddu22 = (state_fab(i, j, k + 1, Idx::u) + state_fab(i, j, k - 1, Idx::u) - 2*state_fab(i, j, k, Idx::u))/std::pow(dx[2], 2);
         amrex::Real r = std::sqrt(std::pow(x0, 2) + std::pow(x1, 2) + std::pow(x2, 2));
-        amrex::Real c10 = 3.0;
+        amrex::Real c10 = 4.0;
         amrex::Real c11 = 0.0;
         amrex::Real c12 = 0.0;
-        amrex::Real c20 = -3.0;
+        amrex::Real c20 = -4.0;
         amrex::Real c21 = 0.0;
         amrex::Real c22 = 0.0;
         amrex::Real P10 = 0.0;
@@ -58,22 +58,24 @@ state_rhs(int i, int j, int k,
         amrex::Real eps1;
         amrex::Real eps2;
         
-        if(rc1<=0.5)
-          eps1 = 0.01;
+        amrex::Real M1 = 1.0;
+        amrex::Real M2 = 1.0;
+        if(rc1<=0.25*M1)
+          eps1 = 0.25*M1;
         else
           eps1 = 0;
 
-        if(rc2<=0.5)
-          eps2 = 0.01;
+        if(rc2<=0.25*M2)
+          eps2 = 0.25*M2;
         else
           eps2 = 0;
         
-        amrex::Real n10 = xc10/rc1;
-        amrex::Real n11 = xc11/rc1;
-        amrex::Real n12 = xc12/rc1;
-        amrex::Real n20 = xc20/rc2;
-        amrex::Real n21 = xc21/rc2;
-        amrex::Real n22 = xc22/rc2;
+        amrex::Real n10 = xc10/(rc1+eps1);
+        amrex::Real n11 = xc11/(rc1+eps1);
+        amrex::Real n12 = xc12/(rc1+eps1);
+        amrex::Real n20 = xc20/(rc2+eps2);
+        amrex::Real n21 = xc21/(rc2+eps2);
+        amrex::Real n22 = xc22/(rc2+eps2);
         amrex::Real Atilde1UU00 = -3.0/2.0*P10*n10*(1 - std::pow(n10, 2))/std::pow(eps1 + rc1, 2) + 3*P10*n10/std::pow(eps1 + rc1, 2) - 3.0/2.0*P11*n11*(1 - std::pow(n10, 2))/std::pow(eps1 + rc1, 2) - 3.0/2.0*P12*n12*(1 - std::pow(n10, 2))/std::pow(eps1 + rc1, 2);
         amrex::Real Atilde1UU01 = (3.0/2.0)*P10*std::pow(n10, 2)*n11/std::pow(eps1 + rc1, 2) + (3.0/2.0)*P11*n10*std::pow(n11, 2)/std::pow(eps1 + rc1, 2) + (3.0/2.0)*P12*n10*n11*n12/std::pow(eps1 + rc1, 2) + (3.0/2.0)*(P10*n11 + P11*n10)/std::pow(eps1 + rc1, 2);
         amrex::Real Atilde1UU02 = (3.0/2.0)*P10*std::pow(n10, 2)*n12/std::pow(eps1 + rc1, 2) + (3.0/2.0)*P11*n10*n11*n12/std::pow(eps1 + rc1, 2) + (3.0/2.0)*P12*n10*std::pow(n12, 2)/std::pow(eps1 + rc1, 2) + (3.0/2.0)*(P10*n12 + P12*n10)/std::pow(eps1 + rc1, 2);
@@ -101,9 +103,7 @@ state_rhs(int i, int j, int k,
         amrex::Real AtildeUU20 = Atilde1UU20 + Atilde2UU20;
         amrex::Real AtildeUU21 = Atilde1UU21 + Atilde2UU21;
         amrex::Real AtildeUU22 = Atilde1UU22 + Atilde2UU22;
-        amrex::Real M1 = 1.0;
-        amrex::Real M2 = 1.0;
-        amrex::Real alpha = 1.0/(M1/(eps1 + rc1) + M2/(eps2 + rc2));
+        amrex::Real alpha = 1.0/(M1/(2*(eps1 + rc1)) + M2/(2*(eps2 + rc2)));
         amrex::Real beta = 0 + 0.125*std::pow(AtildeUU00, 2)*std::pow(alpha, 7) + 0.125*std::pow(AtildeUU01, 2)*std::pow(alpha, 7) + 0.125*std::pow(AtildeUU02, 2)*std::pow(alpha, 7) + 0.125*std::pow(AtildeUU10, 2)*std::pow(alpha, 7) + 0.125*std::pow(AtildeUU11, 2)*std::pow(alpha, 7) + 0.125*std::pow(AtildeUU12, 2)*std::pow(alpha, 7) + 0.125*std::pow(AtildeUU20, 2)*std::pow(alpha, 7) + 0.125*std::pow(AtildeUU21, 2)*std::pow(alpha, 7) + 0.125*std::pow(AtildeUU22, 2)*std::pow(alpha, 7);
         rhs_fab(i, j, k, Idx::u) = beta/std::pow(alpha*(u + 1) + 1, 7) + ddu00 + ddu11 + ddu22;
 
