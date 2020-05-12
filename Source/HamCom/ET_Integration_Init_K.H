@@ -18,11 +18,12 @@ state_init(int i, int j, int k,
         amrex::Real x1 = (j + 0.5)*geom.CellSize(1) + domain_xlo[1];
         amrex::Real x2 = (k + 0.5)*geom.CellSize(2) + domain_xlo[2];
         
-        amrex::Real xp = x0-3.0;
-        amrex::Real xm = x0+3.0;
+        amrex::Real xp = x0;
+        amrex::Real xm = x0;
         amrex::Real r = std::sqrt(x1*x1+x2*x2);
 
-        state_fab(i, j, k, Idx::u) = (1.0/(std::pow(5*xp,2)+50)+1.0/(std::pow(5*xm,2)+50)+0.002)*(1.0/(std::pow(5*r,2)+50)+0.001)/(1.0/(50)+0.001);
+        state_fab(i, j, k, Idx::u) = 0;
+        //state_fab(i, j, k, Idx::u) = (1.0/(std::pow(5*xp,2)+50)+1.0/(std::pow(5*xm,2)+50)+0.002)*(1.0/(std::pow(5*r,2)+50)+0.001)/(1.0/(50)+0.001);
 
 }
 #endif

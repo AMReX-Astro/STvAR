@@ -20,14 +20,14 @@ state_diagnostics(int i, int j, int k,
         amrex::Real x1 = (j + 0.5)*geom.CellSize(0) + domain_xlo[1]; 
         amrex::Real x2 = (k + 0.5)*geom.CellSize(0) + domain_xlo[2];
         
-        amrex::Real M1 = 0.5;
-        amrex::Real M2 = 0.5;
+        amrex::Real M1 = 1.0;
+        amrex::Real M2 = 1.0;
         
         amrex::Real r = std::sqrt(std::pow(x0, 2) + std::pow(x1, 2) + std::pow(x2, 2));
-        amrex::Real c10 = 3.0;
+        amrex::Real c10 = 4.0;
         amrex::Real c11 = 0.0;
         amrex::Real c12 = 0.0;
-        amrex::Real c20 = -3.0;
+        amrex::Real c20 = -4.0;
         amrex::Real c21 = 0.0;
         amrex::Real c22 = 0.0;
         amrex::Real P10 = 0.0;
@@ -48,22 +48,22 @@ state_diagnostics(int i, int j, int k,
         amrex::Real eps1;
         amrex::Real eps2;
         
-        if(rc1<=0.5)
-          eps1 = 0.01;
+        if(rc1<=0.25*M1)
+          eps1 = 0.25*M1;
         else
           eps1 = 0;
 
-        if(rc2<=0.5)
-          eps2 = 0.01;
+        if(rc2<=0.25*M2)
+          eps2 = 0.25*M2;
         else
           eps2 = 0;
         
-        amrex::Real n10 = xc10/rc1;
-        amrex::Real n11 = xc11/rc1;
-        amrex::Real n12 = xc12/rc1;
-        amrex::Real n20 = xc20/rc2;
-        amrex::Real n21 = xc21/rc2;
-        amrex::Real n22 = xc22/rc2;
+        amrex::Real n10 = xc10/(rc1+eps1);
+        amrex::Real n11 = xc11/(rc1+eps1);
+        amrex::Real n12 = xc12/(rc1+eps1);
+        amrex::Real n20 = xc20/(rc2+eps2);
+        amrex::Real n21 = xc21/(rc2+eps2);
+        amrex::Real n22 = xc22/(rc2+eps2);
         amrex::Real Atilde1UU00 = -3.0/2.0*P10*n10*(1 - std::pow(n10, 2))/std::pow(eps1 + rc1, 2) + 3*P10*n10/std::pow(eps1 + rc1, 2) - 3.0/2.0*P11*n11*(1 - std::pow(n10, 2))/std::pow(eps1 + rc1, 2) - 3.0/2.0*P12*n12*(1 - std::pow(n10, 2))/std::pow(eps1 + rc1, 2);
         amrex::Real Atilde1UU01 = (3.0/2.0)*P10*std::pow(n10, 2)*n11/std::pow(eps1 + rc1, 2) + (3.0/2.0)*P11*n10*std::pow(n11, 2)/std::pow(eps1 + rc1, 2) + (3.0/2.0)*P12*n10*n11*n12/std::pow(eps1 + rc1, 2) + (3.0/2.0)*(P10*n11 + P11*n10)/std::pow(eps1 + rc1, 2);
         amrex::Real Atilde1UU02 = (3.0/2.0)*P10*std::pow(n10, 2)*n12/std::pow(eps1 + rc1, 2) + (3.0/2.0)*P11*n10*n11*n12/std::pow(eps1 + rc1, 2) + (3.0/2.0)*P12*n10*std::pow(n12, 2)/std::pow(eps1 + rc1, 2) + (3.0/2.0)*(P10*n12 + P12*n10)/std::pow(eps1 + rc1, 2);
@@ -92,7 +92,7 @@ state_diagnostics(int i, int j, int k,
         amrex::Real AtildeUU21 = Atilde1UU21 + Atilde2UU21;
         amrex::Real AtildeUU22 = Atilde1UU22 + Atilde2UU22;
         
-        diag(i, j, k, Diag::phi) = std::log(M1/rc1 + M2/rc2 + 1 + state_fab(i, j, k, Idx::u));
+        diag(i, j, k, Diag::phi) = std::log(M1/(2*(rc1+eps1)) + M2/(2*(rc2+eps2)) + 1 + state_fab(i, j, k, Idx::u));
 
         diag(i, j, k, Diag::gamtildeLL00) = 1;
 
@@ -128,7 +128,7 @@ state_diagnostics(int i, int j, int k,
 
         diag(i, j, k, Diag::GamtildeU2) = 0;
 
-        diag(i, j, k, Diag::alpha) = std::pow(M1/rc1 + M2/rc2 + 1 + state_fab(i, j, k, Idx::u), -2);
+        diag(i, j, k, Diag::alpha) = std::pow(M1/(2*(rc1+eps1)) + M2/(2*(rc2+eps2)) + 1 + state_fab(i, j, k, Idx::u), -2);
 
         diag(i, j, k, Diag::betaU0) = 0;
 
