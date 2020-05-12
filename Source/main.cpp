@@ -209,6 +209,25 @@ void main_main ()
             // Write a plotfile of the diagnostic data
             const std::string& pltfile = amrex::Concatenate("diag_plt",n,7);
             WriteSingleLevelPlotfile(pltfile, diagnostics, Diagnostics::names, geom, integrator.get_time(), n);
+            /*
+            const std::string& checkpointname = "End_data";
+
+            amrex::Print() << "Writing checkpoint " << checkpointname << "\n";
+
+            const int nlevels = 1;
+
+            bool callBarrier = true;
+
+            // ---- prebuild a hierarchy of directories
+            // ---- dirName is built first.  if dirName exists, it is renamed.  then build
+            // ---- dirName/subDirPrefix_0 .. dirName/subDirPrefix_nlevels-1
+            // ---- if callBarrier is true, call ParallelDescriptor::Barrier()
+            // ---- after all directories are built
+            // ---- ParallelDescriptor::IOProcessor() creates the directories
+            amrex::PreBuildDirectorHierarchy(checkpointname, "Level_", nlevels, callBarrier);
+        
+            VisMF::Write(diagnostics, amrex::MultiFabFileFullPrefix(0, checkpointname, "Level_", "Cell"));
+            */
         }
     };
 
