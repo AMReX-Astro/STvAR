@@ -78,9 +78,14 @@ void rescale_state (MultiFab& state_mf)
         state_fab(i, j, k, Idx::AtildeLL12) = AtildeLL12 - 1.0/3.0*gamtildeLL12*TrAtilde;
         state_fab(i, j, k, Idx::AtildeLL22) = AtildeLL22 - 1.0/3.0*gamtildeLL22*TrAtilde;
         
-        if (state_fab(i, j, k, Idx::alpha) < 0)
+        if (state_fab(i, j, k, Idx::alpha) < 0.005)
         {
-            state_fab(i, j, k, Idx::alpha) = 0.01;
+            state_fab(i, j, k, Idx::alpha) = 0.005;
+        }
+        
+        if (state_fab(i, j, k, Idx::chi) < 0.005)
+        {
+            state_fab(i, j, k, Idx::chi) = 0.005;
         }
         
     });
