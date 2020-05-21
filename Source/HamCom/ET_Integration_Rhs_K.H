@@ -34,17 +34,17 @@ state_rhs(int i, int j, int k,
         amrex::Real ddu21 = ((1.0/4.0)*state_fab(i, j + 1, k + 1, Idx::u) - 1.0/4.0*state_fab(i, j + 1, k - 1, Idx::u) - 1.0/4.0*state_fab(i, j - 1, k + 1, Idx::u) + (1.0/4.0)*state_fab(i, j - 1, k - 1, Idx::u))/(dx[1]*dx[2]);
         amrex::Real ddu22 = (state_fab(i, j, k + 1, Idx::u) + state_fab(i, j, k - 1, Idx::u) - 2*state_fab(i, j, k, Idx::u))/std::pow(dx[2], 2);
         amrex::Real r = std::sqrt(std::pow(x0, 2) + std::pow(x1, 2) + std::pow(x2, 2));
-        amrex::Real c10 = 4.0;
+        amrex::Real c10 = 1.168642873;
         amrex::Real c11 = 0.0;
         amrex::Real c12 = 0.0;
-        amrex::Real c20 = -4.0;
+        amrex::Real c20 = -1.168642873;
         amrex::Real c21 = 0.0;
         amrex::Real c22 = 0.0;
         amrex::Real P10 = 0.0;
-        amrex::Real P11 = 0.20000000000000001;
+        amrex::Real P11 = 0.3331917498;
         amrex::Real P12 = 0.0;
         amrex::Real P20 = 0.0;
-        amrex::Real P21 = -0.20000000000000001;
+        amrex::Real P21 = -0.3331917498;
         amrex::Real P22 = 0.0;
         amrex::Real xc10 = -c10 + x0;
         amrex::Real xc11 = -c11 + x1;
@@ -58,15 +58,15 @@ state_rhs(int i, int j, int k,
         amrex::Real eps1;
         amrex::Real eps2;
         
-        amrex::Real M1 = 1.0;
-        amrex::Real M2 = 1.0;
-        if(rc1<=0.25*M1)
-          eps1 = 0.25*M1;
+        amrex::Real M1 = 0.453;
+        amrex::Real M2 = 0.453;
+        if(rc1<=0*M1)
+          eps1 = 0.1*M1;
         else
           eps1 = 0;
 
-        if(rc2<=0.25*M2)
-          eps2 = 0.25*M2;
+        if(rc2<=0*M2)
+          eps2 = 0.1*M2;
         else
           eps2 = 0;
         

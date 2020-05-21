@@ -20,21 +20,21 @@ state_diagnostics(int i, int j, int k,
         amrex::Real x1 = (j + 0.5)*geom.CellSize(0) + domain_xlo[1]; 
         amrex::Real x2 = (k + 0.5)*geom.CellSize(0) + domain_xlo[2];
         
-        amrex::Real M1 = 1.0;
-        amrex::Real M2 = 1.0;
+        amrex::Real M1 = 0.453;
+        amrex::Real M2 = 0.453;
         
         amrex::Real r = std::sqrt(std::pow(x0, 2) + std::pow(x1, 2) + std::pow(x2, 2));
-        amrex::Real c10 = 4.0;
+        amrex::Real c10 = 1.168642873;
         amrex::Real c11 = 0.0;
         amrex::Real c12 = 0.0;
-        amrex::Real c20 = -4.0;
+        amrex::Real c20 = -1.168642873;
         amrex::Real c21 = 0.0;
         amrex::Real c22 = 0.0;
         amrex::Real P10 = 0.0;
-        amrex::Real P11 = 0.20000000000000001;
+        amrex::Real P11 = 0.3331917498;
         amrex::Real P12 = 0.0;
         amrex::Real P20 = 0.0;
-        amrex::Real P21 = -0.20000000000000001;
+        amrex::Real P21 = -0.3331917498;
         amrex::Real P22 = 0.0;
         amrex::Real xc10 = -c10 + x0;
         amrex::Real xc11 = -c11 + x1;
@@ -48,13 +48,13 @@ state_diagnostics(int i, int j, int k,
         amrex::Real eps1;
         amrex::Real eps2;
         
-        if(rc1<=0.25*M1)
-          eps1 = 0.25*M1;
+        if(rc1<=0*M1)
+          eps1 = 0.1*M1;
         else
           eps1 = 0;
 
-        if(rc2<=0.25*M2)
-          eps2 = 0.25*M2;
+        if(rc2<=0*M2)
+          eps2 = 0.1*M2;
         else
           eps2 = 0;
         
@@ -92,7 +92,7 @@ state_diagnostics(int i, int j, int k,
         amrex::Real AtildeUU21 = Atilde1UU21 + Atilde2UU21;
         amrex::Real AtildeUU22 = Atilde1UU22 + Atilde2UU22;
         
-        diag(i, j, k, Diag::phi) = std::log(M1/(2*(rc1+eps1)) + M2/(2*(rc2+eps2)) + 1 + state_fab(i, j, k, Idx::u));
+        diag(i, j, k, Diag::chi) = std::pow(M1/(2*(rc1+eps1)) + M2/(2*(rc2+eps2)) + 1 + state_fab(i, j, k, Idx::u), -4);
 
         diag(i, j, k, Diag::gamtildeLL00) = 1;
 
@@ -135,12 +135,5 @@ state_diagnostics(int i, int j, int k,
         diag(i, j, k, Diag::betaU1) = 0;
 
         diag(i, j, k, Diag::betaU2) = 0;
-
-        diag(i, j, k, Diag::BU0) = 0;
-
-        diag(i, j, k, Diag::BU1) = 0;
-
-        diag(i, j, k, Diag::BU2) = 0;
-
 }
 #endif
