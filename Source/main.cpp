@@ -133,10 +133,16 @@ void main_main ()
 
     // time = starting time in the simulation
     Real time = 0.0;
-
+    
+    
+    
+    //////////////////////////////////////
+    
+    
+    
     // Initialize state_new by calling a C++ initializing routine.
-    //init(state_new, time, geom);
-    VisMF::Read(state_new, amrex::MultiFabFileFullPrefix(0, "End_data", "Level_", "Cell"));
+    init(state_new, time, geom);
+    //VisMF::Read(state_new, amrex::MultiFabFileFullPrefix(0, "End_data", "Level_", "Cell"));
 
     // Fill ghost cells for state_new from interior & periodic BCs
     state_new.FillBoundary(geom.periodicity());
@@ -211,7 +217,7 @@ void main_main ()
             WriteSingleLevelPlotfile(pltfile, diagnostics, Diagnostics::names, geom, integrator.get_time(), n);
             /*
             const std::string& checkpointname = "End_data";
-
+   
             amrex::Print() << "Writing checkpoint " << checkpointname << "\n";
 
             const int nlevels = 1;
