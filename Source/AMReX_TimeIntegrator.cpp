@@ -43,7 +43,7 @@ void TimeIntegrator::integrate(const amrex::Real start_timestep, const amrex::Re
 {
     Real timestep = start_timestep;
     bool stop_advance = false;
-    for (step_number = 1; step_number <= nsteps && !stop_advance; ++step_number)
+    for (step_number = 0; step_number < nsteps && !stop_advance; ++step_number)
     {
         if (end_time - time < timestep) {
             timestep = end_time - time;
