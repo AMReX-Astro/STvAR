@@ -84,11 +84,11 @@ class stVar:
         return "        "+AMReXcode(self.var,declare_state = True, statename = str(self.symb))+"\n\n"
     
     def AMReXDiag(self):
-        return "        "+AMReXcode(self.var,declare_diag = True, diagname = str(self.symb))+"\n\n"
+        return "        "+AMReXcode(self.var,stVar.declDiag, declare_diag = True, diagname = str(self.symb))+"\n\n"
             
     
 class stVarRank1(stVar):
-    def __init__(self, symb, dim = 3, declare = False):
+    def __init__(self, symb, dim = 3, declare = False, declareDiag = False):
         self.symb = ixp.declarerank1(str(symb),DIM=dim)
         self.var = ixp.zerorank1(DIM=dim)
         self.dim = dim
@@ -96,6 +96,9 @@ class stVarRank1(stVar):
             for itri in range(dim):
                 self.var[itri] = IndexedBase('state_fab')[i,j,k,str(self.symb[itri])]
                 stVar.decl.append(str(self.symb[itri]))
+        if declareDiag == True:
+            for itri in range(dim):
+                stVar.declDiag.append(str(self.symb[itri]))
                 
         self.symb = np.array(self.symb)
         
@@ -122,9 +125,15 @@ class stVarRank1(stVar):
         for i in range(self.dim):
             expr += "        "+AMReXcode(self.var[i],declare_state = True, statename = str(self.symb[i]))+"\n\n"
         return expr
+    
+    def AMReXDiag(self):
+        expr = ""
+        for i in range(self.dim):
+            expr += "        "+AMReXcode(self.var[i],stVar.declDiag, declare_diag = True, diagname = str(self.symb[i]))+"\n\n"
+        return expr
         
 class stVarRank2(stVar):
-    def __init__(self, symb, sym = 'nosym', dim = 3, declare = False, resetsym = True):
+    def __init__(self, symb, sym = 'nosym', dim = 3, declare = False, declareDiag = False, resetsym = True):
         self.symb = ixp.declarerank2(str(symb), sym, DIM=dim)
         self.var = ixp.zerorank2(DIM=dim)
         self.dim = dim
@@ -142,6 +151,17 @@ class stVarRank2(stVar):
                 for itri in range(dim):
                     for itrj in range(dim):
                         stVar.decl.append(str(self.symb[itri][itrj]))
+                        
+        if declareDiag == True:
+            if sym == 'sym01':
+                for itri in range(dim):
+                    for itrj in range(itri,dim):
+                        stVar.declDiag.append(str(self.symb[itri][itrj]))
+            else:
+                for itri in range(dim):
+                    for itrj in range(dim):
+                        stVar.declDiag.append(str(self.symb[itri][itrj]))
+                        
         if resetsym == True:
                 self.symb = ixp.declarerank2(str(symb),'nosym', DIM=dim)
                 
@@ -183,6 +203,18 @@ class stVarRank2(stVar):
             for i in range(self.dim):
                 for j in range(i,self.dim):
                     expr += "        "+AMReXcode(self.var[i][j],declare_state = True, statename = str(self.symb[i][j]))+"\n\n"
+        return expr
+    
+    def AMReXDiag(self):
+        expr = ""
+        if self.sym == 'nosym':
+            for i in range(self.dim):
+                for j in range(self.dim):
+                    expr += "        "+AMReXcode(self.var[i][j],stVar.declDiag, declare_diag = True, diagname = str(self.symb[i][j]))+"\n\n"
+        elif self.sym == 'sym01':
+            for i in range(self.dim):
+                for j in range(i,self.dim):
+                    expr += "        "+AMReXcode(self.var[i][j],stVar.declDiag, declare_diag = True, diagname = str(self.symb[i][j]))+"\n\n"
         return expr
 
 class stVarRank3(stVar):
