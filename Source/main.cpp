@@ -68,12 +68,12 @@ void main_main ()
 
         // Time at end of simulation
         pp.query("end_time", end_time);
-        
+
         pp.query("elliptic", elliptic);
-        
+
         pp.query("initialize_from_data", initialize_from_data);
         pp.query("write_checkpoint",write_checkpoint);
-        
+
         checkpoint_int = -1;
         pp.query("checkpoint_int",checkpoint_int);
     }
@@ -141,19 +141,15 @@ void main_main ()
 
     // time = starting time in the simulation
     Real time = 0.0;
-    
-    
-    
+
     //////////////////////////////////////
-    
-    
-    
+
     // Initialize state_new by calling a C++ initializing routine.
     if (initialize_from_data)
     {
         VisMF::Read(state_new, amrex::MultiFabFileFullPrefix(0, "End_data_Final", "Level_", "Cell"));
     }
-    else 
+    else
         init(state_new, time, geom);
 
     // Fill ghost cells for state_new from interior & periodic BCs
@@ -172,7 +168,7 @@ void main_main ()
 
     // Compute the time step
     Real dt;
-    
+
     if (elliptic)
     {
         dt = cfl*dx[0]*dx[0];
@@ -246,7 +242,7 @@ void main_main ()
         if (write_checkpoint && checkpoint_int > 0 && n % checkpoint_int == 0)
         {
             const std::string& checkpointname = amrex::Concatenate("End_data",n,7);
-   
+
             amrex::Print() << "Writing checkpoint " << checkpointname << "\n";
 
             const int nlevels = 1;
@@ -260,22 +256,26 @@ void main_main ()
             // ---- after all directories are built
             // ---- ParallelDescriptor::IOProcessor() creates the directories
             amrex::PreBuildDirectorHierarchy(checkpointname, "Level_", nlevels, callBarrier);
-        
+
             VisMF::Write(diagnostics, amrex::MultiFabFileFullPrefix(0, checkpointname, "Level_", "Cell"));
         }
-            
     };
 
     integrator.set_rhs(source_fun);
     integrator.set_post_update(post_update_fun);
     integrator.set_post_timestep(post_timestep_fun);
+
+    // init_time is the current time post-initialization
+    Real init_time = amrex::second();
+
+    // advance until reaching either end_time or nsteps
     integrator.integrate(dt, end_time, nsteps);
 
     // Write a final plotfile
     {
         const std::string& pltfile = "plt_End_Simulation";
         WriteSingleLevelPlotfile(pltfile, integrator.get_new_data(), Variable::names, geom, integrator.get_time(), integrator.get_step_number());
-        
+
         if (write_checkpoint)
         {
             const std::string& checkpointname = "End_data_Final";
@@ -293,18 +293,30 @@ void main_main ()
             // ---- after all directories are built
             // ---- ParallelDescriptor::IOProcessor() creates the directories
             amrex::PreBuildDirectorHierarchy(checkpointname, "Level_", nlevels, callBarrier);
-        
+
             VisMF::Write(diagnostics, amrex::MultiFabFileFullPrefix(0, checkpointname, "Level_", "Cell"));
         }
-        
+
     }
 
     // Call the timer again and compute the maximum difference between the start time and stop time
-    //   over all processors
-    Real stop_time = amrex::second() - strt_time;
-    const int IOProc = ParallelDescriptor::IOProcessorNumber();
-    ParallelDescriptor::ReduceRealMax(stop_time,IOProc);
+    // over all processors
+    Real stop_time = amrex::second();
+    Real total_time = stop_time - strt_time;
+    Real advance_time = stop_time - init_time;
 
-    // Tell the I/O Processor to write out the "run time"
-    amrex::Print() << "Run time = " << stop_time << std::endl;
+    const int IOProc = ParallelDescriptor::IOProcessorNumber();
+    ParallelDescriptor::ReduceRealMax(total_time,IOProc);
+    ParallelDescriptor::ReduceRealMax(advance_time,IOProc);
+
+    // Get the figure of merit, dividing cells advanced by time to advance in microseconds.
+    Real run_fom = integrator.get_step_number() * ba.numPts();
+    run_fom = run_fom / advance_time / 1.e6;
+
+    // Tell the I/O Processor to write out the total runtime,
+    // time to advance solution (w/o initialization), and figure of merit.
+    Print() << "Run time = " << total_time << std::endl;
+    Print() << "Run time w/o initialization = " << advance_time << std::endl;
+    Print() << "  Average number of cells advanced per microsecond = " << std::fixed << std::setprecision(3) << run_fom << std::endl;
+
 }
