@@ -16,6 +16,6 @@ namespace Diagnostics
 
     void Initialize()
     {
-        #include <ET_Integration_Diagnostics.H>
+        #include <ET_Integration_Diagnostic_Variables.H>
     }
 }
