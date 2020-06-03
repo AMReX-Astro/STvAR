@@ -1,17 +1,25 @@
-plot_int = 100
-diag_int = 10
-n_cell = 256
+plot_int = 10
+diag_int = 100
+checkpoint_int = -1
+n_cell = 128
 max_grid_size = 64
 
-domain_lo = -75.0 -75.0 -75.0
-domain_hi =  75.0  75.0  75.0
+domain_lo = -20.0 -20.0 -20.0
+domain_hi =  20.0  20.0  20.0
 
 # CFL
-cfl = 0.1
+elliptic = 1
+cfl = 0.15
 
 # Stopping Criteria
-nsteps = 300
+nsteps = 50
 end_time = 1000.0
+
+# Initialize from data
+initialize_from_data = 0
+
+# Write checkpoints
+write_checkpoint = 1
 
 ## integration.type can take on the following values:
 ## 0 = Forward Euler
