@@ -4,6 +4,7 @@ USE_ADM     ?= FALSE
 USE_BSSN    ?= FALSE
 USE_Z4C     ?= FALSE
 USE_HAMCOM  ?= FALSE
+USE_INITDAT ?= FALSE
 
 include $(AMREX_HOME)/Tools/GNUMake/Make.defs
 
@@ -34,6 +35,9 @@ else ifeq ($(USE_Z4C), TRUE)
 else ifeq ($(USE_HAMCOM), TRUE)
   DEFINES += -DHAMCOM
   PROBLEM_SOURCE = $(ETI_SOURCE_DIR)/HamCom
+else ifeq ($(USE_INITDAT), TRUE)
+  DEFINES += -DINITDAT
+  PROBLEM_SOURCE = $(ETI_SOURCE_DIR)/InitialDataSolver
 endif
 
 include $(PROBLEM_SOURCE)/Make.package
