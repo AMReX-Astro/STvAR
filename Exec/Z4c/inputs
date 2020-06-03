@@ -16,7 +16,7 @@ nsteps = 1000
 end_time = 1000.0
 
 # Initialize from data
-initialize_from_data = 0
+initialize_from_data = 1
 
 # Write checkpoints
 write_checkpoint = 0
