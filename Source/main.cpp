@@ -19,7 +19,7 @@ void main_main ()
     Real strt_time = amrex::second();
 
     // AMREX_SPACEDIM: number of dimensions
-    int n_cell, max_grid_size, plot_int, diag_int, nsteps;
+    int n_cell, max_grid_size, plot_int, diag_int, nsteps, elliptic, checkpoint_int, initialize_from_data, write_checkpoint;
     Real cfl = 0.9;
     Real end_time = 1.0;
     Vector<int> is_periodic(AMREX_SPACEDIM,1);  // periodic in all direction by default
@@ -68,6 +68,14 @@ void main_main ()
 
         // Time at end of simulation
         pp.query("end_time", end_time);
+        
+        pp.query("elliptic", elliptic);
+        
+        pp.query("initialize_from_data", initialize_from_data);
+        pp.query("write_checkpoint",write_checkpoint);
+        
+        checkpoint_int = -1;
+        pp.query("checkpoint_int",checkpoint_int);
     }
 
     // make BoxArray and Geometry
@@ -141,8 +149,12 @@ void main_main ()
     
     
     // Initialize state_new by calling a C++ initializing routine.
-    init(state_new, time, geom);
-    //VisMF::Read(state_new, amrex::MultiFabFileFullPrefix(0, "End_data", "Level_", "Cell"));
+    if (initialize_from_data)
+    {
+        VisMF::Read(state_new, amrex::MultiFabFileFullPrefix(0, "End_data_Final", "Level_", "Cell"));
+    }
+    else 
+        init(state_new, time, geom);
 
     // Fill ghost cells for state_new from interior & periodic BCs
     state_new.FillBoundary(geom.periodicity());
@@ -159,13 +171,28 @@ void main_main ()
     }
 
     // Compute the time step
-    Real dt = cfl*dx[0];
+    Real dt;
+    
+    if (elliptic)
+    {
+        dt = cfl*dx[0]*dx[0];
 #if AMREX_SPACEDIM > 1
-    dt = amrex::min(dt, cfl*dx[1]);
+        dt = amrex::min(dt, cfl*dx[1]*dx[1]);
 #endif
 #if AMREX_SPACEDIM > 2
-    dt = amrex::min(dt, cfl*dx[2]);
+        dt = amrex::min(dt, cfl*dx[2]*dx[2]);
 #endif
+    }
+    else
+    {
+        dt = cfl*dx[0];
+#if AMREX_SPACEDIM > 1
+        dt = amrex::min(dt, cfl*dx[1]);
+#endif
+#if AMREX_SPACEDIM > 2
+        dt = amrex::min(dt, cfl*dx[2]);
+#endif
+    }
 
     // Write a plotfile of the initial data if plot_int > 0 (plot_int was defined in the inputs file)
     if (plot_int > 0)
@@ -186,7 +213,7 @@ void main_main ()
     // Create a function to call after updating a state
     auto post_update_fun = [&](MultiFab& S_data){
         // Call user function to rescale state
-        rescale_state(S_data);
+        post_update(S_data, geom);
 
         // Fill ghost cells for S_data from interior & periodic BCs
         S_data.FillBoundary(geom.periodicity());
@@ -215,8 +242,10 @@ void main_main ()
             // Write a plotfile of the diagnostic data
             const std::string& pltfile = amrex::Concatenate("diag_plt",n,7);
             WriteSingleLevelPlotfile(pltfile, diagnostics, Diagnostics::names, geom, integrator.get_time(), n);
-            /*
-            const std::string& checkpointname = "End_data";
+        }
+        if (write_checkpoint && checkpoint_int > 0 && n % checkpoint_int == 0)
+        {
+            const std::string& checkpointname = amrex::Concatenate("End_data",n,7);
    
             amrex::Print() << "Writing checkpoint " << checkpointname << "\n";
 
@@ -233,8 +262,8 @@ void main_main ()
             amrex::PreBuildDirectorHierarchy(checkpointname, "Level_", nlevels, callBarrier);
         
             VisMF::Write(diagnostics, amrex::MultiFabFileFullPrefix(0, checkpointname, "Level_", "Cell"));
-            */
         }
+            
     };
 
     integrator.set_rhs(source_fun);
@@ -247,25 +276,27 @@ void main_main ()
         const std::string& pltfile = "plt_End_Simulation";
         WriteSingleLevelPlotfile(pltfile, integrator.get_new_data(), Variable::names, geom, integrator.get_time(), integrator.get_step_number());
         
-        /*
-        const std::string& checkpointname = "End_data";
+        if (write_checkpoint)
+        {
+            const std::string& checkpointname = "End_data_Final";
 
-        amrex::Print() << "Writing checkpoint " << checkpointname << "\n";
+            amrex::Print() << "Writing checkpoint " << checkpointname << "\n";
 
-        const int nlevels = 1;
+            const int nlevels = 1;
 
-        bool callBarrier = true;
+            bool callBarrier = true;
 
-        // ---- prebuild a hierarchy of directories
-        // ---- dirName is built first.  if dirName exists, it is renamed.  then build
-        // ---- dirName/subDirPrefix_0 .. dirName/subDirPrefix_nlevels-1
-        // ---- if callBarrier is true, call ParallelDescriptor::Barrier()
-        // ---- after all directories are built
-        // ---- ParallelDescriptor::IOProcessor() creates the directories
-        amrex::PreBuildDirectorHierarchy(checkpointname, "Level_", nlevels, callBarrier);
+            // ---- prebuild a hierarchy of directories
+            // ---- dirName is built first.  if dirName exists, it is renamed.  then build
+            // ---- dirName/subDirPrefix_0 .. dirName/subDirPrefix_nlevels-1
+            // ---- if callBarrier is true, call ParallelDescriptor::Barrier()
+            // ---- after all directories are built
+            // ---- ParallelDescriptor::IOProcessor() creates the directories
+            amrex::PreBuildDirectorHierarchy(checkpointname, "Level_", nlevels, callBarrier);
         
-        VisMF::Write(diagnostics, amrex::MultiFabFileFullPrefix(0, checkpointname, "Level_", "Cell"));
-        */
+            VisMF::Write(diagnostics, amrex::MultiFabFileFullPrefix(0, checkpointname, "Level_", "Cell"));
+        }
+        
     }
 
     // Call the timer again and compute the maximum difference between the start time and stop time
