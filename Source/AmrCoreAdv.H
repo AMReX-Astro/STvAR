@@ -121,6 +121,14 @@ private:
     // read checkpoint file from disk
     void ReadCheckpointFile ();
 
+    // Read the file passed to amr.restart and use it as an initial condition for
+    // the current simulation. Supports a different number of components and
+    // ghost cells.
+    void InitializeFromFile ();
+
+    // Initialize the new-time data at a level from the initial_data MultiFab
+    void InitializeLevelFromData (int lev, const amrex::MultiFab& initial_data);
+
     // utility to skip to next line in Header
     static void GotoNextLine (std::istream& is);
 
@@ -157,6 +165,10 @@ private:
 
     // if >= 0 we restart from a checkpoint
     std::string restart_chkfile = "";
+
+    // if this flag is set, then the amr.restart file is
+    // used to set the solver's initial conditions.
+    int restart_is_initial_data = 0;
 
     // advective cfl number - dt = cfl*dx/umax
     amrex::Real cfl = 0.7;

@@ -139,6 +139,10 @@ AmrCoreAdv::InitData ()
             WriteCheckpointFile();
         }
     }
+    else if (restart_is_initial_data) {
+        // Load the initial data from a file
+        InitializeFromFile();
+    }
     else {
         // restart from a checkpoint
         ReadCheckpointFile();
@@ -315,7 +319,9 @@ AmrCoreAdv::ReadParameters ()
         pp.query("plot_int", plot_int);
         pp.query("chk_file", chk_file);
         pp.query("chk_int", chk_int);
-        pp.query("restart",restart_chkfile);
+
+        pp.query("restart", restart_chkfile);
+        pp.query("restart_is_initial_data", restart_is_initial_data);
 
         // Diagnostics
         // Default diag_int to -1, allow us to set it to something else in the inputs file
@@ -753,7 +759,7 @@ AmrCoreAdv::WriteCheckpointFile () const
        std::ofstream HeaderFile;
        HeaderFile.rdbuf()->pubsetbuf(io_buffer.dataPtr(), io_buffer.size());
        HeaderFile.open(HeaderFileName.c_str(), std::ofstream::out   |
-		                               std::ofstream::trunc |
+                                               std::ofstream::trunc |
                                                std::ofstream::binary);
        if( ! HeaderFile.good()) {
            amrex::FileOpenFailed(HeaderFileName);
@@ -766,6 +772,12 @@ AmrCoreAdv::WriteCheckpointFile () const
 
        // write out finest_level
        HeaderFile << finest_level << "\n";
+
+       // write the number of components
+       HeaderFile << Idx::NumScalars << "\n";
+
+       // write the number of ghost cells
+       HeaderFile << NUM_GHOST_CELLS << "\n";
 
        // write out array of istep
        for (int i = 0; i < istep.size(); ++i) {
@@ -819,12 +831,24 @@ AmrCoreAdv::ReadCheckpointFile ()
 
     std::string line, word;
 
+    int chk_ncomp, chk_nghost;
+
     // read in title line
     std::getline(is, line);
 
     // read in finest_level
     is >> finest_level;
     GotoNextLine(is);
+
+    // read in number of components & assert they are the same as here
+    is >> chk_ncomp;
+    GotoNextLine(is);
+    AMREX_ASSERT(chk_ncomp == Idx::NumScalars);
+
+    // read in number of ghost cells & assert they are the same as here
+    is >> chk_nghost;
+    GotoNextLine(is);
+    AMREX_ASSERT(chk_nghost == NUM_GHOST_CELLS);
 
     // read in array of istep
     std::getline(is, line);
@@ -870,9 +894,10 @@ AmrCoreAdv::ReadCheckpointFile ()
         SetBoxArray(lev, ba);
         SetDistributionMap(lev, dm);
 
-        // build MultiFab and FluxRegister data
+        // build MultiFab data
         int ncomp = Idx::NumScalars;
         int nghost = NUM_GHOST_CELLS;
+
         grid_old[lev].define(grids[lev], dmap[lev], ncomp, nghost);
         grid_new[lev].define(grids[lev], dmap[lev], ncomp, nghost);
 
@@ -884,6 +909,112 @@ AmrCoreAdv::ReadCheckpointFile ()
                     amrex::MultiFabFileFullPrefix(lev, restart_chkfile, "Level_", "Cell"));
     }
 
+}
+
+// Read the file in restart_chkfile and use it as an initial condition for
+// the current simulation. Supports a different number of components and
+// ghost cells.
+void
+AmrCoreAdv::InitializeFromFile ()
+{
+    amrex::Print() << "Initializing from file " << restart_chkfile << "\n";
+
+    // Header
+    std::string File(restart_chkfile + "/Header");
+
+    VisMF::IO_Buffer io_buffer(VisMF::GetIOBufferSize());
+
+    Vector<char> fileCharPtr;
+    ParallelDescriptor::ReadAndBcastFile(File, fileCharPtr);
+    std::string fileCharPtrString(fileCharPtr.dataPtr());
+    std::istringstream is(fileCharPtrString, std::istringstream::in);
+
+    std::string line, word;
+
+    // read in title line
+    std::getline(is, line);
+
+    // read in finest_level
+    is >> finest_level;
+    GotoNextLine(is);
+
+    // read in number of components and ghost cells
+    // we don't assert those are the same as in the current solver
+    // but we need this to build the temporary MultiFab for reading
+    // the data we use to initialize our grid.
+
+    // read in number of components
+    is >> chk_ncomp;
+    GotoNextLine(is);
+
+    // read in number of ghost cells
+    is >> chk_nghost;
+    GotoNextLine(is);
+
+    // read in array of istep & ignore
+    std::getline(is, line);
+
+    // read in array of dt & ignore
+    std::getline(is, line);
+
+    // read in array of t_new & ignore
+    std::getline(is, line);
+
+    for (int lev = 0; lev <= finest_level; ++lev) {
+
+        // read in level 'lev' BoxArray from Header
+        BoxArray ba;
+        ba.readFrom(is);
+        GotoNextLine(is);
+
+        // create a distribution mapping
+        DistributionMapping dm { ba, ParallelDescriptor::NProcs() };
+
+        // set BoxArray grids and DistributionMapping dmap in AMReX_AmrMesh.H class
+        SetBoxArray(lev, ba);
+        SetDistributionMap(lev, dm);
+
+        // build MultiFab data
+        int ncomp = Idx::NumScalars;
+        int nghost = NUM_GHOST_CELLS;
+        grid_old[lev].define(grids[lev], dmap[lev], ncomp, nghost);
+        grid_new[lev].define(grids[lev], dmap[lev], ncomp, nghost);
+
+    }
+
+    // read in the MultiFab data & initialize from it
+    for (int lev = 0; lev <= finest_level; ++lev) {
+        MultiFab initial_data_lev(grids[lev], dmap[lev], chk_ncomp, chk_nghost);
+        VisMF::Read(initial_data_lev,
+                    amrex::MultiFabFileFullPrefix(lev, restart_chkfile, "Level_", "Cell"));
+        InitializeLevelFromData(lev, initial_data_lev);
+    }
+
+    //! fill the ghost cells in state data
+
+}
+
+// Initialize the new-time data at a level from the initial_data MultiFab
+void
+AmrCoreAdv::InitializeLevelFromData(int lev, const MultiFab& initial_data)
+{
+    auto& state_mf = grid_new[lev];
+
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+    for ( MFIter mfi(initial_data, TilingIfNotGPU()); mfi.isValid(); ++mfi )
+    {
+        const Box& bx = mfi.tilebox();
+        state = state_mf.array(mfi);
+        idata = initial_data.array(mfi);
+
+        // Call a user-supplied function to initialize the state data
+        // from the input data file.
+        ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) {
+            initialize_from_data(i, j, k, state, idata, geom[lev].data());
+        });
+    }
 }
 
 // utility to skip to next line in Header
