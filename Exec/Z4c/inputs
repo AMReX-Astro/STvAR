@@ -1,25 +1,44 @@
-plot_int = 5
-diag_int = 100
-checkpoint_int = 20
-n_cell = 128
-max_grid_size = 64
-
-domain_lo = -20.0 -20.0 -20.0
-domain_hi =  20.0  20.0  20.0
-
-# CFL
-elliptic = 0
-cfl = 0.5
-
 # Stopping Criteria
-nsteps = 1000
-end_time = 1000.0
+max_step = 1000
+stop_time = 100.0
 
-# Initialize from data
-initialize_from_data = 1
+# Problem Size & Geometry
+amr.n_cell = 64 64 64
 
-# Write checkpoints
-write_checkpoint = 0
+geometry.is_periodic = 0 0 0
+geometry.coord_sys = 0 # cartesian
+geometry.prob_lo = -20.0 -20.0 -20.0
+geometry.prob_hi =  20.0  20.0  20.0
+
+# Turn on verbosity in Amr
+amr.v = 1
+
+# Refinement
+amr.max_level = 1 # starts counting at 0
+amr.ref_ratio = 2 # refinement ratio
+amr.blocking_factor = 8
+amr.max_grid_size = 64
+amr.regrid_int = 2
+
+# Problem specific boundary conditions
+domain_lo_bc_types = 2 2 2
+domain_hi_bc_types = 2 2 2
+
+# Problem specific tagging for refinement
+problem.s_error = 0.5
+problem.error_comp = 18
+
+# Problem specific inputs
+problem.elliptic = 0
+problem.cfl = 0.5
+
+# I/O
+amr.plot_int = 5
+amr.diag_int = 100
+amr.chk_int = 20
+
+# Restart from checkpoint?
+# amr.restart = chk0000000
 
 ## integration.type can take on the following values:
 ## 0 = Forward Euler
