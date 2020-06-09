@@ -29,7 +29,7 @@ TimeIntegrator::TimeIntegrator(amrex::MultiFab& S_old_external,
 
     // By default, do nothing after updating the state
     // In general, this is where BCs should be filled
-    set_post_update([](MultiFab& S_data){});
+    set_post_update([](MultiFab& S_data, const Real S_time){});
 
     // By default, set the RHS to 0.0
     set_rhs([](MultiFab& S_rhs, const MultiFab& S_data, const Real time){ S_rhs = 0.0; });
@@ -66,7 +66,7 @@ void TimeIntegrator::set_post_timestep(std::function<void ()> F)
     post_timestep = F;
 }
 
-void TimeIntegrator::set_post_update(std::function<void (amrex::MultiFab&)> F)
+void TimeIntegrator::set_post_update(std::function<void (amrex::MultiFab&, const amrex::Real)> F)
 {
     integrator_ptr->set_post_update(F);
 }

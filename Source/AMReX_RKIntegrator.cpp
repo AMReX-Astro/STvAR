@@ -160,7 +160,7 @@ Real RKIntegrator::advance(const Real timestep)
             }
 
             // Call the post-update hook for S_tmp
-            post_update(S_tmp);
+            post_update(S_tmp, stage_time);
         }
 
         // Fill F[i], the RHS at the current stage
@@ -176,11 +176,11 @@ Real RKIntegrator::advance(const Real timestep)
         MultiFab::Saxpy(S_new, timestep * weights[i], F_nodes[i], 0, 0, S_new.nComp(), S_new.nGrow());
     }
 
-    // Call the post-update hook for S_new
-    post_update(S_new);
-
     // Update time
     time += timestep;
+
+    // Call the post-update hook for S_new
+    post_update(S_new, time);
 
     // If we are working with an extended Butcher tableau, we can estimate the error in S_tmp here,
     // and then calculate an adaptive timestep.
