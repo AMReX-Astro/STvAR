@@ -10,6 +10,7 @@
 #include <AMReX_BCUtil.H>
 #include <ET_Integration_Setup.H>
 #include <ET_Integration_Init_K.H>
+#include <ET_Integration_LoadInitData_K.H>
 #include <ET_Integration_Rhs_K.H>
 #include <ET_Integration_Diag_K.H>
 #include <ET_Integration_Post_Update_K.H>
