@@ -1,8 +1,7 @@
 CEXE_sources += main.cpp
-CEXE_sources += init.cpp
-CEXE_sources += rhs.cpp
-CEXE_sources += diagnostics.cpp
-CEXE_sources += post_update.cpp
+CEXE_sources += AmrCoreAdv.cpp
+CEXE_headers += AmrCoreAdv.H
+CEXE_headers += bc_fill.H
 CEXE_sources += AMReX_TimeIntegrator.cpp
 CEXE_headers += AMReX_TimeIntegrator.H
 CEXE_sources += AMReX_FEIntegrator.cpp
