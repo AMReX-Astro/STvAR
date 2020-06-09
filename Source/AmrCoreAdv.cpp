@@ -428,6 +428,82 @@ AmrCoreAdv::FillPatch (int lev, Real time, MultiFab& mf, int icomp, int ncomp)
     }
 }
 
+// compute a new multifab by coping in data from valid region and filling ghost cells
+// works for single level and 2-level cases (fill fine grid ghost by interpolating from coarse)
+// unlike FillPatch, FillIntermediatePatch will use the supplied multifab instead of fine level data.
+// This is to support filling boundary cells at an intermediate time between old/new times
+// on the fine level when valid data at a specific time is already available (such as
+// at each RK stage when integrating between initial and final times at a given level).
+void
+AmrCoreAdv::FillIntermediatePatch (int lev, Real time, MultiFab& mf, int icomp, int ncomp)
+{
+    if (lev == 0)
+    {
+        // on lev, use the mf data and time passed to FillIntermediatePatch().
+        Vector<MultiFab*> smf { &mf };
+        Vector<Real> stime { time };
+
+        if(Gpu::inLaunchRegion())
+        {
+            GpuBndryFuncFab<AmrCoreFill> gpu_bndry_func(AmrCoreFill{});
+            PhysBCFunct<GpuBndryFuncFab<AmrCoreFill> > physbc(geom[lev],bcs,gpu_bndry_func);
+            //! make sure this is passing the right bc
+            amrex::FillPatchSingleLevel(mf, time, smf, stime, 0, icomp, ncomp,
+                                        geom[lev], physbc, 0);
+        }
+        else
+        {
+            CpuBndryFuncFab bndry_func(nullptr);  // Without EXT_DIR, we can pass a nullptr.
+            PhysBCFunct<CpuBndryFuncFab> physbc(geom[lev],bcs,bndry_func);
+            //! make sure this is passing the right bc
+            amrex::FillPatchSingleLevel(mf, time, smf, stime, 0, icomp, ncomp,
+                                        geom[lev], physbc, 0);
+        }
+    }
+    else
+    {
+        MultiFab mf_temp(mf.boxArray(), mf.DistributionMap(), mf.nComp(), NUM_GHOST_CELLS);
+
+        Vector<MultiFab*> cmf, fmf;
+        Vector<Real> ctime, ftime;
+        GetData(lev-1, time, cmf, ctime);
+
+        // on lev, use the mf data and time passed to FillIntermediatePatch().
+        fmf.push_back(&mf);
+        ftime.push_back(time);
+
+        Interpolater* mapper = &cell_cons_interp;
+
+        if(Gpu::inLaunchRegion())
+        {
+            GpuBndryFuncFab<AmrCoreFill> gpu_bndry_func(AmrCoreFill{});
+            PhysBCFunct<GpuBndryFuncFab<AmrCoreFill> > cphysbc(geom[lev-1],bcs,gpu_bndry_func);
+            PhysBCFunct<GpuBndryFuncFab<AmrCoreFill> > fphysbc(geom[lev],bcs,gpu_bndry_func);
+
+            //! make sure this is passing the right bc
+            amrex::FillPatchTwoLevels(mf_temp, time, cmf, ctime, fmf, ftime,
+                                      0, icomp, ncomp, geom[lev-1], geom[lev],
+                                      cphysbc, 0, fphysbc, 0, refRatio(lev-1),
+                                      mapper, bcs, 0);
+        }
+        else
+        {
+            CpuBndryFuncFab bndry_func(nullptr);  // Without EXT_DIR, we can pass a nullptr.
+            PhysBCFunct<CpuBndryFuncFab> cphysbc(geom[lev-1],bcs,bndry_func);
+            PhysBCFunct<CpuBndryFuncFab> fphysbc(geom[lev],bcs,bndry_func);
+
+            //! make sure this is passing the right bc
+            amrex::FillPatchTwoLevels(mf_temp, time, cmf, ctime, fmf, ftime,
+                                      0, icomp, ncomp, geom[lev-1], geom[lev],
+                                      cphysbc, 0, fphysbc, 0, refRatio(lev-1),
+                                      mapper, bcs, 0);
+        }
+
+        // Replace mf with mf_temp
+        std::swap(mf_temp, mf);
+    }
+}
+
 // fill an entire multifab by interpolating from the coarser level
 // this comes into play when a new level of refinement appears
 void
@@ -595,14 +671,14 @@ AmrCoreAdv::Advance (int lev, Real time, Real dt_lev, int iteration, int ncycle)
     };
 
     // Create a function to call after updating a state
-    auto post_update_fun = [&](MultiFab& S_data){
-        // Call user function to rescale state
+    auto post_update_fun = [&](MultiFab& S_data, const Real time){
+        // Call user function to update state
         post_update(S_data, geom_lev);
 
         // Fill ghost cells for S_data from interior & periodic BCs
-        //! and from interpolating coarser data in space/time at the current stage time.
-        S_data.FillBoundary(geom_lev.periodicity());
-        FillDomainBoundary(S_data, geom_lev, bcs);
+        // and from interpolating coarser data in space/time at the current stage time.
+        //! could be more efficient, right now this involves a copy
+        FillIntermediatePatch(lev, time, S_data, 0, S_data.nComp());
     };
 
     integrator.set_rhs(source_fun);
