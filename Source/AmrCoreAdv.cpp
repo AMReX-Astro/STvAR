@@ -919,6 +919,8 @@ AmrCoreAdv::InitializeFromFile ()
 {
     amrex::Print() << "Initializing from file " << restart_chkfile << "\n";
 
+    const Real time = 0.0;
+
     // Header
     std::string File(restart_chkfile + "/Header");
 
@@ -930,6 +932,7 @@ AmrCoreAdv::InitializeFromFile ()
     std::istringstream is(fileCharPtrString, std::istringstream::in);
 
     std::string line, word;
+    int chk_ncomp, chk_nghost;
 
     // read in title line
     std::getline(is, line);
@@ -987,11 +990,15 @@ AmrCoreAdv::InitializeFromFile ()
         MultiFab initial_data_lev(grids[lev], dmap[lev], chk_ncomp, chk_nghost);
         VisMF::Read(initial_data_lev,
                     amrex::MultiFabFileFullPrefix(lev, restart_chkfile, "Level_", "Cell"));
+
+        // This fills grid_new[lev] from initial_data_lev
         InitializeLevelFromData(lev, initial_data_lev);
+
+        //! Calling RemakeLevel makes sure grid_new[lev] ghost cells
+        // are properly filled (can make this more efficient by just
+        // interpolating to fill boundary cells in grid_new[lev] instead.
+        RemakeLevel(lev, time, grids[lev], dmap[lev]);
     }
-
-    //! fill the ghost cells in state data
-
 }
 
 // Initialize the new-time data at a level from the initial_data MultiFab
@@ -1006,8 +1013,8 @@ AmrCoreAdv::InitializeLevelFromData(int lev, const MultiFab& initial_data)
     for ( MFIter mfi(initial_data, TilingIfNotGPU()); mfi.isValid(); ++mfi )
     {
         const Box& bx = mfi.tilebox();
-        state = state_mf.array(mfi);
-        idata = initial_data.array(mfi);
+        auto state = state_mf.array(mfi);
+        const auto idata = initial_data.array(mfi);
 
         // Call a user-supplied function to initialize the state data
         // from the input data file.
