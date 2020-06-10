@@ -1,5 +1,5 @@
 # Stopping Criteria
-max_step = 1000
+max_step = 20
 stop_time = 100.0
 
 # Problem Size & Geometry
@@ -21,21 +21,21 @@ amr.max_grid_size = 64
 amr.regrid_int = 2
 
 # Problem specific boundary conditions
-domain_lo_bc_types = 2 2 2
-domain_hi_bc_types = 2 2 2
+domain_lo_bc_types = 0 0 0
+domain_hi_bc_types = 0 0 0
 
 # Problem specific tagging for refinement
-problem.s_error = 0.5
+problem.s_error = 1.5
 problem.error_comp = 1
 
 # Problem specific inputs
 problem.elliptic = 1
-problem.cfl = -0.5
+problem.cfl = 0.05
 
 # I/O
-amr.plot_int = 100
+amr.plot_int = 1
 amr.diag_int = 100
-amr.chk_int = 20
+amr.chk_int = 100
 
 # Restart from checkpoint?
 # amr.restart = chk0000000
