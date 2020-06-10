@@ -134,12 +134,11 @@ void RKIntegrator::initialize_stages()
 
 Real RKIntegrator::advance(const Real timestep)
 {
+    // Given valid data at (S_old, time), advance by timestep to
+    // fill S_new with valid data at time + timestep.
+
     // Get a reference to our temporary State workspace
     auto& S_tmp = *S_tmp_ptr;
-
-    // Assume before advance() that S_new is valid data at the current time ("time" argument)
-    // So we update S_old by copying the current state.
-    MultiFab::Copy(S_old, S_new, 0, 0, S_old.nComp(), S_old.nGrow());
 
     // Fill the RHS F_nodes at each stage
     for (int i = 0; i < number_nodes; ++i)

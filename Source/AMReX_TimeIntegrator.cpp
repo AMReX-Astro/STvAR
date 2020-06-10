@@ -50,15 +50,36 @@ void TimeIntegrator::integrate(const amrex::Real start_timestep, const amrex::Re
             stop_advance = true;
         }
 
-        // Call the time integrator advance
-        integrator_ptr->advance(timestep);
+        // Advance one timestep and call the post_timestep hook
+        advance(timestep);
 
-        // Update our time variable
-        time = integrator_ptr->get_time();
-
-        // Call the post-timestep hook
-        post_timestep();
+        // Swap new & old data before taking a new step
+        // We always begin advance() with the valid data in old at
+        // the given time.
+        std::swap(get_new_data(), get_old_data());
     }
+
+    // At the end of the last advance() iteration we swapped
+    // old/new data to prepare for a new step. Swap them back,
+    // so that integrate() returns with valid data in new.
+    std::swap(get_new_data(), get_old_data());
+}
+
+void TimeIntegrator::advance(const amrex::Real timestep)
+{
+    // High level interface to take just one integrator step
+    // Assumes valid data for the initial condition corresponds
+    // to (old data, time) and advance() fills new data and updates
+    // time to time + timestep.
+
+    // Call the time integrator advance to fill the new time data
+    integrator_ptr->advance(timestep);
+
+    // Update our time variable to the new time
+    time = integrator_ptr->get_time();
+
+    // Call the post-timestep hook
+    post_timestep();
 }
 
 void TimeIntegrator::set_post_timestep(std::function<void ()> F)
