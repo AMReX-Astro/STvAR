@@ -29,6 +29,7 @@ public:
     void set_post_update(std::function<void (amrex::MultiFab&, const amrex::Real)> F);
     void set_rhs(std::function<void(amrex::MultiFab&, const amrex::MultiFab&, const amrex::Real)> F);
     void integrate(const amrex::Real start_timestep, const amrex::Real end_time, const int nsteps);
+    void advance(const amrex::Real timestep);
     amrex::MultiFab& get_new_data();
     amrex::MultiFab& get_old_data();
     amrex::Real get_time();
