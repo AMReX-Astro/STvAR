@@ -21,7 +21,7 @@ Real FEIntegrator::advance(const Real timestep)
     rhs(F_tmp, S_old, time);
 
     // S_new += timestep * dS/dt
-    MultiFab::Saxpy(S_new, timestep, F_tmp, 0, 0, S_new.nComp(), S_new.nGrow());
+    MultiFab::Saxpy(S_new, timestep, F_tmp, 0, 0, S_new.nComp(), 0);
 
     // Update time
     time += timestep;
