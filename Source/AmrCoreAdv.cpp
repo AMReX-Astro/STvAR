@@ -74,6 +74,7 @@ AmrCoreAdv::Evolve ()
 {
     Real cur_time = t_new[0];
     int last_plot_file_step = 0;
+    int last_chk_file_step = 0;
 
     for (int step = istep[0]; step < max_step && cur_time < stop_time; ++step)
     {
@@ -101,6 +102,7 @@ AmrCoreAdv::Evolve ()
         }
 
         if (chk_int > 0 && (step+1) % chk_int == 0) {
+            last_chk_file_step = step+1;
             WriteCheckpointFile();
         }
 
@@ -122,6 +124,10 @@ AmrCoreAdv::Evolve ()
 
     if (plot_int > 0 && istep[0] > last_plot_file_step) {
         WritePlotFile();
+    }
+
+    if (chk_int > 0 && istep[0] > last_chk_file_step) {
+        WriteCheckpointFile();
     }
 }
 
@@ -658,9 +664,9 @@ AmrCoreAdv::Advance (int lev, Real time, Real dt_lev, int iteration, int ncycle)
     MultiFab Sborder(grids[lev], dmap[lev], S_new.nComp(), num_grow);
     FillPatch(lev, time, Sborder, 0, Sborder.nComp());
 
-    // Integrate from (y,t) = (Sborder, time) by dt_lev to set S_new.
+    /* Integrate from (y,t) = (Sborder, time) by dt_lev to set S_new. */
 
-    // Create integrator with the old state, new state, and new state time
+    // Create integrator with the old state, new state, and old time
     TimeIntegrator integrator(Sborder, S_new, time);
 
     const auto geom_lev = geom[lev];
@@ -684,8 +690,8 @@ AmrCoreAdv::Advance (int lev, Real time, Real dt_lev, int iteration, int ncycle)
     integrator.set_rhs(source_fun);
     integrator.set_post_update(post_update_fun);
 
-    // integrate forward one step
-    integrator.integrate(dt_lev, new_time, 1);
+    // integrate forward one step to fill S_new
+    integrator.advance(dt_lev);
 }
 
 // a wrapper for EstTimeStep
@@ -792,10 +798,6 @@ AmrCoreAdv::WritePlotFile () const
     const auto& varnames = PlotFileVarNames();
 
     amrex::Print() << "Writing plotfile " << plotfilename << "\n";
-
-    amrex::Print() << "variables: ";
-    for (auto vn : varnames) amrex::Print() << vn << " ";
-    amrex::Print() << "\n";
 
     amrex::WriteMultiLevelPlotfile(plotfilename, finest_level+1, mf, varnames,
                                    Geom(), t_new[0], istep, refRatio());
@@ -1081,6 +1083,7 @@ AmrCoreAdv::InitializeFromFile ()
 void
 AmrCoreAdv::InitializeLevelFromData(int lev, const MultiFab& initial_data)
 {
+#ifdef PROBLEM_LOADS_INITDATA
     auto& state_mf = grid_new[lev];
 
 #ifdef _OPENMP
@@ -1098,6 +1101,9 @@ AmrCoreAdv::InitializeLevelFromData(int lev, const MultiFab& initial_data)
             initialize_from_data(i, j, k, state, idata, geom[lev].data());
         });
     }
+#else
+    amrex::Error("Custom initialization from external data is not implemented for this problem.");
+#endif
 }
 
 // utility to skip to next line in Header

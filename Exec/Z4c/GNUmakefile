@@ -11,5 +11,6 @@ COMP      = gnu
 DIM       = 3
 
 USE_Z4C = TRUE
+PROBLEM_LOADS_INITDATA = TRUE
 
 include ../Make.ETI
