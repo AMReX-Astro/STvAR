@@ -40,6 +40,13 @@ else ifeq ($(USE_INITDAT), TRUE)
   PROBLEM_SOURCE = $(ETI_SOURCE_DIR)/InitialDataSolver
 endif
 
+# Does this problem include custom initialization from external data?
+# Note: this is separate from simply loading a checkpoint file.
+PROBLEM_LOADS_INITDATA ?= FALSE
+ifeq ($(PROBLEM_LOADS_INITDATA), TRUE)
+  DEFINES += -DPROBLEM_LOADS_INITDATA
+endif
+
 include $(PROBLEM_SOURCE)/Make.package
 
 VPATH_LOCATIONS += $(PROBLEM_SOURCE)
