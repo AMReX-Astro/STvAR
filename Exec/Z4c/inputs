@@ -37,13 +37,14 @@ amr.plot_int = 5
 amr.diag_int = 100
 amr.chk_int = 20
 
-# Restart from checkpoint?
-# amr.restart = chk0000000
+# Restart from checkpoint or use as initial condition?
+amr.restart = initial_data_chk
+amr.restart_is_initial_data = 1
 
 ## integration.type can take on the following values:
 ## 0 = Forward Euler
 ## 1 = Explicit Runge Kutta
-integration.type = 1
+integration.type = 0
 
 ## Explicit Runge-Kuta parameters
 #
