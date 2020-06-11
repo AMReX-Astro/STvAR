@@ -155,7 +155,7 @@ Real RKIntegrator::advance(const Real timestep)
             // We should fuse these kernels ...
             for (int j = 0; j < i; ++j)
             {
-                MultiFab::Saxpy(S_tmp, timestep * tableau[i][j], F_nodes[j], 0, 0, S_tmp.nComp(), S_tmp.nGrow());
+                MultiFab::Saxpy(S_tmp, timestep * tableau[i][j], F_nodes[j], 0, 0, S_tmp.nComp(), 0);
             }
 
             // Call the post-update hook for S_tmp
@@ -172,7 +172,7 @@ Real RKIntegrator::advance(const Real timestep)
     // We should fuse these kernels ...
     for (int i = 0; i < number_nodes; ++i)
     {
-        MultiFab::Saxpy(S_new, timestep * weights[i], F_nodes[i], 0, 0, S_new.nComp(), S_new.nGrow());
+        MultiFab::Saxpy(S_new, timestep * weights[i], F_nodes[i], 0, 0, S_new.nComp(), 0);
     }
 
     // Update time
