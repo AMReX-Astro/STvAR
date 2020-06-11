@@ -1,5 +1,5 @@
 # Stopping Criteria
-max_step = 20
+max_step = 200
 stop_time = 100.0
 
 # Problem Size & Geometry
@@ -16,7 +16,7 @@ amr.v = 1
 # Refinement
 amr.max_level = 1 # starts counting at 0
 amr.ref_ratio = 2 # refinement ratio
-amr.blocking_factor = 8
+amr.blocking_factor = 16
 amr.max_grid_size = 64
 amr.regrid_int = 2
 
@@ -25,15 +25,15 @@ domain_lo_bc_types = 0 0 0
 domain_hi_bc_types = 0 0 0
 
 # Problem specific tagging for refinement
-problem.s_error = 1.5
-problem.error_comp = 1
+problem.s_error = 0.02
+problem.error_comp = 0
 
 # Problem specific inputs
 problem.elliptic = 1
 problem.cfl = 0.05
 
 # I/O
-amr.plot_int = 1
+amr.plot_int = 5
 amr.diag_int = 100
 amr.chk_int = 100
 
@@ -43,7 +43,7 @@ amr.chk_int = 100
 ## integration.type can take on the following values:
 ## 0 = Forward Euler
 ## 1 = Explicit Runge Kutta
-integration.type = 1
+integration.type = 0
 
 ## Explicit Runge-Kuta parameters
 #
