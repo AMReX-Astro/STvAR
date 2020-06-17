@@ -21,8 +21,8 @@ amr.max_grid_size = 64
 amr.regrid_int = 2
 
 # Problem specific boundary conditions
-domain_lo_bc_types = 0 0 0
-domain_hi_bc_types = 0 0 0
+domain_lo_bc_types = 2 2 2
+domain_hi_bc_types = 2 2 2
 
 # Problem specific tagging for refinement
 problem.s_error = 0.02
