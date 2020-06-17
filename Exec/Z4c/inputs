@@ -20,17 +20,20 @@ amr.blocking_factor = 8
 amr.max_grid_size = 64
 amr.regrid_int = 2
 
+# AMR Interpolation
+amr.interpolation_type = 6
+
 # Problem specific boundary conditions
 domain_lo_bc_types = 2 2 2
 domain_hi_bc_types = 2 2 2
 
 # Problem specific tagging for refinement
 problem.s_error = 0.5
-problem.error_comp = 18
+problem.error_comp = 0
 
 # Problem specific inputs
 problem.elliptic = 0
-problem.cfl = 0.5
+problem.cfl = 0.25
 
 # I/O
 amr.plot_int = 5
