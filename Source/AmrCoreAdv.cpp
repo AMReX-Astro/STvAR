@@ -20,7 +20,7 @@ AmrCoreAdv::AmrCoreAdv ()
     nsubsteps.resize(nlevs_max, 1);
     for (int lev = 1; lev <= max_level; ++lev) {
         if (elliptic)
-            nsubsteps[lev] = 2 * MaxRefRatio(lev-1);
+            nsubsteps[lev] = MaxRefRatio(lev-1) * MaxRefRatio(lev-1);
         else
             nsubsteps[lev] = MaxRefRatio(lev-1);
     }
