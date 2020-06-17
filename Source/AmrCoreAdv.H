@@ -12,12 +12,36 @@
 #include <AMReX_AmrCore.H>
 #include <AMReX_BCRec.H>
 
+#include <AMReX_ParallelDescriptor.H>
+#include <AMReX_ParmParse.H>
+#include <AMReX_MultiFabUtil.H>
+#include <AMReX_FillPatchUtil.H>
+#include <AMReX_PlotFileUtil.H>
+#include <AMReX_VisMF.H>
+#include <AMReX_PhysBCFunct.H>
+
+#ifdef AMREX_MEM_PROFILING
+#include <AMReX_MemProfiler.H>
+#endif
+
 #include "bc_fill.H"
 
 #include "ET_Integration.H"
 #include "AMReX_TimeIntegrator.H"
 
 using namespace amrex;
+
+namespace InterpType {
+    enum {
+        PCInterp = 0,
+        NodeBilinear,
+        CellConservativeLinear,
+        CellBilinear,
+        CellQuadratic,
+        CellConservativeProtected,
+        CellConservativeQuartic
+    };
+}
 
 class AmrCoreAdv
     : public amrex::AmrCore
@@ -164,6 +188,9 @@ private:
     // condition types at the lo/hi walls in each direction
     amrex::Vector<BCRec> bcs;
 
+    // Interpolater to use between levels
+    amrex::Interpolater* mapper = nullptr;
+
     ////////////////
     // runtime parameters
 
@@ -203,6 +230,9 @@ private:
 
     // elliptic?
     int elliptic = 0;
+
+    // interpolation type between levels
+    int interpolation_type = 0;
 };
 
 #endif
