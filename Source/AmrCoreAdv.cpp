@@ -1,16 +1,3 @@
-
-#include <AMReX_ParallelDescriptor.H>
-#include <AMReX_ParmParse.H>
-#include <AMReX_MultiFabUtil.H>
-#include <AMReX_FillPatchUtil.H>
-#include <AMReX_PlotFileUtil.H>
-#include <AMReX_VisMF.H>
-#include <AMReX_PhysBCFunct.H>
-
-#ifdef AMREX_MEM_PROFILING
-#include <AMReX_MemProfiler.H>
-#endif
-
 #include <AmrCoreAdv.H>
 
 using namespace amrex;
@@ -32,7 +19,10 @@ AmrCoreAdv::AmrCoreAdv ()
     istep.resize(nlevs_max, 0);
     nsubsteps.resize(nlevs_max, 1);
     for (int lev = 1; lev <= max_level; ++lev) {
-        nsubsteps[lev] = MaxRefRatio(lev-1);
+        if (elliptic)
+            nsubsteps[lev] = 2 * MaxRefRatio(lev-1);
+        else
+            nsubsteps[lev] = MaxRefRatio(lev-1);
     }
 
     t_new.resize(nlevs_max, 0.0);
@@ -61,6 +51,15 @@ AmrCoreAdv::AmrCoreAdv ()
                 bcs[n].setHi(i, domain_hi_bc_types[i]);
             }
         }
+    }
+
+    // set interpolation type between levels
+    if (interpolation_type == InterpType::CellConservativeLinear)
+        mapper = &cell_cons_interp;
+    else if (interpolation_type == InterpType::CellConservativeQuartic)
+        mapper = &quartic_interp;
+    else {
+        amrex::Error("Unsupported interpolation type");
     }
 }
 
@@ -320,6 +319,8 @@ AmrCoreAdv::ReadParameters ()
     {
         ParmParse pp("amr"); // Traditionally, these have prefix, amr.
 
+        pp.query("interpolation_type", interpolation_type);
+
         pp.query("regrid_int", regrid_int);
         pp.query("plot_file", plot_file);
         pp.query("plot_int", plot_int);
@@ -405,8 +406,6 @@ AmrCoreAdv::FillPatch (int lev, Real time, MultiFab& mf, int icomp, int ncomp)
         GetData(lev-1, time, cmf, ctime);
         GetData(lev  , time, fmf, ftime);
 
-        Interpolater* mapper = &cell_cons_interp;
-
         if(Gpu::inLaunchRegion())
         {
             GpuBndryFuncFab<AmrCoreFill> gpu_bndry_func(AmrCoreFill{});
@@ -478,8 +477,6 @@ AmrCoreAdv::FillIntermediatePatch (int lev, Real time, MultiFab& mf, int icomp, 
         fmf.push_back(&mf);
         ftime.push_back(time);
 
-        Interpolater* mapper = &cell_cons_interp;
-
         if(Gpu::inLaunchRegion())
         {
             GpuBndryFuncFab<AmrCoreFill> gpu_bndry_func(AmrCoreFill{});
@@ -521,8 +518,6 @@ AmrCoreAdv::FillCoarsePatch (int lev, Real time, MultiFab& mf, int icomp, int nc
     Vector<Real> ctime;
     GetData(lev-1, time, cmf, ctime);
 
-    Interpolater* mapper = &cell_cons_interp;
-    
     if (cmf.size() != 1) {
 	amrex::Abort("FillCoarsePatch: how did this happen?");
     }
@@ -736,10 +731,11 @@ AmrCoreAdv::EstTimeStep (int lev, bool local) const
 
     Real dt = std::numeric_limits<Real>::max();
 
-    const auto dx = geom[0].CellSizeArray();
+    const auto dx = geom[lev].CellSizeArray();
 
     if (elliptic)
     {
+        Print() << "using elliptic timestep\n";
         dt = dx[0]*dx[0];
 #if AMREX_SPACEDIM > 1
         dt = amrex::min(dt, dx[1]*dx[1]);
