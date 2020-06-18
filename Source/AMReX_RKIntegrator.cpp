@@ -8,9 +8,6 @@ RKIntegrator::RKIntegrator(amrex::MultiFab& S_old_external,
 {
     initialize_parameters();
     initialize_stages();
-
-    // Create temporary State MultiFab
-    S_tmp_ptr = std::make_unique<MultiFab>(S_old.boxArray(), S_old.DistributionMap(), S_old.nComp(), S_old.nGrow());
 }
 
 void RKIntegrator::initialize_parameters()
@@ -137,8 +134,8 @@ Real RKIntegrator::advance(const Real timestep)
     // Given valid data at (S_old, time), advance by timestep to
     // fill S_new with valid data at time + timestep.
 
-    // Get a reference to our temporary State workspace
-    auto& S_tmp = *S_tmp_ptr;
+    // Make a temporary MultiFab with grow cells to hold stage state values
+    MultiFab S_tmp(S_old.boxArray(), S_old.DistributionMap(), S_old.nComp(), S_old.nGrow());
 
     // Fill the RHS F_nodes at each stage
     for (int i = 0; i < number_nodes; ++i)
@@ -147,8 +144,8 @@ Real RKIntegrator::advance(const Real timestep)
         Real stage_time = time + timestep * nodes[i];
 
         // Fill S_tmp with the solution value for evaluating F at the current stage
-        // Copy S_tmp = S_old
-        MultiFab::Copy(S_tmp, S_old, 0, 0, S_old.nComp(), S_old.nGrow());
+        // Copy S_tmp = S_old in the interior (fill ghost cells in post_update)
+        MultiFab::Copy(S_tmp, S_old, 0, 0, S_old.nComp(), 0);
         if (i > 0) {
             // Saxpy across the tableau row:
             // S_tmp += h * Aij * Fj
@@ -167,7 +164,10 @@ Real RKIntegrator::advance(const Real timestep)
         rhs(F_nodes[i], S_tmp, stage_time);
     }
 
-    // Fill new State. S_new = S_old already, so we add the stage contributions.
+    // Fill new State. First set S_new = S_old in the interior.
+    // then add the stage contributions.
+    MultiFab::Copy(S_new, S_old, 0, 0, S_old.nComp(), 0);
+
     // Saxpy S_new += h * Wi * Fi for integration weights Wi
     // We should fuse these kernels ...
     for (int i = 0; i < number_nodes; ++i)

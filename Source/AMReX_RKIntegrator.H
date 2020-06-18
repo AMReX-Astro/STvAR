@@ -18,7 +18,6 @@ private:
     int number_nodes;
     bool use_adaptive_timestep;
     amrex::Vector<amrex::MultiFab> F_nodes;
-    std::unique_ptr<amrex::MultiFab> S_tmp_ptr;
     amrex::Vector<amrex::Vector<amrex::Real> > tableau;
     amrex::Vector<amrex::Real> weights;
     amrex::Vector<amrex::Real> extended_weights;
