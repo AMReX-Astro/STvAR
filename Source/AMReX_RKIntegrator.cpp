@@ -145,7 +145,9 @@ Real RKIntegrator::advance(const Real timestep)
 
         // Fill S_tmp with the solution value for evaluating F at the current stage
         // Copy S_tmp = S_old in the interior (fill ghost cells in post_update)
-        MultiFab::Copy(S_tmp, S_old, 0, 0, S_old.nComp(), 0);
+        
+        //MultiFab::Copy(S_tmp, S_old, 0, 0, S_old.nComp(), 0); Changed by Adam.  I don't understand, but this fixes issues.
+        MultiFab::Copy(S_tmp, S_old, 0, 0, S_old.nComp(), S_old.nGrow());
         if (i > 0) {
             // Saxpy across the tableau row:
             // S_tmp += h * Aij * Fj
