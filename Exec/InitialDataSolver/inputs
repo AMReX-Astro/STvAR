@@ -1,5 +1,5 @@
 # Stopping Criteria
-max_step = 200
+max_step = 50
 stop_time = 100.0
 
 # Problem Size & Geometry
@@ -7,43 +7,47 @@ amr.n_cell = 64 64 64
 
 geometry.is_periodic = 0 0 0
 geometry.coord_sys = 0 # cartesian
-geometry.prob_lo = -20.0 -20.0 -20.0
-geometry.prob_hi =  20.0  20.0  20.0
+geometry.prob_lo = -40.0 -40.0 -40.0
+geometry.prob_hi =  40.0  40.0  40.0
 
 # Turn on verbosity in Amr
 amr.v = 1
 
 # Refinement
-amr.max_level = 1 # starts counting at 0
+amr.max_level = 4 # starts counting at 0
 amr.ref_ratio = 2 # refinement ratio
-amr.blocking_factor = 16
+amr.blocking_factor = 8
 amr.max_grid_size = 64
 amr.regrid_int = 2
+
+# AMR Interpolation
+amr.interpolation_type = 6
 
 # Problem specific boundary conditions
 domain_lo_bc_types = 2 2 2
 domain_hi_bc_types = 2 2 2
 
 # Problem specific tagging for refinement
-problem.s_error = 0.02
+problem.s_error = 0.002 0.035 0.1 0.3
 problem.error_comp = 0
 
 # Problem specific inputs
-problem.elliptic = 1
-problem.cfl = 0.05
+problem.elliptic = 0
+problem.cfl = 0.01
 
 # I/O
-amr.plot_int = 5
+amr.plot_int = 10
 amr.diag_int = 100
-amr.chk_int = 100
+amr.chk_int = 50
 
-# Restart from checkpoint?
-# amr.restart = chk0000000
+# Restart from checkpoint or use as initial condition?
+#amr.restart = chk0000100
+#amr.restart_is_initial_data = 0
 
 ## integration.type can take on the following values:
 ## 0 = Forward Euler
 ## 1 = Explicit Runge Kutta
-integration.type = 0
+integration.type = 1
 
 ## Explicit Runge-Kuta parameters
 #
