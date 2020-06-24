@@ -662,7 +662,7 @@ AmrCoreAdv::Advance (int lev, Real time, Real dt_lev, int iteration, int ncycle)
     /* Integrate from (y,t) = (Sborder, time) by dt_lev to set S_new. */
 
     // Create integrator with the old state, new state, and old time
-    TimeIntegrator integrator(Sborder, S_new, time);
+    TimeIntegrator<MultiFab> integrator(Sborder, S_new, time);
 
     const auto geom_lev = geom[lev];
 
@@ -672,7 +672,7 @@ AmrCoreAdv::Advance (int lev, Real time, Real dt_lev, int iteration, int ncycle)
     };
 
     // Create a function to call after updating a state
-    auto post_update_fun = [&](MultiFab& S_data, const Real time){
+    auto post_update_fun = [&](MultiFab& S_data, const Real time) {
         // Call user function to update state
         post_update(S_data, geom_lev);
 
@@ -687,6 +687,7 @@ AmrCoreAdv::Advance (int lev, Real time, Real dt_lev, int iteration, int ncycle)
 
     // integrate forward one step to fill S_new
     integrator.advance(dt_lev);
+
 }
 
 // a wrapper for EstTimeStep
@@ -1037,7 +1038,7 @@ AmrCoreAdv::InitializeFromFile ()
     // read in array of t_new & ignore
     std::getline(is, line);
 
-    for (int lev = 0; lev <= finest_level; ++lev) {
+    for (int lev = 0; lev <= max_level; ++lev) {
 
         // read in level 'lev' BoxArray from Header
         BoxArray ba;
@@ -1060,7 +1061,7 @@ AmrCoreAdv::InitializeFromFile ()
     }
 
     // read in the MultiFab data & initialize from it
-    for (int lev = 0; lev <= finest_level; ++lev) {
+    for (int lev = 0; lev <= max_level; ++lev) {
         MultiFab initial_data_lev(grids[lev], dmap[lev], chk_ncomp, chk_nghost);
         VisMF::Read(initial_data_lev,
                     amrex::MultiFabFileFullPrefix(lev, restart_chkfile, "Level_", "Cell"));
