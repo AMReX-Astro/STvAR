@@ -9,7 +9,7 @@ namespace Idx {
 };
 
 namespace InitIdx { 
-         enum ETInitIndexes {u, NumScalars}; 
+         enum ETIndexes {u}; 
 };
 
 namespace Diag { 
