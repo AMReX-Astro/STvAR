@@ -5,6 +5,7 @@ USE_BSSN    ?= FALSE
 USE_Z4C     ?= FALSE
 USE_HAMCOM  ?= FALSE
 USE_INITDAT ?= FALSE
+USE_KLEINGORDON ?= FALSE
 
 include $(AMREX_HOME)/Tools/GNUMake/Make.defs
 
@@ -38,6 +39,9 @@ else ifeq ($(USE_HAMCOM), TRUE)
 else ifeq ($(USE_INITDAT), TRUE)
   DEFINES += -DINITDAT
   PROBLEM_SOURCE = $(ETI_SOURCE_DIR)/InitialDataSolver
+else ifeq ($(USE_KLEINGORDON), TRUE)
+  DEFINES += -DKLEINGORDON
+  PROBLEM_SOURCE = $(ETI_SOURCE_DIR)/KleinGordon
 endif
 
 # Does this problem include custom initialization from external data?
