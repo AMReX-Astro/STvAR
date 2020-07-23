@@ -16,7 +16,7 @@ amr.v = 1
 # Refinement
 amr.max_level = 5 # starts counting at 0
 amr.ref_ratio = 2 # refinement ratio
-amr.blocking_factor = 16 16 16 16
+amr.blocking_factor = 16
 amr.max_grid_size = 64
 amr.regrid_int = 5
 
