@@ -2,6 +2,10 @@ USE_WAVE_EQ ?= FALSE
 USE_MAXWELL ?= FALSE
 USE_ADM     ?= FALSE
 USE_BSSN    ?= FALSE
+USE_Z4C     ?= FALSE
+USE_HAMCOM  ?= FALSE
+USE_INITDAT ?= FALSE
+USE_KLEINGORDON ?= FALSE
 
 include $(AMREX_HOME)/Tools/GNUMake/Make.defs
 
@@ -26,6 +30,25 @@ else ifeq ($(USE_ADM), TRUE)
 else ifeq ($(USE_BSSN), TRUE)
   DEFINES += -DBSSN
   PROBLEM_SOURCE = $(ETI_SOURCE_DIR)/BSSN
+else ifeq ($(USE_Z4C), TRUE)
+  DEFINES += -DZ4C
+  PROBLEM_SOURCE = $(ETI_SOURCE_DIR)/Z4c
+else ifeq ($(USE_HAMCOM), TRUE)
+  DEFINES += -DHAMCOM
+  PROBLEM_SOURCE = $(ETI_SOURCE_DIR)/HamCom
+else ifeq ($(USE_INITDAT), TRUE)
+  DEFINES += -DINITDAT
+  PROBLEM_SOURCE = $(ETI_SOURCE_DIR)/InitialDataSolver
+else ifeq ($(USE_KLEINGORDON), TRUE)
+  DEFINES += -DKLEINGORDON
+  PROBLEM_SOURCE = $(ETI_SOURCE_DIR)/KleinGordon
+endif
+
+# Does this problem include custom initialization from external data?
+# Note: this is separate from simply loading a checkpoint file.
+PROBLEM_LOADS_INITDATA ?= FALSE
+ifeq ($(PROBLEM_LOADS_INITDATA), TRUE)
+  DEFINES += -DPROBLEM_LOADS_INITDATA
 endif
 
 include $(PROBLEM_SOURCE)/Make.package
@@ -34,5 +57,10 @@ VPATH_LOCATIONS += $(PROBLEM_SOURCE)
 INCLUDE_LOCATIONS += $(PROBLEM_SOURCE)
 
 include $(AMREX_HOME)/Src/Base/Make.package
+
+AMReXdirs             := Base Boundary AmrCore Particle
+AMReXpack             += $(foreach dir, $(AMReXdirs), $(AMREX_HOME)/Src/$(dir)/Make.package)
+
+include $(AMReXpack)
 
 include $(AMREX_HOME)/Tools/GNUMake/Make.rules
