@@ -1,9 +1,9 @@
-#ifndef ET_INTEGRATION_RHS_K_H 
-#define ET_INTEGRATION_RHS_K_H 
+#ifndef ET_INTEGRATION_RHS_K_H
+#define ET_INTEGRATION_RHS_K_H
 
 #include <AMReX_REAL.H> 
 #include <AMReX_Array4.H> 
-#include <ET_Integration_Setup.H> 
+#include <ET_Integration_Setup_K.H> 
 
 AMREX_GPU_DEVICE 
 inline 
@@ -14,12 +14,13 @@ state_rhs(int i, int j, int k,
         amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dx, 
         const amrex::GeometryData& geom) noexcept 
 {
-        const auto domain_xlo = geom.ProbLo(); 
-
+        const auto domain_xlo = geom.ProbLo();
+        
         amrex::Real x0 = (i + 0.5)*geom.CellSize(0) + domain_xlo[0]; 
-        amrex::Real x1 = (j + 0.5)*geom.CellSize(0) + domain_xlo[1]; 
-        amrex::Real x2 = (k + 0.5)*geom.CellSize(0) + domain_xlo[2]; 
+        amrex::Real x1 = (j + 0.5)*geom.CellSize(1) + domain_xlo[1]; 
+        amrex::Real x2 = (k + 0.5)*geom.CellSize(2) + domain_xlo[2]; 
         amrex::Real chi = state_fab(i, j, k, Idx::chi);
+
         amrex::Real gamtildeLL00 = state_fab(i, j, k, Idx::gamtildeLL00);
         amrex::Real gamtildeLL01 = state_fab(i, j, k, Idx::gamtildeLL01);
         amrex::Real gamtildeLL02 = state_fab(i, j, k, Idx::gamtildeLL02);
@@ -30,6 +31,7 @@ state_rhs(int i, int j, int k,
         amrex::Real gamtildeLL21 = state_fab(i, j, k, Idx::gamtildeLL12);
         amrex::Real gamtildeLL22 = state_fab(i, j, k, Idx::gamtildeLL22);
         amrex::Real Khat = state_fab(i, j, k, Idx::Khat);
+
         amrex::Real AtildeLL00 = state_fab(i, j, k, Idx::AtildeLL00);
         amrex::Real AtildeLL01 = state_fab(i, j, k, Idx::AtildeLL01);
         amrex::Real AtildeLL02 = state_fab(i, j, k, Idx::AtildeLL02);
@@ -40,53 +42,38 @@ state_rhs(int i, int j, int k,
         amrex::Real AtildeLL21 = state_fab(i, j, k, Idx::AtildeLL12);
         amrex::Real AtildeLL22 = state_fab(i, j, k, Idx::AtildeLL22);
         amrex::Real theta = state_fab(i, j, k, Idx::theta);
+
         amrex::Real GamtildeU0 = state_fab(i, j, k, Idx::GamtildeU0);
         amrex::Real GamtildeU1 = state_fab(i, j, k, Idx::GamtildeU1);
         amrex::Real GamtildeU2 = state_fab(i, j, k, Idx::GamtildeU2);
         amrex::Real alpha = state_fab(i, j, k, Idx::alpha);
+
         amrex::Real betaU0 = state_fab(i, j, k, Idx::betaU0);
         amrex::Real betaU1 = state_fab(i, j, k, Idx::betaU1);
         amrex::Real betaU2 = state_fab(i, j, k, Idx::betaU2);
 
-        amrex::Real betaUp0 = 0;
-        amrex::Real betaDn0 = 0;
-        if(betaU0 > 0)
-        {
-            betaUp0 = 1;
-            betaDn0 = 0;
-        }
-        else if(betaU0 < 0)
-        {
-            betaUp0 = 0;
-            betaDn0 = 1;
-        }
-        
-        amrex::Real betaUp1 = 0;
-        amrex::Real betaDn1 = 0;
-        if(betaU1 > 0)
-        {
-            betaUp1 = 1;
-            betaDn1 = 0;
-        }
-        else if(betaU1 < 0)
-        {
-            betaUp1 = 0;
-            betaDn1 = 1;
-        }
-        
-        amrex::Real betaUp2 = 0;
-        amrex::Real betaDn2 = 0;
-        if(betaU2 > 0)
-        {
-            betaUp2 = 1;
-            betaDn2 = 0;
-        }
-        else if(betaU2 < 0)
-        {
-            betaUp2 = 0;
-            betaDn2 = 1;
-        }
+        std::vector<amrex::Real> UpWind; UpWind.push_back(1); UpWind.push_back(0); 
+        std::vector<amrex::Real> DnWind; DnWind.push_back(0); DnWind.push_back(1);
 
+        std::vector<amrex::Real> betaAdv0;
+        betaAdv0.resize(2);
+        
+        std::vector<amrex::Real> betaAdv1;
+        betaAdv1.resize(2);
+        
+        std::vector<amrex::Real> betaAdv2;
+        betaAdv2.resize(2);
+        
+        betaAdv0 = (betaU0 > 0) ? UpWind : DnWind;
+        betaAdv1 = (betaU1 > 0) ? UpWind : DnWind;
+        betaAdv2 = (betaU2 > 0) ? UpWind : DnWind;
+        
+        amrex::Real betaUp0 = betaAdv0[0];
+        amrex::Real betaDn0 = betaAdv0[1];
+        amrex::Real betaUp1 = betaAdv1[0];
+        amrex::Real betaDn1 = betaAdv1[1];
+        amrex::Real betaUp2 = betaAdv2[0];
+        amrex::Real betaDn2 = betaAdv2[1];
 
         amrex::Real Dupchi0 = ((3.0/2.0)*state_fab(i + 1, j, k, Idx::chi) - 1.0/2.0*state_fab(i + 2, j, k, Idx::chi) + (1.0/12.0)*state_fab(i + 3, j, k, Idx::chi) - 1.0/4.0*state_fab(i - 1, j, k, Idx::chi) - 5.0/6.0*state_fab(i, j, k, Idx::chi))/dx[0];
         amrex::Real Dupchi1 = ((3.0/2.0)*state_fab(i, j + 1, k, Idx::chi) - 1.0/2.0*state_fab(i, j + 2, k, Idx::chi) + (1.0/12.0)*state_fab(i, j + 3, k, Idx::chi) - 1.0/4.0*state_fab(i, j - 1, k, Idx::chi) - 5.0/6.0*state_fab(i, j, k, Idx::chi))/dx[1];
@@ -94,7 +81,8 @@ state_rhs(int i, int j, int k,
         amrex::Real Ddnphi0 = ((1.0/4.0)*state_fab(i + 1, j, k, Idx::chi) - 3.0/2.0*state_fab(i - 1, j, k, Idx::chi) + (1.0/2.0)*state_fab(i - 2, j, k, Idx::chi) - 1.0/12.0*state_fab(i - 3, j, k, Idx::chi) + (5.0/6.0)*state_fab(i, j, k, Idx::chi))/dx[0];
         amrex::Real Ddnphi1 = ((1.0/4.0)*state_fab(i, j + 1, k, Idx::chi) - 3.0/2.0*state_fab(i, j - 1, k, Idx::chi) + (1.0/2.0)*state_fab(i, j - 2, k, Idx::chi) - 1.0/12.0*state_fab(i, j - 3, k, Idx::chi) + (5.0/6.0)*state_fab(i, j, k, Idx::chi))/dx[1];
         amrex::Real Ddnphi2 = ((1.0/4.0)*state_fab(i, j, k + 1, Idx::chi) - 3.0/2.0*state_fab(i, j, k - 1, Idx::chi) + (1.0/2.0)*state_fab(i, j, k - 2, Idx::chi) - 1.0/12.0*state_fab(i, j, k - 3, Idx::chi) + (5.0/6.0)*state_fab(i, j, k, Idx::chi))/dx[2];
-        amrex::Real betaDchi = 0 + betaU0*(Ddnphi0*betaDn0 + Dupchi0*betaUp0) + betaU1*(Ddnphi1*betaDn1 + Dupchi1*betaUp1) + betaU2*(Ddnphi2*betaDn2 + Dupchi2*betaUp2);
+        amrex::Real betaDchi = betaU0*(Ddnphi0*betaDn0 + Dupchi0*betaUp0) + betaU1*(Ddnphi1*betaDn1 + Dupchi1*betaUp1) + betaU2*(Ddnphi2*betaDn2 + Dupchi2*betaUp2);
+
         amrex::Real DupgamtildeLL000 = ((3.0/2.0)*state_fab(i + 1, j, k, Idx::gamtildeLL00) - 1.0/2.0*state_fab(i + 2, j, k, Idx::gamtildeLL00) + (1.0/12.0)*state_fab(i + 3, j, k, Idx::gamtildeLL00) - 1.0/4.0*state_fab(i - 1, j, k, Idx::gamtildeLL00) - 5.0/6.0*state_fab(i, j, k, Idx::gamtildeLL00))/dx[0];
         amrex::Real DupgamtildeLL001 = ((3.0/2.0)*state_fab(i, j + 1, k, Idx::gamtildeLL00) - 1.0/2.0*state_fab(i, j + 2, k, Idx::gamtildeLL00) + (1.0/12.0)*state_fab(i, j + 3, k, Idx::gamtildeLL00) - 1.0/4.0*state_fab(i, j - 1, k, Idx::gamtildeLL00) - 5.0/6.0*state_fab(i, j, k, Idx::gamtildeLL00))/dx[1];
         amrex::Real DupgamtildeLL002 = ((3.0/2.0)*state_fab(i, j, k + 1, Idx::gamtildeLL00) - 1.0/2.0*state_fab(i, j, k + 2, Idx::gamtildeLL00) + (1.0/12.0)*state_fab(i, j, k + 3, Idx::gamtildeLL00) - 1.0/4.0*state_fab(i, j, k - 1, Idx::gamtildeLL00) - 5.0/6.0*state_fab(i, j, k, Idx::gamtildeLL00))/dx[2];
@@ -164,7 +152,8 @@ state_rhs(int i, int j, int k,
         amrex::Real DdnKhat0 = ((1.0/4.0)*state_fab(i + 1, j, k, Idx::Khat) - 3.0/2.0*state_fab(i - 1, j, k, Idx::Khat) + (1.0/2.0)*state_fab(i - 2, j, k, Idx::Khat) - 1.0/12.0*state_fab(i - 3, j, k, Idx::Khat) + (5.0/6.0)*state_fab(i, j, k, Idx::Khat))/dx[0];
         amrex::Real DdnKhat1 = ((1.0/4.0)*state_fab(i, j + 1, k, Idx::Khat) - 3.0/2.0*state_fab(i, j - 1, k, Idx::Khat) + (1.0/2.0)*state_fab(i, j - 2, k, Idx::Khat) - 1.0/12.0*state_fab(i, j - 3, k, Idx::Khat) + (5.0/6.0)*state_fab(i, j, k, Idx::Khat))/dx[1];
         amrex::Real DdnKhat2 = ((1.0/4.0)*state_fab(i, j, k + 1, Idx::Khat) - 3.0/2.0*state_fab(i, j, k - 1, Idx::Khat) + (1.0/2.0)*state_fab(i, j, k - 2, Idx::Khat) - 1.0/12.0*state_fab(i, j, k - 3, Idx::Khat) + (5.0/6.0)*state_fab(i, j, k, Idx::Khat))/dx[2];
-        amrex::Real betaDKhat = 0 + betaU0*(DdnKhat0*betaDn0 + DupKhat0*betaUp0) + betaU1*(DdnKhat1*betaDn1 + DupKhat1*betaUp1) + betaU2*(DdnKhat2*betaDn2 + DupKhat2*betaUp2);
+        amrex::Real betaDKhat = betaU0*(DdnKhat0*betaDn0 + DupKhat0*betaUp0) + betaU1*(DdnKhat1*betaDn1 + DupKhat1*betaUp1) + betaU2*(DdnKhat2*betaDn2 + DupKhat2*betaUp2);
+
         amrex::Real DupAtildeLL000 = ((3.0/2.0)*state_fab(i + 1, j, k, Idx::AtildeLL00) - 1.0/2.0*state_fab(i + 2, j, k, Idx::AtildeLL00) + (1.0/12.0)*state_fab(i + 3, j, k, Idx::AtildeLL00) - 1.0/4.0*state_fab(i - 1, j, k, Idx::AtildeLL00) - 5.0/6.0*state_fab(i, j, k, Idx::AtildeLL00))/dx[0];
         amrex::Real DupAtildeLL001 = ((3.0/2.0)*state_fab(i, j + 1, k, Idx::AtildeLL00) - 1.0/2.0*state_fab(i, j + 2, k, Idx::AtildeLL00) + (1.0/12.0)*state_fab(i, j + 3, k, Idx::AtildeLL00) - 1.0/4.0*state_fab(i, j - 1, k, Idx::AtildeLL00) - 5.0/6.0*state_fab(i, j, k, Idx::AtildeLL00))/dx[1];
         amrex::Real DupAtildeLL002 = ((3.0/2.0)*state_fab(i, j, k + 1, Idx::AtildeLL00) - 1.0/2.0*state_fab(i, j, k + 2, Idx::AtildeLL00) + (1.0/12.0)*state_fab(i, j, k + 3, Idx::AtildeLL00) - 1.0/4.0*state_fab(i, j, k - 1, Idx::AtildeLL00) - 5.0/6.0*state_fab(i, j, k, Idx::AtildeLL00))/dx[2];
@@ -234,7 +223,8 @@ state_rhs(int i, int j, int k,
         amrex::Real Ddntheta0 = ((1.0/4.0)*state_fab(i + 1, j, k, Idx::theta) - 3.0/2.0*state_fab(i - 1, j, k, Idx::theta) + (1.0/2.0)*state_fab(i - 2, j, k, Idx::theta) - 1.0/12.0*state_fab(i - 3, j, k, Idx::theta) + (5.0/6.0)*state_fab(i, j, k, Idx::theta))/dx[0];
         amrex::Real Ddntheta1 = ((1.0/4.0)*state_fab(i, j + 1, k, Idx::theta) - 3.0/2.0*state_fab(i, j - 1, k, Idx::theta) + (1.0/2.0)*state_fab(i, j - 2, k, Idx::theta) - 1.0/12.0*state_fab(i, j - 3, k, Idx::theta) + (5.0/6.0)*state_fab(i, j, k, Idx::theta))/dx[1];
         amrex::Real Ddntheta2 = ((1.0/4.0)*state_fab(i, j, k + 1, Idx::theta) - 3.0/2.0*state_fab(i, j, k - 1, Idx::theta) + (1.0/2.0)*state_fab(i, j, k - 2, Idx::theta) - 1.0/12.0*state_fab(i, j, k - 3, Idx::theta) + (5.0/6.0)*state_fab(i, j, k, Idx::theta))/dx[2];
-        amrex::Real betaDtheta = 0 + betaU0*(Ddntheta0*betaDn0 + Duptheta0*betaUp0) + betaU1*(Ddntheta1*betaDn1 + Duptheta1*betaUp1) + betaU2*(Ddntheta2*betaDn2 + Duptheta2*betaUp2);
+        amrex::Real betaDtheta = betaU0*(Ddntheta0*betaDn0 + Duptheta0*betaUp0) + betaU1*(Ddntheta1*betaDn1 + Duptheta1*betaUp1) + betaU2*(Ddntheta2*betaDn2 + Duptheta2*betaUp2);
+
         amrex::Real DupGamtildeU00 = ((3.0/2.0)*state_fab(i + 1, j, k, Idx::GamtildeU0) - 1.0/2.0*state_fab(i + 2, j, k, Idx::GamtildeU0) + (1.0/12.0)*state_fab(i + 3, j, k, Idx::GamtildeU0) - 1.0/4.0*state_fab(i - 1, j, k, Idx::GamtildeU0) - 5.0/6.0*state_fab(i, j, k, Idx::GamtildeU0))/dx[0];
         amrex::Real DupGamtildeU01 = ((3.0/2.0)*state_fab(i, j + 1, k, Idx::GamtildeU0) - 1.0/2.0*state_fab(i, j + 2, k, Idx::GamtildeU0) + (1.0/12.0)*state_fab(i, j + 3, k, Idx::GamtildeU0) - 1.0/4.0*state_fab(i, j - 1, k, Idx::GamtildeU0) - 5.0/6.0*state_fab(i, j, k, Idx::GamtildeU0))/dx[1];
         amrex::Real DupGamtildeU02 = ((3.0/2.0)*state_fab(i, j, k + 1, Idx::GamtildeU0) - 1.0/2.0*state_fab(i, j, k + 2, Idx::GamtildeU0) + (1.0/12.0)*state_fab(i, j, k + 3, Idx::GamtildeU0) - 1.0/4.0*state_fab(i, j, k - 1, Idx::GamtildeU0) - 5.0/6.0*state_fab(i, j, k, Idx::GamtildeU0))/dx[2];
@@ -262,7 +252,8 @@ state_rhs(int i, int j, int k,
         amrex::Real Ddnalpha0 = ((1.0/4.0)*state_fab(i + 1, j, k, Idx::alpha) - 3.0/2.0*state_fab(i - 1, j, k, Idx::alpha) + (1.0/2.0)*state_fab(i - 2, j, k, Idx::alpha) - 1.0/12.0*state_fab(i - 3, j, k, Idx::alpha) + (5.0/6.0)*state_fab(i, j, k, Idx::alpha))/dx[0];
         amrex::Real Ddnalpha1 = ((1.0/4.0)*state_fab(i, j + 1, k, Idx::alpha) - 3.0/2.0*state_fab(i, j - 1, k, Idx::alpha) + (1.0/2.0)*state_fab(i, j - 2, k, Idx::alpha) - 1.0/12.0*state_fab(i, j - 3, k, Idx::alpha) + (5.0/6.0)*state_fab(i, j, k, Idx::alpha))/dx[1];
         amrex::Real Ddnalpha2 = ((1.0/4.0)*state_fab(i, j, k + 1, Idx::alpha) - 3.0/2.0*state_fab(i, j, k - 1, Idx::alpha) + (1.0/2.0)*state_fab(i, j, k - 2, Idx::alpha) - 1.0/12.0*state_fab(i, j, k - 3, Idx::alpha) + (5.0/6.0)*state_fab(i, j, k, Idx::alpha))/dx[2];
-        amrex::Real betaDalpha = 0 + betaU0*(Ddnalpha0*betaDn0 + Dupalpha0*betaUp0) + betaU1*(Ddnalpha1*betaDn1 + Dupalpha1*betaUp1) + betaU2*(Ddnalpha2*betaDn2 + Dupalpha2*betaUp2);
+        amrex::Real betaDalpha = betaU0*(Ddnalpha0*betaDn0 + Dupalpha0*betaUp0) + betaU1*(Ddnalpha1*betaDn1 + Dupalpha1*betaUp1) + betaU2*(Ddnalpha2*betaDn2 + Dupalpha2*betaUp2);
+
         amrex::Real DupbetaU00 = ((3.0/2.0)*state_fab(i + 1, j, k, Idx::betaU0) - 1.0/2.0*state_fab(i + 2, j, k, Idx::betaU0) + (1.0/12.0)*state_fab(i + 3, j, k, Idx::betaU0) - 1.0/4.0*state_fab(i - 1, j, k, Idx::betaU0) - 5.0/6.0*state_fab(i, j, k, Idx::betaU0))/dx[0];
         amrex::Real DupbetaU01 = ((3.0/2.0)*state_fab(i, j + 1, k, Idx::betaU0) - 1.0/2.0*state_fab(i, j + 2, k, Idx::betaU0) + (1.0/12.0)*state_fab(i, j + 3, k, Idx::betaU0) - 1.0/4.0*state_fab(i, j - 1, k, Idx::betaU0) - 5.0/6.0*state_fab(i, j, k, Idx::betaU0))/dx[1];
         amrex::Real DupbetaU02 = ((3.0/2.0)*state_fab(i, j, k + 1, Idx::betaU0) - 1.0/2.0*state_fab(i, j, k + 2, Idx::betaU0) + (1.0/12.0)*state_fab(i, j, k + 3, Idx::betaU0) - 1.0/4.0*state_fab(i, j, k - 1, Idx::betaU0) - 5.0/6.0*state_fab(i, j, k, Idx::betaU0))/dx[2];
@@ -297,6 +288,7 @@ state_rhs(int i, int j, int k,
         amrex::Real ddchi21 = ((4.0/9.0)*state_fab(i, j + 1, k + 1, Idx::chi) - 1.0/18.0*state_fab(i, j + 1, k + 2, Idx::chi) - 4.0/9.0*state_fab(i, j + 1, k - 1, Idx::chi) + (1.0/18.0)*state_fab(i, j + 1, k - 2, Idx::chi) - 1.0/18.0*state_fab(i, j + 2, k + 1, Idx::chi) + (1.0/144.0)*state_fab(i, j + 2, k + 2, Idx::chi) + (1.0/18.0)*state_fab(i, j + 2, k - 1, Idx::chi) - 1.0/144.0*state_fab(i, j + 2, k - 2, Idx::chi) - 4.0/9.0*state_fab(i, j - 1, k + 1, Idx::chi) + (1.0/18.0)*state_fab(i, j - 1, k + 2, Idx::chi) + (4.0/9.0)*state_fab(i, j - 1, k - 1, Idx::chi) - 1.0/18.0*state_fab(i, j - 1, k - 2, Idx::chi) + (1.0/18.0)*state_fab(i, j - 2, k + 1, Idx::chi) - 1.0/144.0*state_fab(i, j - 2, k + 2, Idx::chi) - 1.0/18.0*state_fab(i, j - 2, k - 1, Idx::chi) + (1.0/144.0)*state_fab(i, j - 2, k - 2, Idx::chi))/(dx[1]*dx[2]);
         amrex::Real ddchi22 = ((4.0/3.0)*state_fab(i, j, k + 1, Idx::chi) - 1.0/12.0*state_fab(i, j, k + 2, Idx::chi) + (4.0/3.0)*state_fab(i, j, k - 1, Idx::chi) - 1.0/12.0*state_fab(i, j, k - 2, Idx::chi) - 5.0/2.0*state_fab(i, j, k, Idx::chi))/std::pow(dx[2], 2);
         amrex::Real KOchi = 0.0015625000000000001*(15*state_fab(i, j, k + 1, Idx::chi) - 6*state_fab(i, j, k + 2, Idx::chi) + state_fab(i, j, k + 3, Idx::chi) + 15*state_fab(i, j, k - 1, Idx::chi) - 6*state_fab(i, j, k - 2, Idx::chi) + state_fab(i, j, k - 3, Idx::chi) - 20*state_fab(i, j, k, Idx::chi))/dx[2] + 0.0015625000000000001*(15*state_fab(i, j + 1, k, Idx::chi) - 6*state_fab(i, j + 2, k, Idx::chi) + state_fab(i, j + 3, k, Idx::chi) + 15*state_fab(i, j - 1, k, Idx::chi) - 6*state_fab(i, j - 2, k, Idx::chi) + state_fab(i, j - 3, k, Idx::chi) - 20*state_fab(i, j, k, Idx::chi))/dx[1] + 0.0015625000000000001*(15*state_fab(i + 1, j, k, Idx::chi) - 6*state_fab(i + 2, j, k, Idx::chi) + state_fab(i + 3, j, k, Idx::chi) + 15*state_fab(i - 1, j, k, Idx::chi) - 6*state_fab(i - 2, j, k, Idx::chi) + state_fab(i - 3, j, k, Idx::chi) - 20*state_fab(i, j, k, Idx::chi))/dx[0];
+
         amrex::Real dgamtildeLL000 = ((2.0/3.0)*state_fab(i + 1, j, k, Idx::gamtildeLL00) - 1.0/12.0*state_fab(i + 2, j, k, Idx::gamtildeLL00) - 2.0/3.0*state_fab(i - 1, j, k, Idx::gamtildeLL00) + (1.0/12.0)*state_fab(i - 2, j, k, Idx::gamtildeLL00))/dx[0];
         amrex::Real dgamtildeLL001 = ((2.0/3.0)*state_fab(i, j + 1, k, Idx::gamtildeLL00) - 1.0/12.0*state_fab(i, j + 2, k, Idx::gamtildeLL00) - 2.0/3.0*state_fab(i, j - 1, k, Idx::gamtildeLL00) + (1.0/12.0)*state_fab(i, j - 2, k, Idx::gamtildeLL00))/dx[1];
         amrex::Real dgamtildeLL002 = ((2.0/3.0)*state_fab(i, j, k + 1, Idx::gamtildeLL00) - 1.0/12.0*state_fab(i, j, k + 2, Idx::gamtildeLL00) - 2.0/3.0*state_fab(i, j, k - 1, Idx::gamtildeLL00) + (1.0/12.0)*state_fab(i, j, k - 2, Idx::gamtildeLL00))/dx[2];
@@ -418,6 +410,7 @@ state_rhs(int i, int j, int k,
         amrex::Real dKhat1 = ((2.0/3.0)*state_fab(i, j + 1, k, Idx::Khat) - 1.0/12.0*state_fab(i, j + 2, k, Idx::Khat) - 2.0/3.0*state_fab(i, j - 1, k, Idx::Khat) + (1.0/12.0)*state_fab(i, j - 2, k, Idx::Khat))/dx[1];
         amrex::Real dKhat2 = ((2.0/3.0)*state_fab(i, j, k + 1, Idx::Khat) - 1.0/12.0*state_fab(i, j, k + 2, Idx::Khat) - 2.0/3.0*state_fab(i, j, k - 1, Idx::Khat) + (1.0/12.0)*state_fab(i, j, k - 2, Idx::Khat))/dx[2];
         amrex::Real KOKhat = 0.0015625000000000001*(15*state_fab(i, j, k + 1, Idx::Khat) - 6*state_fab(i, j, k + 2, Idx::Khat) + state_fab(i, j, k + 3, Idx::Khat) + 15*state_fab(i, j, k - 1, Idx::Khat) - 6*state_fab(i, j, k - 2, Idx::Khat) + state_fab(i, j, k - 3, Idx::Khat) - 20*state_fab(i, j, k, Idx::Khat))/dx[2] + 0.0015625000000000001*(15*state_fab(i, j + 1, k, Idx::Khat) - 6*state_fab(i, j + 2, k, Idx::Khat) + state_fab(i, j + 3, k, Idx::Khat) + 15*state_fab(i, j - 1, k, Idx::Khat) - 6*state_fab(i, j - 2, k, Idx::Khat) + state_fab(i, j - 3, k, Idx::Khat) - 20*state_fab(i, j, k, Idx::Khat))/dx[1] + 0.0015625000000000001*(15*state_fab(i + 1, j, k, Idx::Khat) - 6*state_fab(i + 2, j, k, Idx::Khat) + state_fab(i + 3, j, k, Idx::Khat) + 15*state_fab(i - 1, j, k, Idx::Khat) - 6*state_fab(i - 2, j, k, Idx::Khat) + state_fab(i - 3, j, k, Idx::Khat) - 20*state_fab(i, j, k, Idx::Khat))/dx[0];
+
         amrex::Real dAtildeLL000 = ((2.0/3.0)*state_fab(i + 1, j, k, Idx::AtildeLL00) - 1.0/12.0*state_fab(i + 2, j, k, Idx::AtildeLL00) - 2.0/3.0*state_fab(i - 1, j, k, Idx::AtildeLL00) + (1.0/12.0)*state_fab(i - 2, j, k, Idx::AtildeLL00))/dx[0];
         amrex::Real dAtildeLL001 = ((2.0/3.0)*state_fab(i, j + 1, k, Idx::AtildeLL00) - 1.0/12.0*state_fab(i, j + 2, k, Idx::AtildeLL00) - 2.0/3.0*state_fab(i, j - 1, k, Idx::AtildeLL00) + (1.0/12.0)*state_fab(i, j - 2, k, Idx::AtildeLL00))/dx[1];
         amrex::Real dAtildeLL002 = ((2.0/3.0)*state_fab(i, j, k + 1, Idx::AtildeLL00) - 1.0/12.0*state_fab(i, j, k + 2, Idx::AtildeLL00) - 2.0/3.0*state_fab(i, j, k - 1, Idx::AtildeLL00) + (1.0/12.0)*state_fab(i, j, k - 2, Idx::AtildeLL00))/dx[2];
@@ -458,6 +451,7 @@ state_rhs(int i, int j, int k,
         amrex::Real dtheta1 = ((2.0/3.0)*state_fab(i, j + 1, k, Idx::theta) - 1.0/12.0*state_fab(i, j + 2, k, Idx::theta) - 2.0/3.0*state_fab(i, j - 1, k, Idx::theta) + (1.0/12.0)*state_fab(i, j - 2, k, Idx::theta))/dx[1];
         amrex::Real dtheta2 = ((2.0/3.0)*state_fab(i, j, k + 1, Idx::theta) - 1.0/12.0*state_fab(i, j, k + 2, Idx::theta) - 2.0/3.0*state_fab(i, j, k - 1, Idx::theta) + (1.0/12.0)*state_fab(i, j, k - 2, Idx::theta))/dx[2];
         amrex::Real KOtheta = 0.0015625000000000001*(15*state_fab(i, j, k + 1, Idx::theta) - 6*state_fab(i, j, k + 2, Idx::theta) + state_fab(i, j, k + 3, Idx::theta) + 15*state_fab(i, j, k - 1, Idx::theta) - 6*state_fab(i, j, k - 2, Idx::theta) + state_fab(i, j, k - 3, Idx::theta) - 20*state_fab(i, j, k, Idx::theta))/dx[2] + 0.0015625000000000001*(15*state_fab(i, j + 1, k, Idx::theta) - 6*state_fab(i, j + 2, k, Idx::theta) + state_fab(i, j + 3, k, Idx::theta) + 15*state_fab(i, j - 1, k, Idx::theta) - 6*state_fab(i, j - 2, k, Idx::theta) + state_fab(i, j - 3, k, Idx::theta) - 20*state_fab(i, j, k, Idx::theta))/dx[1] + 0.0015625000000000001*(15*state_fab(i + 1, j, k, Idx::theta) - 6*state_fab(i + 2, j, k, Idx::theta) + state_fab(i + 3, j, k, Idx::theta) + 15*state_fab(i - 1, j, k, Idx::theta) - 6*state_fab(i - 2, j, k, Idx::theta) + state_fab(i - 3, j, k, Idx::theta) - 20*state_fab(i, j, k, Idx::theta))/dx[0];
+
         amrex::Real dGamtildeU00 = ((2.0/3.0)*state_fab(i + 1, j, k, Idx::GamtildeU0) - 1.0/12.0*state_fab(i + 2, j, k, Idx::GamtildeU0) - 2.0/3.0*state_fab(i - 1, j, k, Idx::GamtildeU0) + (1.0/12.0)*state_fab(i - 2, j, k, Idx::GamtildeU0))/dx[0];
         amrex::Real dGamtildeU01 = ((2.0/3.0)*state_fab(i, j + 1, k, Idx::GamtildeU0) - 1.0/12.0*state_fab(i, j + 2, k, Idx::GamtildeU0) - 2.0/3.0*state_fab(i, j - 1, k, Idx::GamtildeU0) + (1.0/12.0)*state_fab(i, j - 2, k, Idx::GamtildeU0))/dx[1];
         amrex::Real dGamtildeU02 = ((2.0/3.0)*state_fab(i, j, k + 1, Idx::GamtildeU0) - 1.0/12.0*state_fab(i, j, k + 2, Idx::GamtildeU0) - 2.0/3.0*state_fab(i, j, k - 1, Idx::GamtildeU0) + (1.0/12.0)*state_fab(i, j, k - 2, Idx::GamtildeU0))/dx[2];
@@ -483,6 +477,7 @@ state_rhs(int i, int j, int k,
         amrex::Real ddalpha21 = ((4.0/9.0)*state_fab(i, j + 1, k + 1, Idx::alpha) - 1.0/18.0*state_fab(i, j + 1, k + 2, Idx::alpha) - 4.0/9.0*state_fab(i, j + 1, k - 1, Idx::alpha) + (1.0/18.0)*state_fab(i, j + 1, k - 2, Idx::alpha) - 1.0/18.0*state_fab(i, j + 2, k + 1, Idx::alpha) + (1.0/144.0)*state_fab(i, j + 2, k + 2, Idx::alpha) + (1.0/18.0)*state_fab(i, j + 2, k - 1, Idx::alpha) - 1.0/144.0*state_fab(i, j + 2, k - 2, Idx::alpha) - 4.0/9.0*state_fab(i, j - 1, k + 1, Idx::alpha) + (1.0/18.0)*state_fab(i, j - 1, k + 2, Idx::alpha) + (4.0/9.0)*state_fab(i, j - 1, k - 1, Idx::alpha) - 1.0/18.0*state_fab(i, j - 1, k - 2, Idx::alpha) + (1.0/18.0)*state_fab(i, j - 2, k + 1, Idx::alpha) - 1.0/144.0*state_fab(i, j - 2, k + 2, Idx::alpha) - 1.0/18.0*state_fab(i, j - 2, k - 1, Idx::alpha) + (1.0/144.0)*state_fab(i, j - 2, k - 2, Idx::alpha))/(dx[1]*dx[2]);
         amrex::Real ddalpha22 = ((4.0/3.0)*state_fab(i, j, k + 1, Idx::alpha) - 1.0/12.0*state_fab(i, j, k + 2, Idx::alpha) + (4.0/3.0)*state_fab(i, j, k - 1, Idx::alpha) - 1.0/12.0*state_fab(i, j, k - 2, Idx::alpha) - 5.0/2.0*state_fab(i, j, k, Idx::alpha))/std::pow(dx[2], 2);
         amrex::Real KOalpha = 0.0015625000000000001*(15*state_fab(i, j, k + 1, Idx::alpha) - 6*state_fab(i, j, k + 2, Idx::alpha) + state_fab(i, j, k + 3, Idx::alpha) + 15*state_fab(i, j, k - 1, Idx::alpha) - 6*state_fab(i, j, k - 2, Idx::alpha) + state_fab(i, j, k - 3, Idx::alpha) - 20*state_fab(i, j, k, Idx::alpha))/dx[2] + 0.0015625000000000001*(15*state_fab(i, j + 1, k, Idx::alpha) - 6*state_fab(i, j + 2, k, Idx::alpha) + state_fab(i, j + 3, k, Idx::alpha) + 15*state_fab(i, j - 1, k, Idx::alpha) - 6*state_fab(i, j - 2, k, Idx::alpha) + state_fab(i, j - 3, k, Idx::alpha) - 20*state_fab(i, j, k, Idx::alpha))/dx[1] + 0.0015625000000000001*(15*state_fab(i + 1, j, k, Idx::alpha) - 6*state_fab(i + 2, j, k, Idx::alpha) + state_fab(i + 3, j, k, Idx::alpha) + 15*state_fab(i - 1, j, k, Idx::alpha) - 6*state_fab(i - 2, j, k, Idx::alpha) + state_fab(i - 3, j, k, Idx::alpha) - 20*state_fab(i, j, k, Idx::alpha))/dx[0];
+
         amrex::Real dbetaU00 = ((2.0/3.0)*state_fab(i + 1, j, k, Idx::betaU0) - 1.0/12.0*state_fab(i + 2, j, k, Idx::betaU0) - 2.0/3.0*state_fab(i - 1, j, k, Idx::betaU0) + (1.0/12.0)*state_fab(i - 2, j, k, Idx::betaU0))/dx[0];
         amrex::Real dbetaU01 = ((2.0/3.0)*state_fab(i, j + 1, k, Idx::betaU0) - 1.0/12.0*state_fab(i, j + 2, k, Idx::betaU0) - 2.0/3.0*state_fab(i, j - 1, k, Idx::betaU0) + (1.0/12.0)*state_fab(i, j - 2, k, Idx::betaU0))/dx[1];
         amrex::Real dbetaU02 = ((2.0/3.0)*state_fab(i, j, k + 1, Idx::betaU0) - 1.0/12.0*state_fab(i, j, k + 2, Idx::betaU0) - 2.0/3.0*state_fab(i, j, k - 1, Idx::betaU0) + (1.0/12.0)*state_fab(i, j, k - 2, Idx::betaU0))/dx[2];
@@ -531,60 +526,87 @@ state_rhs(int i, int j, int k,
         amrex::Real gamtildeUU20 = (gamtildeLL10*gamtildeLL21 - gamtildeLL11*gamtildeLL20)/(gamtildeLL00*gamtildeLL11*gamtildeLL22 - gamtildeLL00*gamtildeLL12*gamtildeLL21 - gamtildeLL01*gamtildeLL10*gamtildeLL22 + gamtildeLL01*gamtildeLL12*gamtildeLL20 + gamtildeLL02*gamtildeLL10*gamtildeLL21 - gamtildeLL02*gamtildeLL11*gamtildeLL20);
         amrex::Real gamtildeUU21 = -gamtildeLL00*(gamtildeLL00*gamtildeLL21 - gamtildeLL01*gamtildeLL20)/((gamtildeLL00*gamtildeLL11 - gamtildeLL01*gamtildeLL10)*(gamtildeLL00*gamtildeLL22 - gamtildeLL02*gamtildeLL20) - (gamtildeLL00*gamtildeLL12 - gamtildeLL02*gamtildeLL10)*(gamtildeLL00*gamtildeLL21 - gamtildeLL01*gamtildeLL20));
         amrex::Real gamtildeUU22 = gamtildeLL00*(gamtildeLL00*gamtildeLL11 - gamtildeLL01*gamtildeLL10)/((gamtildeLL00*gamtildeLL11 - gamtildeLL01*gamtildeLL10)*(gamtildeLL00*gamtildeLL22 - gamtildeLL02*gamtildeLL20) - (gamtildeLL00*gamtildeLL12 - gamtildeLL02*gamtildeLL10)*(gamtildeLL00*gamtildeLL21 - gamtildeLL01*gamtildeLL20));
-        amrex::Real GamtildeULL000 = 0.5*dgamtildeLL000*gamtildeUU00 + 0.5*gamtildeUU01*(-dgamtildeLL001 + 2*dgamtildeLL100) + 0.5*gamtildeUU02*(-dgamtildeLL002 + 2*dgamtildeLL200);
-        amrex::Real GamtildeULL001 = 0.5*dgamtildeLL001*gamtildeUU00 + 0.5*gamtildeUU01*(-dgamtildeLL011 + dgamtildeLL101 + dgamtildeLL110) + 0.5*gamtildeUU02*(-dgamtildeLL012 + dgamtildeLL201 + dgamtildeLL210);
-        amrex::Real GamtildeULL002 = 0.5*dgamtildeLL002*gamtildeUU00 + 0.5*gamtildeUU01*(-dgamtildeLL021 + dgamtildeLL102 + dgamtildeLL120) + 0.5*gamtildeUU02*(-dgamtildeLL022 + dgamtildeLL202 + dgamtildeLL220);
-        amrex::Real GamtildeULL010 = 0.5*dgamtildeLL110*gamtildeUU01 + 0.5*gamtildeUU00*(dgamtildeLL001 + dgamtildeLL010 - dgamtildeLL100) + 0.5*gamtildeUU02*(-dgamtildeLL102 + dgamtildeLL201 + dgamtildeLL210);
-        amrex::Real GamtildeULL011 = 0.5*dgamtildeLL111*gamtildeUU01 + 0.5*gamtildeUU00*(2*dgamtildeLL011 - dgamtildeLL110) + 0.5*gamtildeUU02*(-dgamtildeLL112 + 2*dgamtildeLL211);
-        amrex::Real GamtildeULL012 = 0.5*dgamtildeLL112*gamtildeUU01 + 0.5*gamtildeUU00*(dgamtildeLL012 + dgamtildeLL021 - dgamtildeLL120) + 0.5*gamtildeUU02*(-dgamtildeLL122 + dgamtildeLL212 + dgamtildeLL221);
-        amrex::Real GamtildeULL020 = 0.5*dgamtildeLL220*gamtildeUU02 + 0.5*gamtildeUU00*(dgamtildeLL002 + dgamtildeLL020 - dgamtildeLL200) + 0.5*gamtildeUU01*(dgamtildeLL102 + dgamtildeLL120 - dgamtildeLL201);
-        amrex::Real GamtildeULL021 = 0.5*dgamtildeLL221*gamtildeUU02 + 0.5*gamtildeUU00*(dgamtildeLL012 + dgamtildeLL021 - dgamtildeLL210) + 0.5*gamtildeUU01*(dgamtildeLL112 + dgamtildeLL121 - dgamtildeLL211);
-        amrex::Real GamtildeULL022 = 0.5*dgamtildeLL222*gamtildeUU02 + 0.5*gamtildeUU00*(2*dgamtildeLL022 - dgamtildeLL220) + 0.5*gamtildeUU01*(2*dgamtildeLL122 - dgamtildeLL221);
-        amrex::Real GamtildeULL100 = 0.5*dgamtildeLL000*gamtildeUU10 + 0.5*gamtildeUU11*(-dgamtildeLL001 + 2*dgamtildeLL100) + 0.5*gamtildeUU12*(-dgamtildeLL002 + 2*dgamtildeLL200);
-        amrex::Real GamtildeULL101 = 0.5*dgamtildeLL001*gamtildeUU10 + 0.5*gamtildeUU11*(-dgamtildeLL011 + dgamtildeLL101 + dgamtildeLL110) + 0.5*gamtildeUU12*(-dgamtildeLL012 + dgamtildeLL201 + dgamtildeLL210);
-        amrex::Real GamtildeULL102 = 0.5*dgamtildeLL002*gamtildeUU10 + 0.5*gamtildeUU11*(-dgamtildeLL021 + dgamtildeLL102 + dgamtildeLL120) + 0.5*gamtildeUU12*(-dgamtildeLL022 + dgamtildeLL202 + dgamtildeLL220);
-        amrex::Real GamtildeULL110 = 0.5*dgamtildeLL110*gamtildeUU11 + 0.5*gamtildeUU10*(dgamtildeLL001 + dgamtildeLL010 - dgamtildeLL100) + 0.5*gamtildeUU12*(-dgamtildeLL102 + dgamtildeLL201 + dgamtildeLL210);
-        amrex::Real GamtildeULL111 = 0.5*dgamtildeLL111*gamtildeUU11 + 0.5*gamtildeUU10*(2*dgamtildeLL011 - dgamtildeLL110) + 0.5*gamtildeUU12*(-dgamtildeLL112 + 2*dgamtildeLL211);
-        amrex::Real GamtildeULL112 = 0.5*dgamtildeLL112*gamtildeUU11 + 0.5*gamtildeUU10*(dgamtildeLL012 + dgamtildeLL021 - dgamtildeLL120) + 0.5*gamtildeUU12*(-dgamtildeLL122 + dgamtildeLL212 + dgamtildeLL221);
-        amrex::Real GamtildeULL120 = 0.5*dgamtildeLL220*gamtildeUU12 + 0.5*gamtildeUU10*(dgamtildeLL002 + dgamtildeLL020 - dgamtildeLL200) + 0.5*gamtildeUU11*(dgamtildeLL102 + dgamtildeLL120 - dgamtildeLL201);
-        amrex::Real GamtildeULL121 = 0.5*dgamtildeLL221*gamtildeUU12 + 0.5*gamtildeUU10*(dgamtildeLL012 + dgamtildeLL021 - dgamtildeLL210) + 0.5*gamtildeUU11*(dgamtildeLL112 + dgamtildeLL121 - dgamtildeLL211);
-        amrex::Real GamtildeULL122 = 0.5*dgamtildeLL222*gamtildeUU12 + 0.5*gamtildeUU10*(2*dgamtildeLL022 - dgamtildeLL220) + 0.5*gamtildeUU11*(2*dgamtildeLL122 - dgamtildeLL221);
-        amrex::Real GamtildeULL200 = 0.5*dgamtildeLL000*gamtildeUU20 + 0.5*gamtildeUU21*(-dgamtildeLL001 + 2*dgamtildeLL100) + 0.5*gamtildeUU22*(-dgamtildeLL002 + 2*dgamtildeLL200);
-        amrex::Real GamtildeULL201 = 0.5*dgamtildeLL001*gamtildeUU20 + 0.5*gamtildeUU21*(-dgamtildeLL011 + dgamtildeLL101 + dgamtildeLL110) + 0.5*gamtildeUU22*(-dgamtildeLL012 + dgamtildeLL201 + dgamtildeLL210);
-        amrex::Real GamtildeULL202 = 0.5*dgamtildeLL002*gamtildeUU20 + 0.5*gamtildeUU21*(-dgamtildeLL021 + dgamtildeLL102 + dgamtildeLL120) + 0.5*gamtildeUU22*(-dgamtildeLL022 + dgamtildeLL202 + dgamtildeLL220);
-        amrex::Real GamtildeULL210 = 0.5*dgamtildeLL110*gamtildeUU21 + 0.5*gamtildeUU20*(dgamtildeLL001 + dgamtildeLL010 - dgamtildeLL100) + 0.5*gamtildeUU22*(-dgamtildeLL102 + dgamtildeLL201 + dgamtildeLL210);
-        amrex::Real GamtildeULL211 = 0.5*dgamtildeLL111*gamtildeUU21 + 0.5*gamtildeUU20*(2*dgamtildeLL011 - dgamtildeLL110) + 0.5*gamtildeUU22*(-dgamtildeLL112 + 2*dgamtildeLL211);
-        amrex::Real GamtildeULL212 = 0.5*dgamtildeLL112*gamtildeUU21 + 0.5*gamtildeUU20*(dgamtildeLL012 + dgamtildeLL021 - dgamtildeLL120) + 0.5*gamtildeUU22*(-dgamtildeLL122 + dgamtildeLL212 + dgamtildeLL221);
-        amrex::Real GamtildeULL220 = 0.5*dgamtildeLL220*gamtildeUU22 + 0.5*gamtildeUU20*(dgamtildeLL002 + dgamtildeLL020 - dgamtildeLL200) + 0.5*gamtildeUU21*(dgamtildeLL102 + dgamtildeLL120 - dgamtildeLL201);
-        amrex::Real GamtildeULL221 = 0.5*dgamtildeLL221*gamtildeUU22 + 0.5*gamtildeUU20*(dgamtildeLL012 + dgamtildeLL021 - dgamtildeLL210) + 0.5*gamtildeUU21*(dgamtildeLL112 + dgamtildeLL121 - dgamtildeLL211);
-        amrex::Real GamtildeULL222 = 0.5*dgamtildeLL222*gamtildeUU22 + 0.5*gamtildeUU20*(2*dgamtildeLL022 - dgamtildeLL220) + 0.5*gamtildeUU21*(2*dgamtildeLL122 - dgamtildeLL221);
-        amrex::Real GamtildeLLL000 = gamtildeLL00*(0.5*dgamtildeLL000*gamtildeUU00 + 0.5*gamtildeUU01*(-dgamtildeLL001 + 2*dgamtildeLL100) + 0.5*gamtildeUU02*(-dgamtildeLL002 + 2*dgamtildeLL200)) + gamtildeLL01*(0.5*dgamtildeLL000*gamtildeUU10 + 0.5*gamtildeUU11*(-dgamtildeLL001 + 2*dgamtildeLL100) + 0.5*gamtildeUU12*(-dgamtildeLL002 + 2*dgamtildeLL200)) + gamtildeLL02*(0.5*dgamtildeLL000*gamtildeUU20 + 0.5*gamtildeUU21*(-dgamtildeLL001 + 2*dgamtildeLL100) + 0.5*gamtildeUU22*(-dgamtildeLL002 + 2*dgamtildeLL200));
-        amrex::Real GamtildeLLL001 = gamtildeLL00*(0.5*dgamtildeLL001*gamtildeUU00 + 0.5*gamtildeUU01*(-dgamtildeLL011 + dgamtildeLL101 + dgamtildeLL110) + 0.5*gamtildeUU02*(-dgamtildeLL012 + dgamtildeLL201 + dgamtildeLL210)) + gamtildeLL01*(0.5*dgamtildeLL001*gamtildeUU10 + 0.5*gamtildeUU11*(-dgamtildeLL011 + dgamtildeLL101 + dgamtildeLL110) + 0.5*gamtildeUU12*(-dgamtildeLL012 + dgamtildeLL201 + dgamtildeLL210)) + gamtildeLL02*(0.5*dgamtildeLL001*gamtildeUU20 + 0.5*gamtildeUU21*(-dgamtildeLL011 + dgamtildeLL101 + dgamtildeLL110) + 0.5*gamtildeUU22*(-dgamtildeLL012 + dgamtildeLL201 + dgamtildeLL210));
-        amrex::Real GamtildeLLL002 = gamtildeLL00*(0.5*dgamtildeLL002*gamtildeUU00 + 0.5*gamtildeUU01*(-dgamtildeLL021 + dgamtildeLL102 + dgamtildeLL120) + 0.5*gamtildeUU02*(-dgamtildeLL022 + dgamtildeLL202 + dgamtildeLL220)) + gamtildeLL01*(0.5*dgamtildeLL002*gamtildeUU10 + 0.5*gamtildeUU11*(-dgamtildeLL021 + dgamtildeLL102 + dgamtildeLL120) + 0.5*gamtildeUU12*(-dgamtildeLL022 + dgamtildeLL202 + dgamtildeLL220)) + gamtildeLL02*(0.5*dgamtildeLL002*gamtildeUU20 + 0.5*gamtildeUU21*(-dgamtildeLL021 + dgamtildeLL102 + dgamtildeLL120) + 0.5*gamtildeUU22*(-dgamtildeLL022 + dgamtildeLL202 + dgamtildeLL220));
-        amrex::Real GamtildeLLL010 = gamtildeLL00*(0.5*dgamtildeLL110*gamtildeUU01 + 0.5*gamtildeUU00*(dgamtildeLL001 + dgamtildeLL010 - dgamtildeLL100) + 0.5*gamtildeUU02*(-dgamtildeLL102 + dgamtildeLL201 + dgamtildeLL210)) + gamtildeLL01*(0.5*dgamtildeLL110*gamtildeUU11 + 0.5*gamtildeUU10*(dgamtildeLL001 + dgamtildeLL010 - dgamtildeLL100) + 0.5*gamtildeUU12*(-dgamtildeLL102 + dgamtildeLL201 + dgamtildeLL210)) + gamtildeLL02*(0.5*dgamtildeLL110*gamtildeUU21 + 0.5*gamtildeUU20*(dgamtildeLL001 + dgamtildeLL010 - dgamtildeLL100) + 0.5*gamtildeUU22*(-dgamtildeLL102 + dgamtildeLL201 + dgamtildeLL210));
-        amrex::Real GamtildeLLL011 = gamtildeLL00*(0.5*dgamtildeLL111*gamtildeUU01 + 0.5*gamtildeUU00*(2*dgamtildeLL011 - dgamtildeLL110) + 0.5*gamtildeUU02*(-dgamtildeLL112 + 2*dgamtildeLL211)) + gamtildeLL01*(0.5*dgamtildeLL111*gamtildeUU11 + 0.5*gamtildeUU10*(2*dgamtildeLL011 - dgamtildeLL110) + 0.5*gamtildeUU12*(-dgamtildeLL112 + 2*dgamtildeLL211)) + gamtildeLL02*(0.5*dgamtildeLL111*gamtildeUU21 + 0.5*gamtildeUU20*(2*dgamtildeLL011 - dgamtildeLL110) + 0.5*gamtildeUU22*(-dgamtildeLL112 + 2*dgamtildeLL211));
-        amrex::Real GamtildeLLL012 = gamtildeLL00*(0.5*dgamtildeLL112*gamtildeUU01 + 0.5*gamtildeUU00*(dgamtildeLL012 + dgamtildeLL021 - dgamtildeLL120) + 0.5*gamtildeUU02*(-dgamtildeLL122 + dgamtildeLL212 + dgamtildeLL221)) + gamtildeLL01*(0.5*dgamtildeLL112*gamtildeUU11 + 0.5*gamtildeUU10*(dgamtildeLL012 + dgamtildeLL021 - dgamtildeLL120) + 0.5*gamtildeUU12*(-dgamtildeLL122 + dgamtildeLL212 + dgamtildeLL221)) + gamtildeLL02*(0.5*dgamtildeLL112*gamtildeUU21 + 0.5*gamtildeUU20*(dgamtildeLL012 + dgamtildeLL021 - dgamtildeLL120) + 0.5*gamtildeUU22*(-dgamtildeLL122 + dgamtildeLL212 + dgamtildeLL221));
-        amrex::Real GamtildeLLL020 = gamtildeLL00*(0.5*dgamtildeLL220*gamtildeUU02 + 0.5*gamtildeUU00*(dgamtildeLL002 + dgamtildeLL020 - dgamtildeLL200) + 0.5*gamtildeUU01*(dgamtildeLL102 + dgamtildeLL120 - dgamtildeLL201)) + gamtildeLL01*(0.5*dgamtildeLL220*gamtildeUU12 + 0.5*gamtildeUU10*(dgamtildeLL002 + dgamtildeLL020 - dgamtildeLL200) + 0.5*gamtildeUU11*(dgamtildeLL102 + dgamtildeLL120 - dgamtildeLL201)) + gamtildeLL02*(0.5*dgamtildeLL220*gamtildeUU22 + 0.5*gamtildeUU20*(dgamtildeLL002 + dgamtildeLL020 - dgamtildeLL200) + 0.5*gamtildeUU21*(dgamtildeLL102 + dgamtildeLL120 - dgamtildeLL201));
-        amrex::Real GamtildeLLL021 = gamtildeLL00*(0.5*dgamtildeLL221*gamtildeUU02 + 0.5*gamtildeUU00*(dgamtildeLL012 + dgamtildeLL021 - dgamtildeLL210) + 0.5*gamtildeUU01*(dgamtildeLL112 + dgamtildeLL121 - dgamtildeLL211)) + gamtildeLL01*(0.5*dgamtildeLL221*gamtildeUU12 + 0.5*gamtildeUU10*(dgamtildeLL012 + dgamtildeLL021 - dgamtildeLL210) + 0.5*gamtildeUU11*(dgamtildeLL112 + dgamtildeLL121 - dgamtildeLL211)) + gamtildeLL02*(0.5*dgamtildeLL221*gamtildeUU22 + 0.5*gamtildeUU20*(dgamtildeLL012 + dgamtildeLL021 - dgamtildeLL210) + 0.5*gamtildeUU21*(dgamtildeLL112 + dgamtildeLL121 - dgamtildeLL211));
-        amrex::Real GamtildeLLL022 = gamtildeLL00*(0.5*dgamtildeLL222*gamtildeUU02 + 0.5*gamtildeUU00*(2*dgamtildeLL022 - dgamtildeLL220) + 0.5*gamtildeUU01*(2*dgamtildeLL122 - dgamtildeLL221)) + gamtildeLL01*(0.5*dgamtildeLL222*gamtildeUU12 + 0.5*gamtildeUU10*(2*dgamtildeLL022 - dgamtildeLL220) + 0.5*gamtildeUU11*(2*dgamtildeLL122 - dgamtildeLL221)) + gamtildeLL02*(0.5*dgamtildeLL222*gamtildeUU22 + 0.5*gamtildeUU20*(2*dgamtildeLL022 - dgamtildeLL220) + 0.5*gamtildeUU21*(2*dgamtildeLL122 - dgamtildeLL221));
-        amrex::Real GamtildeLLL100 = gamtildeLL10*(0.5*dgamtildeLL000*gamtildeUU00 + 0.5*gamtildeUU01*(-dgamtildeLL001 + 2*dgamtildeLL100) + 0.5*gamtildeUU02*(-dgamtildeLL002 + 2*dgamtildeLL200)) + gamtildeLL11*(0.5*dgamtildeLL000*gamtildeUU10 + 0.5*gamtildeUU11*(-dgamtildeLL001 + 2*dgamtildeLL100) + 0.5*gamtildeUU12*(-dgamtildeLL002 + 2*dgamtildeLL200)) + gamtildeLL12*(0.5*dgamtildeLL000*gamtildeUU20 + 0.5*gamtildeUU21*(-dgamtildeLL001 + 2*dgamtildeLL100) + 0.5*gamtildeUU22*(-dgamtildeLL002 + 2*dgamtildeLL200));
-        amrex::Real GamtildeLLL101 = gamtildeLL10*(0.5*dgamtildeLL001*gamtildeUU00 + 0.5*gamtildeUU01*(-dgamtildeLL011 + dgamtildeLL101 + dgamtildeLL110) + 0.5*gamtildeUU02*(-dgamtildeLL012 + dgamtildeLL201 + dgamtildeLL210)) + gamtildeLL11*(0.5*dgamtildeLL001*gamtildeUU10 + 0.5*gamtildeUU11*(-dgamtildeLL011 + dgamtildeLL101 + dgamtildeLL110) + 0.5*gamtildeUU12*(-dgamtildeLL012 + dgamtildeLL201 + dgamtildeLL210)) + gamtildeLL12*(0.5*dgamtildeLL001*gamtildeUU20 + 0.5*gamtildeUU21*(-dgamtildeLL011 + dgamtildeLL101 + dgamtildeLL110) + 0.5*gamtildeUU22*(-dgamtildeLL012 + dgamtildeLL201 + dgamtildeLL210));
-        amrex::Real GamtildeLLL102 = gamtildeLL10*(0.5*dgamtildeLL002*gamtildeUU00 + 0.5*gamtildeUU01*(-dgamtildeLL021 + dgamtildeLL102 + dgamtildeLL120) + 0.5*gamtildeUU02*(-dgamtildeLL022 + dgamtildeLL202 + dgamtildeLL220)) + gamtildeLL11*(0.5*dgamtildeLL002*gamtildeUU10 + 0.5*gamtildeUU11*(-dgamtildeLL021 + dgamtildeLL102 + dgamtildeLL120) + 0.5*gamtildeUU12*(-dgamtildeLL022 + dgamtildeLL202 + dgamtildeLL220)) + gamtildeLL12*(0.5*dgamtildeLL002*gamtildeUU20 + 0.5*gamtildeUU21*(-dgamtildeLL021 + dgamtildeLL102 + dgamtildeLL120) + 0.5*gamtildeUU22*(-dgamtildeLL022 + dgamtildeLL202 + dgamtildeLL220));
-        amrex::Real GamtildeLLL110 = gamtildeLL10*(0.5*dgamtildeLL110*gamtildeUU01 + 0.5*gamtildeUU00*(dgamtildeLL001 + dgamtildeLL010 - dgamtildeLL100) + 0.5*gamtildeUU02*(-dgamtildeLL102 + dgamtildeLL201 + dgamtildeLL210)) + gamtildeLL11*(0.5*dgamtildeLL110*gamtildeUU11 + 0.5*gamtildeUU10*(dgamtildeLL001 + dgamtildeLL010 - dgamtildeLL100) + 0.5*gamtildeUU12*(-dgamtildeLL102 + dgamtildeLL201 + dgamtildeLL210)) + gamtildeLL12*(0.5*dgamtildeLL110*gamtildeUU21 + 0.5*gamtildeUU20*(dgamtildeLL001 + dgamtildeLL010 - dgamtildeLL100) + 0.5*gamtildeUU22*(-dgamtildeLL102 + dgamtildeLL201 + dgamtildeLL210));
-        amrex::Real GamtildeLLL111 = gamtildeLL10*(0.5*dgamtildeLL111*gamtildeUU01 + 0.5*gamtildeUU00*(2*dgamtildeLL011 - dgamtildeLL110) + 0.5*gamtildeUU02*(-dgamtildeLL112 + 2*dgamtildeLL211)) + gamtildeLL11*(0.5*dgamtildeLL111*gamtildeUU11 + 0.5*gamtildeUU10*(2*dgamtildeLL011 - dgamtildeLL110) + 0.5*gamtildeUU12*(-dgamtildeLL112 + 2*dgamtildeLL211)) + gamtildeLL12*(0.5*dgamtildeLL111*gamtildeUU21 + 0.5*gamtildeUU20*(2*dgamtildeLL011 - dgamtildeLL110) + 0.5*gamtildeUU22*(-dgamtildeLL112 + 2*dgamtildeLL211));
-        amrex::Real GamtildeLLL112 = gamtildeLL10*(0.5*dgamtildeLL112*gamtildeUU01 + 0.5*gamtildeUU00*(dgamtildeLL012 + dgamtildeLL021 - dgamtildeLL120) + 0.5*gamtildeUU02*(-dgamtildeLL122 + dgamtildeLL212 + dgamtildeLL221)) + gamtildeLL11*(0.5*dgamtildeLL112*gamtildeUU11 + 0.5*gamtildeUU10*(dgamtildeLL012 + dgamtildeLL021 - dgamtildeLL120) + 0.5*gamtildeUU12*(-dgamtildeLL122 + dgamtildeLL212 + dgamtildeLL221)) + gamtildeLL12*(0.5*dgamtildeLL112*gamtildeUU21 + 0.5*gamtildeUU20*(dgamtildeLL012 + dgamtildeLL021 - dgamtildeLL120) + 0.5*gamtildeUU22*(-dgamtildeLL122 + dgamtildeLL212 + dgamtildeLL221));
-        amrex::Real GamtildeLLL120 = gamtildeLL10*(0.5*dgamtildeLL220*gamtildeUU02 + 0.5*gamtildeUU00*(dgamtildeLL002 + dgamtildeLL020 - dgamtildeLL200) + 0.5*gamtildeUU01*(dgamtildeLL102 + dgamtildeLL120 - dgamtildeLL201)) + gamtildeLL11*(0.5*dgamtildeLL220*gamtildeUU12 + 0.5*gamtildeUU10*(dgamtildeLL002 + dgamtildeLL020 - dgamtildeLL200) + 0.5*gamtildeUU11*(dgamtildeLL102 + dgamtildeLL120 - dgamtildeLL201)) + gamtildeLL12*(0.5*dgamtildeLL220*gamtildeUU22 + 0.5*gamtildeUU20*(dgamtildeLL002 + dgamtildeLL020 - dgamtildeLL200) + 0.5*gamtildeUU21*(dgamtildeLL102 + dgamtildeLL120 - dgamtildeLL201));
-        amrex::Real GamtildeLLL121 = gamtildeLL10*(0.5*dgamtildeLL221*gamtildeUU02 + 0.5*gamtildeUU00*(dgamtildeLL012 + dgamtildeLL021 - dgamtildeLL210) + 0.5*gamtildeUU01*(dgamtildeLL112 + dgamtildeLL121 - dgamtildeLL211)) + gamtildeLL11*(0.5*dgamtildeLL221*gamtildeUU12 + 0.5*gamtildeUU10*(dgamtildeLL012 + dgamtildeLL021 - dgamtildeLL210) + 0.5*gamtildeUU11*(dgamtildeLL112 + dgamtildeLL121 - dgamtildeLL211)) + gamtildeLL12*(0.5*dgamtildeLL221*gamtildeUU22 + 0.5*gamtildeUU20*(dgamtildeLL012 + dgamtildeLL021 - dgamtildeLL210) + 0.5*gamtildeUU21*(dgamtildeLL112 + dgamtildeLL121 - dgamtildeLL211));
-        amrex::Real GamtildeLLL122 = gamtildeLL10*(0.5*dgamtildeLL222*gamtildeUU02 + 0.5*gamtildeUU00*(2*dgamtildeLL022 - dgamtildeLL220) + 0.5*gamtildeUU01*(2*dgamtildeLL122 - dgamtildeLL221)) + gamtildeLL11*(0.5*dgamtildeLL222*gamtildeUU12 + 0.5*gamtildeUU10*(2*dgamtildeLL022 - dgamtildeLL220) + 0.5*gamtildeUU11*(2*dgamtildeLL122 - dgamtildeLL221)) + gamtildeLL12*(0.5*dgamtildeLL222*gamtildeUU22 + 0.5*gamtildeUU20*(2*dgamtildeLL022 - dgamtildeLL220) + 0.5*gamtildeUU21*(2*dgamtildeLL122 - dgamtildeLL221));
-        amrex::Real GamtildeLLL200 = gamtildeLL20*(0.5*dgamtildeLL000*gamtildeUU00 + 0.5*gamtildeUU01*(-dgamtildeLL001 + 2*dgamtildeLL100) + 0.5*gamtildeUU02*(-dgamtildeLL002 + 2*dgamtildeLL200)) + gamtildeLL21*(0.5*dgamtildeLL000*gamtildeUU10 + 0.5*gamtildeUU11*(-dgamtildeLL001 + 2*dgamtildeLL100) + 0.5*gamtildeUU12*(-dgamtildeLL002 + 2*dgamtildeLL200)) + gamtildeLL22*(0.5*dgamtildeLL000*gamtildeUU20 + 0.5*gamtildeUU21*(-dgamtildeLL001 + 2*dgamtildeLL100) + 0.5*gamtildeUU22*(-dgamtildeLL002 + 2*dgamtildeLL200));
-        amrex::Real GamtildeLLL201 = gamtildeLL20*(0.5*dgamtildeLL001*gamtildeUU00 + 0.5*gamtildeUU01*(-dgamtildeLL011 + dgamtildeLL101 + dgamtildeLL110) + 0.5*gamtildeUU02*(-dgamtildeLL012 + dgamtildeLL201 + dgamtildeLL210)) + gamtildeLL21*(0.5*dgamtildeLL001*gamtildeUU10 + 0.5*gamtildeUU11*(-dgamtildeLL011 + dgamtildeLL101 + dgamtildeLL110) + 0.5*gamtildeUU12*(-dgamtildeLL012 + dgamtildeLL201 + dgamtildeLL210)) + gamtildeLL22*(0.5*dgamtildeLL001*gamtildeUU20 + 0.5*gamtildeUU21*(-dgamtildeLL011 + dgamtildeLL101 + dgamtildeLL110) + 0.5*gamtildeUU22*(-dgamtildeLL012 + dgamtildeLL201 + dgamtildeLL210));
-        amrex::Real GamtildeLLL202 = gamtildeLL20*(0.5*dgamtildeLL002*gamtildeUU00 + 0.5*gamtildeUU01*(-dgamtildeLL021 + dgamtildeLL102 + dgamtildeLL120) + 0.5*gamtildeUU02*(-dgamtildeLL022 + dgamtildeLL202 + dgamtildeLL220)) + gamtildeLL21*(0.5*dgamtildeLL002*gamtildeUU10 + 0.5*gamtildeUU11*(-dgamtildeLL021 + dgamtildeLL102 + dgamtildeLL120) + 0.5*gamtildeUU12*(-dgamtildeLL022 + dgamtildeLL202 + dgamtildeLL220)) + gamtildeLL22*(0.5*dgamtildeLL002*gamtildeUU20 + 0.5*gamtildeUU21*(-dgamtildeLL021 + dgamtildeLL102 + dgamtildeLL120) + 0.5*gamtildeUU22*(-dgamtildeLL022 + dgamtildeLL202 + dgamtildeLL220));
-        amrex::Real GamtildeLLL210 = gamtildeLL20*(0.5*dgamtildeLL110*gamtildeUU01 + 0.5*gamtildeUU00*(dgamtildeLL001 + dgamtildeLL010 - dgamtildeLL100) + 0.5*gamtildeUU02*(-dgamtildeLL102 + dgamtildeLL201 + dgamtildeLL210)) + gamtildeLL21*(0.5*dgamtildeLL110*gamtildeUU11 + 0.5*gamtildeUU10*(dgamtildeLL001 + dgamtildeLL010 - dgamtildeLL100) + 0.5*gamtildeUU12*(-dgamtildeLL102 + dgamtildeLL201 + dgamtildeLL210)) + gamtildeLL22*(0.5*dgamtildeLL110*gamtildeUU21 + 0.5*gamtildeUU20*(dgamtildeLL001 + dgamtildeLL010 - dgamtildeLL100) + 0.5*gamtildeUU22*(-dgamtildeLL102 + dgamtildeLL201 + dgamtildeLL210));
-        amrex::Real GamtildeLLL211 = gamtildeLL20*(0.5*dgamtildeLL111*gamtildeUU01 + 0.5*gamtildeUU00*(2*dgamtildeLL011 - dgamtildeLL110) + 0.5*gamtildeUU02*(-dgamtildeLL112 + 2*dgamtildeLL211)) + gamtildeLL21*(0.5*dgamtildeLL111*gamtildeUU11 + 0.5*gamtildeUU10*(2*dgamtildeLL011 - dgamtildeLL110) + 0.5*gamtildeUU12*(-dgamtildeLL112 + 2*dgamtildeLL211)) + gamtildeLL22*(0.5*dgamtildeLL111*gamtildeUU21 + 0.5*gamtildeUU20*(2*dgamtildeLL011 - dgamtildeLL110) + 0.5*gamtildeUU22*(-dgamtildeLL112 + 2*dgamtildeLL211));
-        amrex::Real GamtildeLLL212 = gamtildeLL20*(0.5*dgamtildeLL112*gamtildeUU01 + 0.5*gamtildeUU00*(dgamtildeLL012 + dgamtildeLL021 - dgamtildeLL120) + 0.5*gamtildeUU02*(-dgamtildeLL122 + dgamtildeLL212 + dgamtildeLL221)) + gamtildeLL21*(0.5*dgamtildeLL112*gamtildeUU11 + 0.5*gamtildeUU10*(dgamtildeLL012 + dgamtildeLL021 - dgamtildeLL120) + 0.5*gamtildeUU12*(-dgamtildeLL122 + dgamtildeLL212 + dgamtildeLL221)) + gamtildeLL22*(0.5*dgamtildeLL112*gamtildeUU21 + 0.5*gamtildeUU20*(dgamtildeLL012 + dgamtildeLL021 - dgamtildeLL120) + 0.5*gamtildeUU22*(-dgamtildeLL122 + dgamtildeLL212 + dgamtildeLL221));
-        amrex::Real GamtildeLLL220 = gamtildeLL20*(0.5*dgamtildeLL220*gamtildeUU02 + 0.5*gamtildeUU00*(dgamtildeLL002 + dgamtildeLL020 - dgamtildeLL200) + 0.5*gamtildeUU01*(dgamtildeLL102 + dgamtildeLL120 - dgamtildeLL201)) + gamtildeLL21*(0.5*dgamtildeLL220*gamtildeUU12 + 0.5*gamtildeUU10*(dgamtildeLL002 + dgamtildeLL020 - dgamtildeLL200) + 0.5*gamtildeUU11*(dgamtildeLL102 + dgamtildeLL120 - dgamtildeLL201)) + gamtildeLL22*(0.5*dgamtildeLL220*gamtildeUU22 + 0.5*gamtildeUU20*(dgamtildeLL002 + dgamtildeLL020 - dgamtildeLL200) + 0.5*gamtildeUU21*(dgamtildeLL102 + dgamtildeLL120 - dgamtildeLL201));
-        amrex::Real GamtildeLLL221 = gamtildeLL20*(0.5*dgamtildeLL221*gamtildeUU02 + 0.5*gamtildeUU00*(dgamtildeLL012 + dgamtildeLL021 - dgamtildeLL210) + 0.5*gamtildeUU01*(dgamtildeLL112 + dgamtildeLL121 - dgamtildeLL211)) + gamtildeLL21*(0.5*dgamtildeLL221*gamtildeUU12 + 0.5*gamtildeUU10*(dgamtildeLL012 + dgamtildeLL021 - dgamtildeLL210) + 0.5*gamtildeUU11*(dgamtildeLL112 + dgamtildeLL121 - dgamtildeLL211)) + gamtildeLL22*(0.5*dgamtildeLL221*gamtildeUU22 + 0.5*gamtildeUU20*(dgamtildeLL012 + dgamtildeLL021 - dgamtildeLL210) + 0.5*gamtildeUU21*(dgamtildeLL112 + dgamtildeLL121 - dgamtildeLL211));
-        amrex::Real GamtildeLLL222 = gamtildeLL20*(0.5*dgamtildeLL222*gamtildeUU02 + 0.5*gamtildeUU00*(2*dgamtildeLL022 - dgamtildeLL220) + 0.5*gamtildeUU01*(2*dgamtildeLL122 - dgamtildeLL221)) + gamtildeLL21*(0.5*dgamtildeLL222*gamtildeUU12 + 0.5*gamtildeUU10*(2*dgamtildeLL022 - dgamtildeLL220) + 0.5*gamtildeUU11*(2*dgamtildeLL122 - dgamtildeLL221)) + gamtildeLL22*(0.5*dgamtildeLL222*gamtildeUU22 + 0.5*gamtildeUU20*(2*dgamtildeLL022 - dgamtildeLL220) + 0.5*gamtildeUU21*(2*dgamtildeLL122 - dgamtildeLL221));
+        amrex::Real DgambarLLL000 = dgamtildeLL000;
+        amrex::Real DgambarLLL001 = dgamtildeLL001;
+        amrex::Real DgambarLLL002 = dgamtildeLL002;
+        amrex::Real DgambarLLL010 = dgamtildeLL010;
+        amrex::Real DgambarLLL011 = dgamtildeLL011;
+        amrex::Real DgambarLLL012 = dgamtildeLL012;
+        amrex::Real DgambarLLL020 = dgamtildeLL020;
+        amrex::Real DgambarLLL021 = dgamtildeLL021;
+        amrex::Real DgambarLLL022 = dgamtildeLL022;
+        amrex::Real DgambarLLL100 = dgamtildeLL100;
+        amrex::Real DgambarLLL101 = dgamtildeLL101;
+        amrex::Real DgambarLLL102 = dgamtildeLL102;
+        amrex::Real DgambarLLL110 = dgamtildeLL110;
+        amrex::Real DgambarLLL111 = dgamtildeLL111;
+        amrex::Real DgambarLLL112 = dgamtildeLL112;
+        amrex::Real DgambarLLL120 = dgamtildeLL120;
+        amrex::Real DgambarLLL121 = dgamtildeLL121;
+        amrex::Real DgambarLLL122 = dgamtildeLL122;
+        amrex::Real DgambarLLL200 = dgamtildeLL200;
+        amrex::Real DgambarLLL201 = dgamtildeLL201;
+        amrex::Real DgambarLLL202 = dgamtildeLL202;
+        amrex::Real DgambarLLL210 = dgamtildeLL210;
+        amrex::Real DgambarLLL211 = dgamtildeLL211;
+        amrex::Real DgambarLLL212 = dgamtildeLL212;
+        amrex::Real DgambarLLL220 = dgamtildeLL220;
+        amrex::Real DgambarLLL221 = dgamtildeLL221;
+        amrex::Real DgambarLLL222 = dgamtildeLL222;
+        amrex::Real GamtildeULL000 = 0.5*DgambarLLL000*gamtildeUU00 + 0.5*gamtildeUU01*(-DgambarLLL001 + 2*DgambarLLL100) + 0.5*gamtildeUU02*(-DgambarLLL002 + 2*DgambarLLL200);
+        amrex::Real GamtildeULL001 = 0.5*DgambarLLL001*gamtildeUU00 + 0.5*gamtildeUU01*(-DgambarLLL011 + DgambarLLL101 + DgambarLLL110) + 0.5*gamtildeUU02*(-DgambarLLL012 + DgambarLLL201 + DgambarLLL210);
+        amrex::Real GamtildeULL002 = 0.5*DgambarLLL002*gamtildeUU00 + 0.5*gamtildeUU01*(-DgambarLLL021 + DgambarLLL102 + DgambarLLL120) + 0.5*gamtildeUU02*(-DgambarLLL022 + DgambarLLL202 + DgambarLLL220);
+        amrex::Real GamtildeULL010 = 0.5*DgambarLLL110*gamtildeUU01 + 0.5*gamtildeUU00*(DgambarLLL001 + DgambarLLL010 - DgambarLLL100) + 0.5*gamtildeUU02*(-DgambarLLL102 + DgambarLLL201 + DgambarLLL210);
+        amrex::Real GamtildeULL011 = 0.5*DgambarLLL111*gamtildeUU01 + 0.5*gamtildeUU00*(2*DgambarLLL011 - DgambarLLL110) + 0.5*gamtildeUU02*(-DgambarLLL112 + 2*DgambarLLL211);
+        amrex::Real GamtildeULL012 = 0.5*DgambarLLL112*gamtildeUU01 + 0.5*gamtildeUU00*(DgambarLLL012 + DgambarLLL021 - DgambarLLL120) + 0.5*gamtildeUU02*(-DgambarLLL122 + DgambarLLL212 + DgambarLLL221);
+        amrex::Real GamtildeULL020 = 0.5*DgambarLLL220*gamtildeUU02 + 0.5*gamtildeUU00*(DgambarLLL002 + DgambarLLL020 - DgambarLLL200) + 0.5*gamtildeUU01*(DgambarLLL102 + DgambarLLL120 - DgambarLLL201);
+        amrex::Real GamtildeULL021 = 0.5*DgambarLLL221*gamtildeUU02 + 0.5*gamtildeUU00*(DgambarLLL012 + DgambarLLL021 - DgambarLLL210) + 0.5*gamtildeUU01*(DgambarLLL112 + DgambarLLL121 - DgambarLLL211);
+        amrex::Real GamtildeULL022 = 0.5*DgambarLLL222*gamtildeUU02 + 0.5*gamtildeUU00*(2*DgambarLLL022 - DgambarLLL220) + 0.5*gamtildeUU01*(2*DgambarLLL122 - DgambarLLL221);
+        amrex::Real GamtildeULL100 = 0.5*DgambarLLL000*gamtildeUU10 + 0.5*gamtildeUU11*(-DgambarLLL001 + 2*DgambarLLL100) + 0.5*gamtildeUU12*(-DgambarLLL002 + 2*DgambarLLL200);
+        amrex::Real GamtildeULL101 = 0.5*DgambarLLL001*gamtildeUU10 + 0.5*gamtildeUU11*(-DgambarLLL011 + DgambarLLL101 + DgambarLLL110) + 0.5*gamtildeUU12*(-DgambarLLL012 + DgambarLLL201 + DgambarLLL210);
+        amrex::Real GamtildeULL102 = 0.5*DgambarLLL002*gamtildeUU10 + 0.5*gamtildeUU11*(-DgambarLLL021 + DgambarLLL102 + DgambarLLL120) + 0.5*gamtildeUU12*(-DgambarLLL022 + DgambarLLL202 + DgambarLLL220);
+        amrex::Real GamtildeULL110 = 0.5*DgambarLLL110*gamtildeUU11 + 0.5*gamtildeUU10*(DgambarLLL001 + DgambarLLL010 - DgambarLLL100) + 0.5*gamtildeUU12*(-DgambarLLL102 + DgambarLLL201 + DgambarLLL210);
+        amrex::Real GamtildeULL111 = 0.5*DgambarLLL111*gamtildeUU11 + 0.5*gamtildeUU10*(2*DgambarLLL011 - DgambarLLL110) + 0.5*gamtildeUU12*(-DgambarLLL112 + 2*DgambarLLL211);
+        amrex::Real GamtildeULL112 = 0.5*DgambarLLL112*gamtildeUU11 + 0.5*gamtildeUU10*(DgambarLLL012 + DgambarLLL021 - DgambarLLL120) + 0.5*gamtildeUU12*(-DgambarLLL122 + DgambarLLL212 + DgambarLLL221);
+        amrex::Real GamtildeULL120 = 0.5*DgambarLLL220*gamtildeUU12 + 0.5*gamtildeUU10*(DgambarLLL002 + DgambarLLL020 - DgambarLLL200) + 0.5*gamtildeUU11*(DgambarLLL102 + DgambarLLL120 - DgambarLLL201);
+        amrex::Real GamtildeULL121 = 0.5*DgambarLLL221*gamtildeUU12 + 0.5*gamtildeUU10*(DgambarLLL012 + DgambarLLL021 - DgambarLLL210) + 0.5*gamtildeUU11*(DgambarLLL112 + DgambarLLL121 - DgambarLLL211);
+        amrex::Real GamtildeULL122 = 0.5*DgambarLLL222*gamtildeUU12 + 0.5*gamtildeUU10*(2*DgambarLLL022 - DgambarLLL220) + 0.5*gamtildeUU11*(2*DgambarLLL122 - DgambarLLL221);
+        amrex::Real GamtildeULL200 = 0.5*DgambarLLL000*gamtildeUU20 + 0.5*gamtildeUU21*(-DgambarLLL001 + 2*DgambarLLL100) + 0.5*gamtildeUU22*(-DgambarLLL002 + 2*DgambarLLL200);
+        amrex::Real GamtildeULL201 = 0.5*DgambarLLL001*gamtildeUU20 + 0.5*gamtildeUU21*(-DgambarLLL011 + DgambarLLL101 + DgambarLLL110) + 0.5*gamtildeUU22*(-DgambarLLL012 + DgambarLLL201 + DgambarLLL210);
+        amrex::Real GamtildeULL202 = 0.5*DgambarLLL002*gamtildeUU20 + 0.5*gamtildeUU21*(-DgambarLLL021 + DgambarLLL102 + DgambarLLL120) + 0.5*gamtildeUU22*(-DgambarLLL022 + DgambarLLL202 + DgambarLLL220);
+        amrex::Real GamtildeULL210 = 0.5*DgambarLLL110*gamtildeUU21 + 0.5*gamtildeUU20*(DgambarLLL001 + DgambarLLL010 - DgambarLLL100) + 0.5*gamtildeUU22*(-DgambarLLL102 + DgambarLLL201 + DgambarLLL210);
+        amrex::Real GamtildeULL211 = 0.5*DgambarLLL111*gamtildeUU21 + 0.5*gamtildeUU20*(2*DgambarLLL011 - DgambarLLL110) + 0.5*gamtildeUU22*(-DgambarLLL112 + 2*DgambarLLL211);
+        amrex::Real GamtildeULL212 = 0.5*DgambarLLL112*gamtildeUU21 + 0.5*gamtildeUU20*(DgambarLLL012 + DgambarLLL021 - DgambarLLL120) + 0.5*gamtildeUU22*(-DgambarLLL122 + DgambarLLL212 + DgambarLLL221);
+        amrex::Real GamtildeULL220 = 0.5*DgambarLLL220*gamtildeUU22 + 0.5*gamtildeUU20*(DgambarLLL002 + DgambarLLL020 - DgambarLLL200) + 0.5*gamtildeUU21*(DgambarLLL102 + DgambarLLL120 - DgambarLLL201);
+        amrex::Real GamtildeULL221 = 0.5*DgambarLLL221*gamtildeUU22 + 0.5*gamtildeUU20*(DgambarLLL012 + DgambarLLL021 - DgambarLLL210) + 0.5*gamtildeUU21*(DgambarLLL112 + DgambarLLL121 - DgambarLLL211);
+        amrex::Real GamtildeULL222 = 0.5*DgambarLLL222*gamtildeUU22 + 0.5*gamtildeUU20*(2*DgambarLLL022 - DgambarLLL220) + 0.5*gamtildeUU21*(2*DgambarLLL122 - DgambarLLL221);
+        amrex::Real GamtildeLLL000 = GamtildeULL000*gamtildeLL00 + GamtildeULL100*gamtildeLL01 + GamtildeULL200*gamtildeLL02;
+        amrex::Real GamtildeLLL001 = GamtildeULL001*gamtildeLL00 + GamtildeULL101*gamtildeLL01 + GamtildeULL201*gamtildeLL02;
+        amrex::Real GamtildeLLL002 = GamtildeULL002*gamtildeLL00 + GamtildeULL102*gamtildeLL01 + GamtildeULL202*gamtildeLL02;
+        amrex::Real GamtildeLLL010 = GamtildeULL010*gamtildeLL00 + GamtildeULL110*gamtildeLL01 + GamtildeULL210*gamtildeLL02;
+        amrex::Real GamtildeLLL011 = GamtildeULL011*gamtildeLL00 + GamtildeULL111*gamtildeLL01 + GamtildeULL211*gamtildeLL02;
+        amrex::Real GamtildeLLL012 = GamtildeULL012*gamtildeLL00 + GamtildeULL112*gamtildeLL01 + GamtildeULL212*gamtildeLL02;
+        amrex::Real GamtildeLLL020 = GamtildeULL020*gamtildeLL00 + GamtildeULL120*gamtildeLL01 + GamtildeULL220*gamtildeLL02;
+        amrex::Real GamtildeLLL021 = GamtildeULL021*gamtildeLL00 + GamtildeULL121*gamtildeLL01 + GamtildeULL221*gamtildeLL02;
+        amrex::Real GamtildeLLL022 = GamtildeULL022*gamtildeLL00 + GamtildeULL122*gamtildeLL01 + GamtildeULL222*gamtildeLL02;
+        amrex::Real GamtildeLLL100 = GamtildeULL000*gamtildeLL10 + GamtildeULL100*gamtildeLL11 + GamtildeULL200*gamtildeLL12;
+        amrex::Real GamtildeLLL101 = GamtildeULL001*gamtildeLL10 + GamtildeULL101*gamtildeLL11 + GamtildeULL201*gamtildeLL12;
+        amrex::Real GamtildeLLL102 = GamtildeULL002*gamtildeLL10 + GamtildeULL102*gamtildeLL11 + GamtildeULL202*gamtildeLL12;
+        amrex::Real GamtildeLLL110 = GamtildeULL010*gamtildeLL10 + GamtildeULL110*gamtildeLL11 + GamtildeULL210*gamtildeLL12;
+        amrex::Real GamtildeLLL111 = GamtildeULL011*gamtildeLL10 + GamtildeULL111*gamtildeLL11 + GamtildeULL211*gamtildeLL12;
+        amrex::Real GamtildeLLL112 = GamtildeULL012*gamtildeLL10 + GamtildeULL112*gamtildeLL11 + GamtildeULL212*gamtildeLL12;
+        amrex::Real GamtildeLLL120 = GamtildeULL020*gamtildeLL10 + GamtildeULL120*gamtildeLL11 + GamtildeULL220*gamtildeLL12;
+        amrex::Real GamtildeLLL121 = GamtildeULL021*gamtildeLL10 + GamtildeULL121*gamtildeLL11 + GamtildeULL221*gamtildeLL12;
+        amrex::Real GamtildeLLL122 = GamtildeULL022*gamtildeLL10 + GamtildeULL122*gamtildeLL11 + GamtildeULL222*gamtildeLL12;
+        amrex::Real GamtildeLLL200 = GamtildeULL000*gamtildeLL20 + GamtildeULL100*gamtildeLL21 + GamtildeULL200*gamtildeLL22;
+        amrex::Real GamtildeLLL201 = GamtildeULL001*gamtildeLL20 + GamtildeULL101*gamtildeLL21 + GamtildeULL201*gamtildeLL22;
+        amrex::Real GamtildeLLL202 = GamtildeULL002*gamtildeLL20 + GamtildeULL102*gamtildeLL21 + GamtildeULL202*gamtildeLL22;
+        amrex::Real GamtildeLLL210 = GamtildeULL010*gamtildeLL20 + GamtildeULL110*gamtildeLL21 + GamtildeULL210*gamtildeLL22;
+        amrex::Real GamtildeLLL211 = GamtildeULL011*gamtildeLL20 + GamtildeULL111*gamtildeLL21 + GamtildeULL211*gamtildeLL22;
+        amrex::Real GamtildeLLL212 = GamtildeULL012*gamtildeLL20 + GamtildeULL112*gamtildeLL21 + GamtildeULL212*gamtildeLL22;
+        amrex::Real GamtildeLLL220 = GamtildeULL020*gamtildeLL20 + GamtildeULL120*gamtildeLL21 + GamtildeULL220*gamtildeLL22;
+        amrex::Real GamtildeLLL221 = GamtildeULL021*gamtildeLL20 + GamtildeULL121*gamtildeLL21 + GamtildeULL221*gamtildeLL22;
+        amrex::Real GamtildeLLL222 = GamtildeULL022*gamtildeLL20 + GamtildeULL122*gamtildeLL21 + GamtildeULL222*gamtildeLL22;
         amrex::Real GamULL000 = GamtildeULL000 + 0.5*dchi0*gamtildeLL00*gamtildeUU00/chi - 1.0*dchi0/chi + 0.5*dchi1*gamtildeLL00*gamtildeUU01/chi + 0.5*dchi2*gamtildeLL00*gamtildeUU02/chi;
         amrex::Real GamULL001 = GamtildeULL001 + 0.5*dchi0*gamtildeLL01*gamtildeUU00/chi + 0.5*dchi1*gamtildeLL01*gamtildeUU01/chi - 0.5*dchi1/chi + 0.5*dchi2*gamtildeLL01*gamtildeUU02/chi;
         amrex::Real GamULL002 = GamtildeULL002 + 0.5*dchi0*gamtildeLL02*gamtildeUU00/chi + 0.5*dchi1*gamtildeLL02*gamtildeUU01/chi + 0.5*dchi2*gamtildeLL02*gamtildeUU02/chi - 0.5*dchi2/chi;
@@ -687,7 +709,8 @@ state_rhs(int i, int j, int k,
         amrex::Real DtildeDtildechiLL20 = -GamtildeULL020*dchi0 - GamtildeULL120*dchi1 - GamtildeULL220*dchi2 + ddchi20;
         amrex::Real DtildeDtildechiLL21 = -GamtildeULL021*dchi0 - GamtildeULL121*dchi1 - GamtildeULL221*dchi2 + ddchi21;
         amrex::Real DtildeDtildechiLL22 = -GamtildeULL022*dchi0 - GamtildeULL122*dchi1 - GamtildeULL222*dchi2 + ddchi22;
-        amrex::Real TrDtildeDtildechi = 0 + DtildeDtildechiLL00*gamtildeUU00 + DtildeDtildechiLL01*gamtildeUU01 + DtildeDtildechiLL02*gamtildeUU02 + DtildeDtildechiLL10*gamtildeUU10 + DtildeDtildechiLL11*gamtildeUU11 + DtildeDtildechiLL12*gamtildeUU12 + DtildeDtildechiLL20*gamtildeUU20 + DtildeDtildechiLL21*gamtildeUU21 + DtildeDtildechiLL22*gamtildeUU22;
+        amrex::Real TrDtildeDtildechi = DtildeDtildechiLL00*gamtildeUU00 + DtildeDtildechiLL01*gamtildeUU01 + DtildeDtildechiLL02*gamtildeUU02 + DtildeDtildechiLL10*gamtildeUU10 + DtildeDtildechiLL11*gamtildeUU11 + DtildeDtildechiLL12*gamtildeUU12 + DtildeDtildechiLL20*gamtildeUU20 + DtildeDtildechiLL21*gamtildeUU21 + DtildeDtildechiLL22*gamtildeUU22;
+
         amrex::Real RchiLL00 = 0.5*(DtildeDtildechiLL00 + TrDtildeDtildechi*gamtildeLL00)/chi - 0.75*std::pow(dchi0, 2)*gamtildeLL00*gamtildeUU00/std::pow(chi, 2) - 0.25*std::pow(dchi0, 2)/std::pow(chi, 2) - 0.75*dchi0*dchi1*gamtildeLL00*gamtildeUU01/std::pow(chi, 2) - 0.75*dchi0*dchi1*gamtildeLL00*gamtildeUU10/std::pow(chi, 2) - 0.75*dchi0*dchi2*gamtildeLL00*gamtildeUU02/std::pow(chi, 2) - 0.75*dchi0*dchi2*gamtildeLL00*gamtildeUU20/std::pow(chi, 2) - 0.75*std::pow(dchi1, 2)*gamtildeLL00*gamtildeUU11/std::pow(chi, 2) - 0.75*dchi1*dchi2*gamtildeLL00*gamtildeUU12/std::pow(chi, 2) - 0.75*dchi1*dchi2*gamtildeLL00*gamtildeUU21/std::pow(chi, 2) - 0.75*std::pow(dchi2, 2)*gamtildeLL00*gamtildeUU22/std::pow(chi, 2);
         amrex::Real RchiLL01 = 0.5*(DtildeDtildechiLL01 + TrDtildeDtildechi*gamtildeLL01)/chi - 0.75*std::pow(dchi0, 2)*gamtildeLL01*gamtildeUU00/std::pow(chi, 2) - 0.75*dchi0*dchi1*gamtildeLL01*gamtildeUU01/std::pow(chi, 2) - 0.75*dchi0*dchi1*gamtildeLL01*gamtildeUU10/std::pow(chi, 2) - 0.25*dchi0*dchi1/std::pow(chi, 2) - 0.75*dchi0*dchi2*gamtildeLL01*gamtildeUU02/std::pow(chi, 2) - 0.75*dchi0*dchi2*gamtildeLL01*gamtildeUU20/std::pow(chi, 2) - 0.75*std::pow(dchi1, 2)*gamtildeLL01*gamtildeUU11/std::pow(chi, 2) - 0.75*dchi1*dchi2*gamtildeLL01*gamtildeUU12/std::pow(chi, 2) - 0.75*dchi1*dchi2*gamtildeLL01*gamtildeUU21/std::pow(chi, 2) - 0.75*std::pow(dchi2, 2)*gamtildeLL01*gamtildeUU22/std::pow(chi, 2);
         amrex::Real RchiLL02 = 0.5*(DtildeDtildechiLL02 + TrDtildeDtildechi*gamtildeLL02)/chi - 0.75*std::pow(dchi0, 2)*gamtildeLL02*gamtildeUU00/std::pow(chi, 2) - 0.75*dchi0*dchi1*gamtildeLL02*gamtildeUU01/std::pow(chi, 2) - 0.75*dchi0*dchi1*gamtildeLL02*gamtildeUU10/std::pow(chi, 2) - 0.75*dchi0*dchi2*gamtildeLL02*gamtildeUU02/std::pow(chi, 2) - 0.75*dchi0*dchi2*gamtildeLL02*gamtildeUU20/std::pow(chi, 2) - 0.25*dchi0*dchi2/std::pow(chi, 2) - 0.75*std::pow(dchi1, 2)*gamtildeLL02*gamtildeUU11/std::pow(chi, 2) - 0.75*dchi1*dchi2*gamtildeLL02*gamtildeUU12/std::pow(chi, 2) - 0.75*dchi1*dchi2*gamtildeLL02*gamtildeUU21/std::pow(chi, 2) - 0.75*std::pow(dchi2, 2)*gamtildeLL02*gamtildeUU22/std::pow(chi, 2);
@@ -706,7 +729,8 @@ state_rhs(int i, int j, int k,
         amrex::Real RLL20 = RchiLL20 + RtildeLL20;
         amrex::Real RLL21 = RchiLL21 + RtildeLL21;
         amrex::Real RLL22 = RchiLL22 + RtildeLL22;
-        amrex::Real Rsclr = 0 + RLL00*gamUU00 + RLL01*gamUU01 + RLL02*gamUU02 + RLL10*gamUU10 + RLL11*gamUU11 + RLL12*gamUU12 + RLL20*gamUU20 + RLL21*gamUU21 + RLL22*gamUU22;
+        amrex::Real Rsclr = RLL00*gamUU00 + RLL01*gamUU01 + RLL02*gamUU02 + RLL10*gamUU10 + RLL11*gamUU11 + RLL12*gamUU12 + RLL20*gamUU20 + RLL21*gamUU21 + RLL22*gamUU22;
+
         amrex::Real RTFLL00 = RLL00 - 0.33333333333333331*Rsclr*gamLL00;
         amrex::Real RTFLL01 = RLL01 - 0.33333333333333331*Rsclr*gamLL01;
         amrex::Real RTFLL02 = RLL02 - 0.33333333333333331*Rsclr*gamLL02;
@@ -716,7 +740,8 @@ state_rhs(int i, int j, int k,
         amrex::Real RTFLL20 = RLL20 - 0.33333333333333331*Rsclr*gamLL20;
         amrex::Real RTFLL21 = RLL21 - 0.33333333333333331*Rsclr*gamLL21;
         amrex::Real RTFLL22 = RLL22 - 0.33333333333333331*Rsclr*gamLL22;
-        amrex::Real divTildebeta = 0 + GamtildeULL000*betaU0 + GamtildeULL001*betaU1 + GamtildeULL002*betaU2 + GamtildeULL110*betaU0 + GamtildeULL111*betaU1 + GamtildeULL112*betaU2 + GamtildeULL220*betaU0 + GamtildeULL221*betaU1 + GamtildeULL222*betaU2 + dbetaU00 + dbetaU11 + dbetaU22;
+        amrex::Real divTildebeta = GamtildeULL000*betaU0 + GamtildeULL001*betaU1 + GamtildeULL002*betaU2 + GamtildeULL110*betaU0 + GamtildeULL111*betaU1 + GamtildeULL112*betaU2 + GamtildeULL220*betaU0 + GamtildeULL221*betaU1 + GamtildeULL222*betaU2 + dbetaU00 + dbetaU11 + dbetaU22;
+
         rhs_fab(i, j, k, Idx::chi) = KOchi + betaDchi + 0.66666666666666663*chi*(alpha*(Khat + 2*theta) - divTildebeta);
 
         rhs_fab(i, j, k, Idx::gamtildeLL00) = -2*AtildeLL00*alpha + KOgamtildeLL00 + betaDgamtildeLL00 + 1.3333333333333335*dbetaU00*gamtildeLL00 + 2*dbetaU10*gamtildeLL10 - 0.66666666666666663*dbetaU11*gamtildeLL00 + 2*dbetaU20*gamtildeLL20 - 0.66666666666666663*dbetaU22*gamtildeLL00;
@@ -732,8 +757,10 @@ state_rhs(int i, int j, int k,
         rhs_fab(i, j, k, Idx::gamtildeLL22) = -2*AtildeLL22*alpha + KOgamtildeLL22 + betaDgamtildeLL22 - 0.66666666666666663*dbetaU00*gamtildeLL22 + 2*dbetaU02*gamtildeLL02 - 0.66666666666666663*dbetaU11*gamtildeLL22 + 2*dbetaU12*gamtildeLL12 + 1.3333333333333335*dbetaU22*gamtildeLL22;
 
         amrex::Real kappa1 = 0.02;
+
         amrex::Real kappa2 = 0;
-        rhs_fab(i, j, k, Idx::Khat) = 0 + AtildeLL00*AtildeUU00*alpha + AtildeLL01*AtildeUU01*alpha + AtildeLL02*AtildeUU02*alpha + AtildeLL10*AtildeUU10*alpha + AtildeLL11*AtildeUU11*alpha + AtildeLL12*AtildeUU12*alpha + AtildeLL20*AtildeUU20*alpha + AtildeLL21*AtildeUU21*alpha + AtildeLL22*AtildeUU22*alpha - DDalphaLL00*gamUU00 - DDalphaLL01*gamUU10 - DDalphaLL02*gamUU20 - DDalphaLL10*gamUU01 - DDalphaLL11*gamUU11 - DDalphaLL12*gamUU21 - DDalphaLL20*gamUU02 - DDalphaLL21*gamUU12 - DDalphaLL22*gamUU22 + KOKhat + 0.33333333333333331*alpha*(kappa1*theta*(1 - kappa2) + std::pow(Khat + 2*theta, 2)) + betaDKhat;
+
+        rhs_fab(i, j, k, Idx::Khat) = AtildeLL00*AtildeUU00*alpha + AtildeLL01*AtildeUU01*alpha + AtildeLL02*AtildeUU02*alpha + AtildeLL10*AtildeUU10*alpha + AtildeLL11*AtildeUU11*alpha + AtildeLL12*AtildeUU12*alpha + AtildeLL20*AtildeUU20*alpha + AtildeLL21*AtildeUU21*alpha + AtildeLL22*AtildeUU22*alpha - DDalphaLL00*gamUU00 - DDalphaLL01*gamUU10 - DDalphaLL02*gamUU20 - DDalphaLL10*gamUU01 - DDalphaLL11*gamUU11 - DDalphaLL12*gamUU21 - DDalphaLL20*gamUU02 - DDalphaLL21*gamUU12 - DDalphaLL22*gamUU22 + KOKhat + 0.33333333333333331*alpha*(kappa1*theta*(1 - kappa2) + std::pow(Khat + 2*theta, 2)) + betaDKhat;
 
         rhs_fab(i, j, k, Idx::AtildeLL00) = -2*AtildeLL00*AtildeUL00*alpha + AtildeLL00*alpha*(Khat + 2*theta) + 1.3333333333333335*AtildeLL00*dbetaU00 - 0.66666666666666663*AtildeLL00*dbetaU11 - 0.66666666666666663*AtildeLL00*dbetaU22 - 2*AtildeLL01*AtildeUL10*alpha - 2*AtildeLL02*AtildeUL20*alpha + 2*AtildeLL10*dbetaU10 + 2*AtildeLL20*dbetaU20 + KOAtildeLL00 + betaDAtildeLL00 + chi*(-DDalphaTFLL00 + RTFLL00*alpha);
 
@@ -756,10 +783,13 @@ state_rhs(int i, int j, int k,
         rhs_fab(i, j, k, Idx::GamtildeU2) = 2*AtildeUU00*GamtildeULL200*alpha + 2*AtildeUU01*GamtildeULL201*alpha + 2*AtildeUU02*GamtildeULL202*alpha + 2*AtildeUU10*GamtildeULL210*alpha + 2*AtildeUU11*GamtildeULL211*alpha + 2*AtildeUU12*GamtildeULL212*alpha + 2*AtildeUU20*GamtildeULL220*alpha - 2*AtildeUU20*dalpha0 + 2*AtildeUU21*GamtildeULL221*alpha - 2*AtildeUU21*dalpha1 + 2*AtildeUU22*GamtildeULL222*alpha - 2*AtildeUU22*dalpha2 - GamtildeDU0*dbetaU20 - GamtildeDU1*dbetaU21 + 0.66666666666666663*GamtildeDU2*dbetaU00 + 0.66666666666666663*GamtildeDU2*dbetaU11 - 0.33333333333333337*GamtildeDU2*dbetaU22 + KOGamtildeU2 - 2*alpha*kappa1*(-GamtildeDU2 + GamtildeU2) + 2*alpha*(-1.5*AtildeUU20*dchi0/chi - 0.33333333333333331*gamtildeUU20*(2*dKhat0 + dtheta0)) + 2*alpha*(-1.5*AtildeUU21*dchi1/chi - 0.33333333333333331*gamtildeUU21*(2*dKhat1 + dtheta1)) + 2*alpha*(-1.5*AtildeUU22*dchi2/chi - 0.33333333333333331*gamtildeUU22*(2*dKhat2 + dtheta2)) + betaDGamtildeU2 + 0.33333333333333331*ddbetaU000*gamtildeUU20 + 0.33333333333333331*ddbetaU010*gamtildeUU21 + 0.33333333333333331*ddbetaU020*gamtildeUU22 + 0.33333333333333331*ddbetaU101*gamtildeUU20 + 0.33333333333333331*ddbetaU111*gamtildeUU21 + 0.33333333333333331*ddbetaU121*gamtildeUU22 + ddbetaU200*gamtildeUU00 + ddbetaU201*gamtildeUU01 + ddbetaU202*gamtildeUU02 + 0.33333333333333331*ddbetaU202*gamtildeUU20 + ddbetaU210*gamtildeUU10 + ddbetaU211*gamtildeUU11 + ddbetaU212*gamtildeUU12 + 0.33333333333333331*ddbetaU212*gamtildeUU21 + ddbetaU220*gamtildeUU20 + ddbetaU221*gamtildeUU21 + 1.3333333333333333*ddbetaU222*gamtildeUU22;
 
         amrex::Real mul = 2/alpha;
+
         amrex::Real mus = std::pow(alpha, -2);
-        rhs_fab(i, j, k, Idx::alpha) = 0 + KOalpha - Khat*std::pow(alpha, 2)*mul + betaDalpha;
+
+        rhs_fab(i, j, k, Idx::alpha) = KOalpha - Khat*std::pow(alpha, 2)*mul + betaDalpha;
 
         amrex::Real eta = 2.0;
+
         rhs_fab(i, j, k, Idx::betaU0) = GamtildeU0*std::pow(alpha, 2)*mus + KObetaU0 + betaDbetaU0 - betaU0*eta;
 
         rhs_fab(i, j, k, Idx::betaU1) = GamtildeU1*std::pow(alpha, 2)*mus + KObetaU1 + betaDbetaU1 - betaU1*eta;

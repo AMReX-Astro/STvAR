@@ -1,5 +1,5 @@
-#ifndef ET_INTEGRATION_SETUP_K_H 
-#define ET_INTEGRATION_SETUP_K_H 
+#ifndef ET_INTEGRATION_SETUP_K_H
+#define ET_INTEGRATION_SETUP_K_H
 
 #include <AMReX_REAL.H> 
 #include <AMReX_Array4.H> 
@@ -9,7 +9,7 @@ namespace Idx {
 };
 
 namespace InitIdx { 
-         enum ETIndexes {u}; 
+         enum ETInitIndexes {u, NumScalars}; 
 };
 
 namespace Diag { 

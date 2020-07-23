@@ -1,5 +1,5 @@
 # Stopping Criteria
-max_step = 10
+max_step = 200
 stop_time = 100.0
 
 # Problem Size & Geometry
@@ -14,36 +14,38 @@ geometry.prob_hi =  40.0  40.0  40.0
 amr.v = 1
 
 # Refinement
-amr.max_level = 4 # starts counting at 0
+amr.max_level = 5 # starts counting at 0
 amr.ref_ratio = 2 # refinement ratio
-amr.blocking_factor = 8
+amr.blocking_factor = 16
 amr.max_grid_size = 64
 amr.regrid_int = 2
 
 # AMR Interpolation
-amr.interpolation_type = 6
+amr.interpolation_type = 2
 
 # Problem specific boundary conditions
 domain_lo_bc_types = 2 2 2
 domain_hi_bc_types = 2 2 2
 
 # Problem specific tagging for refinement
-problem.s_error = 0.8 0.6 0.4 0.2
-problem.error_comp = 0
+#problem.s_error = 0.8 0.6 0.4 0.2
+problem.s_error = 0.7 0.6 0.5 0.4 0.3
+problem.error_comp = 18
+
 
 # Problem specific inputs
 problem.elliptic = 0
-problem.cfl = 0.15
+problem.cfl = 0.25
 
 # I/O
 amr.plot_int = 1
-amr.diag_int = -1
+amr.diag_int = 1
 amr.chk_int = 10
 
 # Restart from checkpoint or use as initial condition?
 #amr.restart = chk0000040
 amr.restart = initial_data_chk
-amr.restart_is_initial_data = 0
+amr.restart_is_initial_data = 1
 
 ## integration.type can take on the following values:
 ## 0 = Forward Euler

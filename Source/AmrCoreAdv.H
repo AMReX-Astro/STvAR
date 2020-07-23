@@ -146,6 +146,15 @@ private:
 
     // write plotfile to disk
     void WritePlotFile () const;
+    
+    // get plotfile name
+    std::string DiagFileName (int lev) const;
+
+    // set plotfile variables names
+    amrex::Vector<std::string> DiagFileVarNames () const;
+
+    // write plotfile to disk
+    void WriteDiagnosticFile () const;
 
     // write checkpoint file to disk
     void WriteCheckpointFile () const;
