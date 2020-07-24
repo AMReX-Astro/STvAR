@@ -16,7 +16,8 @@ amr.v = 1
 # Refinement
 amr.max_level = 5 # starts counting at 0
 amr.ref_ratio = 2 # refinement ratio
-amr.blocking_factor = 16
+amr.n_error_buf = 1 #Buffer cells around tagged cells
+amr.blocking_factor = 8
 amr.max_grid_size = 64
 amr.regrid_int = 5
 
@@ -36,7 +37,7 @@ problem.elliptic = 0
 problem.cfl = 0.005
 
 # I/O
-amr.plot_int = 10
+amr.plot_int = 1
 amr.diag_int = 10
 amr.chk_int = 50
 
