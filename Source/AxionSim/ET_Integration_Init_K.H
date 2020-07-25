@@ -17,7 +17,13 @@ state_init(int i, int j, int k,
         amrex::Real x0 = (i + 0.5)*geom.CellSize(0) + domain_xlo[0]; 
         amrex::Real x1 = (j + 0.5)*geom.CellSize(1) + domain_xlo[1]; 
         amrex::Real x2 = (k + 0.5)*geom.CellSize(2) + domain_xlo[2]; 
-        state_fab(i, j, k, Idx::u) = 0;
+        state_fab(i, j, k, Idx::Psi1) = std::exp(-std::pow(x0, 2) - std::pow(x1, 2) - std::pow(x2, 2));
+
+        state_fab(i, j, k, Idx::Pi1) = 0;
+
+        state_fab(i, j, k, Idx::Psi2) = -std::exp(-std::pow(x0, 2) - std::pow(x1, 2) - std::pow(x2, 2));
+
+        state_fab(i, j, k, Idx::Pi2) = 0;
 
 }
 #endif
