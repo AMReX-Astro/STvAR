@@ -1,66 +1,62 @@
-# Stopping Criteria
+# Stopping Criteria 
 max_step = 200
 stop_time = 100.0
 
-# Problem Size & Geometry
-amr.n_cell = 64 64 64
+# Problem Size & Geometry 
+amr.n_cell = 64 64 64 
 
-geometry.is_periodic = 0 0 0
-geometry.coord_sys = 0 # cartesian
-geometry.prob_lo = -40.0 -40.0 -40.0
-geometry.prob_hi =  40.0  40.0  40.0
+geometry.is_periodic = 0 0 0 
+geometry.prob_lo = -40.0 -40.0 -40.0 
+geometry.prob_hi = 40.0 40.0 40.0 
 
-# Turn on verbosity in Amr
+# Turn on verbosity in amr 
 amr.v = 1
 
-# Refinement
-amr.max_level = 5 # starts counting at 0
-amr.ref_ratio = 2 # refinement ratio
-amr.n_error_buf = 1 #Buffer cells around tagged cells
-amr.blocking_factor = 8
+# Refinement Parameters 
+amr.max_level = 5
 amr.max_grid_size = 64
+amr.ref_ratio = 2
+amr.n_error_buf = 1
+amr.blocking_factor = 16
 amr.regrid_int = 2
 
-# AMR Interpolation
-amr.interpolation_type = 2
+# AMR Interpolation 
+amr.interpolation_type = 6
 
-# Problem specific boundary conditions
-domain_lo_bc_types = 2 2 2
-domain_hi_bc_types = 2 2 2
+# Problem specific boundary conditions 
+domain_lo_bc_types = 2 2 2 
+domain_hi_bc_types = 2 2 2 
 
-# Problem specific tagging for refinement
-#problem.s_error = 0.8 0.6 0.4 0.2
-problem.s_error = 0.7 0.6 0.5 0.4 0.3
-problem.error_comp = 18
+# Problem specific tagging for refinement 
+problem.s_error = 0.7 0.6 0.5 0.4 0.3 
+problem.error_comp = 0
 
-
-# Problem specific inputs
+# Problem specific inputs 
 problem.elliptic = 0
 problem.cfl = 0.25
 
-# I/O
+# Plotting steps 
 amr.plot_int = 1
 amr.diag_int = 1
 amr.chk_int = 10
 
-# Restart from checkpoint or use as initial condition?
-#amr.restart = chk0000040
+# Restart from checkpoint or use as initial condition? 
 amr.restart = initial_data_chk
 amr.restart_is_initial_data = 1
 
-## integration.type can take on the following values:
-## 0 = Forward Euler
-## 1 = Explicit Runge Kutta
-integration.type = 1
+## integration.type can take on the following values: 
+## 0 = Forward Euler 
+## 1 = Explicit Runge Kutta 
+integration.type = 1 
 
-## Explicit Runge-Kuta parameters
-#
+## Explicit Runge-Kuta parameters 
+# 
 ## integration.rk.type can take the following values:
 ### 0 = User-specified Butcher Tableau
 ### 1 = Forward Euler
 ### 2 = Trapezoid Method
 ### 3 = SSPRK3 Method
-### 4 = RK4 Method
+### 4 = RK4 Method 
 integration.rk.type = 4
 
 ## If using a user-specified Butcher Tableau, then
@@ -68,7 +64,7 @@ integration.rk.type = 4
 #
 ## The Butcher Tableau is read as a flattened,
 ## lower triangular matrix (but including the diagonal)
-## in row major format.
+## in row major format. 
 integration.rk.weights = 1
 integration.rk.nodes = 0
 integration.rk.tableau = 0.0
