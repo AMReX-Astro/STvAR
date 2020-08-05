@@ -9,7 +9,8 @@ AMREX_GPU_DEVICE
 inline 
 void 
 state_post_update(int i, int j, int k, 
-        amrex::Array4<amrex::Real> const& state_fab, 
+        amrex::Array4<amrex::Real> const& state_fab,
+        const amrex::Real time,
         amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dx,
         const amrex::GeometryData& geom) noexcept 
 {

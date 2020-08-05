@@ -11,6 +11,7 @@ bool
 state_is_tagged(int i, int j, int k, 
         amrex::Array4<amrex::Real const> const& state_fab,
         amrex::Real error_threshold,
+        const amrex::Real time,
         amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dx,
         const amrex::GeometryData& geom) noexcept 
 {

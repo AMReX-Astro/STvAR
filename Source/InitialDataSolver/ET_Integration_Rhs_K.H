@@ -10,7 +10,8 @@ inline
 void 
 state_rhs(int i, int j, int k, 
         amrex::Array4<amrex::Real> const& rhs_fab, 
-        amrex::Array4<amrex::Real const> const& state_fab, 
+        amrex::Array4<amrex::Real const> const& state_fab,
+        const amrex::Real time,
         amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dx, 
         const amrex::GeometryData& geom) noexcept 
 {
@@ -43,21 +44,21 @@ state_rhs(int i, int j, int k,
         amrex::Real c20 = -1.168642873;
         amrex::Real c21 = 0.0;
         amrex::Real c22 = 0.0;
-        amrex::Real M1 = 0.60400302000000006;
+        amrex::Real M1 = 0.60399999999999998;
 
-        amrex::Real M2 = 0.30199698000000003;
+        amrex::Real M2 = 0.30199999999999999;
 
         amrex::Real P10 = 0.0;
-        amrex::Real P11 = 0.23319174979999999;
+        amrex::Real P11 = 0.32319174979999998;
         amrex::Real P12 = 0.0;
         amrex::Real P20 = 0.0;
-        amrex::Real P21 = -0.23319174979999999;
+        amrex::Real P21 = -0.32319174979999998;
         amrex::Real P22 = 0.0;
         amrex::Real S10 = 0;
         amrex::Real S11 = 0;
-        amrex::Real S12 = 0;
+        amrex::Real S12 = 0.20000000000000001;
         amrex::Real S20 = 0;
-        amrex::Real S21 = 0;
+        amrex::Real S21 = 0.29999999999999999;
         amrex::Real S22 = 0;
         amrex::Real xc10 = -c10 + x0;
         amrex::Real xc11 = -c11 + x1;

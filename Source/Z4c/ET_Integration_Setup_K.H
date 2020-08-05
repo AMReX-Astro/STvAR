@@ -13,7 +13,7 @@ namespace InitIdx {
 };
 
 namespace Diag { 
-         enum DiagnosticIndexes {H, NumScalars}; 
+         enum DiagnosticIndexes {H, ML0, ML1, ML2, C, Ksclr, NumScalars}; 
 };
 
 #define NUM_GHOST_CELLS 4

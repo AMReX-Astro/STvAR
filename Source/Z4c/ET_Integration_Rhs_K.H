@@ -10,7 +10,8 @@ inline
 void 
 state_rhs(int i, int j, int k, 
         amrex::Array4<amrex::Real> const& rhs_fab, 
-        amrex::Array4<amrex::Real const> const& state_fab, 
+        amrex::Array4<amrex::Real const> const& state_fab,
+        const amrex::Real time,
         amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dx, 
         const amrex::GeometryData& geom) noexcept 
 {
