@@ -8,6 +8,9 @@ def Geometry(NumCells = [32, 32, 32], LowerBound = [-10, -10, -10], UpperBound =
     header = "# Problem Size & Geometry \n"
     ncellstring = "amr.n_cell = "
     geomperiodicstring = "geometry.is_periodic = "
+    coordsysstring = "geometry.coord_sys = "
+    if CoordSys == "Cartesian":
+        coordsysstring += "0 \n"
     lostring = "geometry.prob_lo = "
     histring = "geometry.prob_hi = "
     for i in range(dim):
@@ -19,7 +22,7 @@ def Geometry(NumCells = [32, 32, 32], LowerBound = [-10, -10, -10], UpperBound =
     geomperiodicstring += "\n"
     lostring += "\n"
     histring += "\n"
-    return header + ncellstring + geomperiodicstring + lostring + histring + "\n"
+    return header + ncellstring + geomperiodicstring + coordsysstring + lostring + histring + "\n"
 
 def AMRVerbosity(Verbosity = 1):
     return "# Turn on verbosity in amr \n" + "amr.v = " + str(Verbosity) + "\n\n"
