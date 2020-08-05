@@ -1,11 +1,11 @@
 # Stopping Criteria
-max_step = 300
+max_step = 200
 stop_time = 100.0
 
 # Problem Size & Geometry
 amr.n_cell = 256 256
 
-geometry.is_periodic = 0 0 
+geometry.is_periodic = 0 0
 geometry.coord_sys = 0 # cartesian
 geometry.prob_lo = -50.0 -50.0
 geometry.prob_hi =  50.0  50.0
@@ -14,30 +14,31 @@ geometry.prob_hi =  50.0  50.0
 amr.v = 1
 
 # Refinement
-amr.max_level = 2 # starts counting at 0
-amr.ref_ratio = 2 # refinement ratio
+amr.max_level = 3 # starts counting at 0
+amr.max_grid_size = 128
+amr.ref_ratio = 2
+amr.n_error_buf = 1
 amr.blocking_factor = 8
-amr.max_grid_size = 256
 amr.regrid_int = 2
 
 # AMR Interpolation
 amr.interpolation_type = 6
 
 # Problem specific boundary conditions
-domain_lo_bc_types = 2 2
+domain_lo_bc_types = 2 2 
 domain_hi_bc_types = 2 2
 
 # Problem specific tagging for refinement
-problem.s_error = 0.01 0.03
+problem.s_error = 0.01 0.02 0.03
 problem.error_comp = 0
 
 # Problem specific inputs
 problem.elliptic = 0
-problem.cfl = 0.5
+problem.cfl = 0.25
 
 # I/O
 amr.plot_int = 1
-amr.diag_int = 100
+amr.diag_int = 1
 amr.chk_int = 10
 
 # Restart from checkpoint or use as initial condition?
