@@ -1,11 +1,12 @@
 # Stopping Criteria 
-max_step = 100
+max_step = 200
 stop_time = 100.0
 
 # Problem Size & Geometry 
 amr.n_cell = 64 64 64 
 
 geometry.is_periodic = 0 0 0 
+geometry.coord_sys = 0 
 geometry.prob_lo = -40.0 -40.0 -40.0 
 geometry.prob_hi = 40.0 40.0 40.0 
 
@@ -14,11 +15,11 @@ amr.v = 1
 
 # Refinement Parameters 
 amr.max_level = 5
-amr.max_grid_size = 64
+amr.max_grid_size = 32
 amr.ref_ratio = 2
 amr.n_error_buf = 1
-amr.blocking_factor = 16
-amr.regrid_int = 5
+amr.blocking_factor = 8
+amr.regrid_int = 2
 
 # AMR Interpolation 
 amr.interpolation_type = 6
@@ -38,7 +39,7 @@ problem.cfl = 0.005
 # Plotting steps 
 amr.plot_int = 1
 amr.diag_int = 10
-amr.chk_int = 50
+amr.chk_int = 10
 
 ## integration.type can take on the following values: 
 ## 0 = Forward Euler 
