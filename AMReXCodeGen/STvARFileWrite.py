@@ -13,7 +13,8 @@ inline
 void 
 state_rhs(int i, int j, int k, 
         amrex::Array4<amrex::Real> const& rhs_fab, 
-        amrex::Array4<amrex::Real const> const& state_fab, 
+        amrex::Array4<amrex::Real const> const& state_fab,
+        const amrex::Real time,
         amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dx, 
         const amrex::GeometryData& geom) noexcept 
 {
@@ -32,7 +33,8 @@ inline
 void 
 state_diagnostics(int i, int j, int k, 
         amrex::Array4<amrex::Real> const& diag, 
-        amrex::Array4<amrex::Real const> const& state_fab, 
+        amrex::Array4<amrex::Real const> const& state_fab,
+        const amrex::Real time_lev,
         amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dx, 
         const amrex::GeometryData& geom) noexcept 
 {
@@ -69,7 +71,8 @@ AMREX_GPU_DEVICE
 inline 
 void 
 state_post_update(int i, int j, int k, 
-        amrex::Array4<amrex::Real> const& state_fab, 
+        amrex::Array4<amrex::Real> const& state_fab,
+        const amrex::Real time,
         amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dx,
         const amrex::GeometryData& geom) noexcept 
 {
@@ -106,6 +109,7 @@ bool
 state_is_tagged(int i, int j, int k, 
         amrex::Array4<amrex::Real const> const& state_fab,
         amrex::Real error_threshold,
+        const amrex::Real time,
         amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dx,
         const amrex::GeometryData& geom) noexcept 
 {
