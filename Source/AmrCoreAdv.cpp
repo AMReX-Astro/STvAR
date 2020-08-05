@@ -109,7 +109,7 @@ AmrCoreAdv::Evolve ()
         // Write a diagnostic file?
         if (diag_int > 0 && (step+1) % diag_int == 0) {
             last_diag_file_step = step + 1;
-            WriteDiagnosticFile();
+            ComputeAndWriteDiagnosticFile();
         }
 
 #ifdef AMREX_MEM_PROFILING
@@ -132,7 +132,7 @@ AmrCoreAdv::Evolve ()
     }
     
     if (diag_int > 0 && istep[0] > last_diag_file_step) {
-        WriteDiagnosticFile();
+        ComputeAndWriteDiagnosticFile();
     }
 }
 
@@ -164,7 +164,7 @@ AmrCoreAdv::InitData ()
     }
     
     if (diag_int > 0) {
-        WriteDiagnosticFile();
+        ComputeAndWriteDiagnosticFile();
     }
 }
 
@@ -309,7 +309,7 @@ AmrCoreAdv::ErrorEst (int lev, TagBoxArray& tags, Real time, int ngrow)
             amrex::ParallelFor(tilebox,
             [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
             {          
-                tagarr(i, j, k) = state_is_tagged(i, j, k, state_fab, error_threshold, dx, geom.data()) ? tagval : clearval;
+                tagarr(i, j, k) = state_is_tagged(i, j, k, state_fab, error_threshold, time, dx, geom.data()) ? tagval : clearval;
             });
         }
     }
@@ -681,13 +681,13 @@ AmrCoreAdv::Advance (int lev, Real time, Real dt_lev, int iteration, int ncycle)
 
     // Create a RHS source function we will integrate
     auto source_fun = [&](MultiFab& rhs, const MultiFab& state, const Real time){
-        fill_rhs(rhs, state, geom_lev);
+        fill_rhs(rhs, state, time, geom_lev);
     };
 
     // Create a function to call after updating a state
     auto post_update_fun = [&](MultiFab& S_data, const Real time) {
         // Call user function to update state
-        post_update(S_data, geom_lev);
+        post_update(S_data, time, geom_lev);
 
         // Fill ghost cells for S_data from interior & periodic BCs
         // and from interpolating coarser data in space/time at the current stage time.
@@ -826,15 +826,31 @@ AmrCoreAdv::DiagFileVarNames () const
 }
 
 void
-AmrCoreAdv::WriteDiagnosticFile () const
+AmrCoreAdv::ComputeAndWriteDiagnosticFile () const
 {
     const std::string& diagfilename = DiagFileName(istep[0]);
-    const auto& mf = PlotFileMF();
+    //const auto& mf = PlotFileMF();
+    const int nDiagComp = Diag::NumScalars;
+    Vector<MultiFab>  grid_diag(finest_level+1);
+    Vector<const MultiFab*> grid_diag_mf;
+    
+    // sets the size and distribution of diagnostic data
+    for (int lev = 0; lev <= finest_level; ++lev) {
+        grid_diag[lev].define(boxArray(lev), DistributionMap(lev), nDiagComp, 0);
+        grid_diag_mf.push_back(&grid_diag[lev]);
+    }
+    
+    for (int lev = 0; lev <= finest_level; ++lev) {  
+        const amrex::Geometry& geom = Geom(lev);
+        fill_state_diagnostics(grid_diag[lev], grid_new[lev], t_new[lev], geom);
+        
+    }
+    
     const auto& diagnames = DiagFileVarNames();
 
     amrex::Print() << "Writing diagfile " << diagfilename << "\n";
 
-    amrex::WriteMultiLevelPlotfile(diagfilename, finest_level+1, mf, diagnames,
+    amrex::WriteMultiLevelPlotfile(diagfilename, finest_level+1, grid_diag_mf, diagnames,
                                    Geom(), t_new[0], istep, refRatio());
 }
 
@@ -1151,7 +1167,7 @@ AmrCoreAdv::GotoNextLine (std::istream& is)
     is.ignore(bl_ignore_max, '\n');
 }
 
-void AmrCoreAdv::post_update (MultiFab& state_mf, const Geometry& geom)
+void AmrCoreAdv::post_update (MultiFab& state_mf, const amrex::Real time, const Geometry& geom)
 {
     const auto dx = geom.CellSizeArray();
     int ncomp = state_mf.nComp();
@@ -1170,12 +1186,12 @@ void AmrCoreAdv::post_update (MultiFab& state_mf, const Geometry& geom)
     amrex::ParallelFor(bx,
     [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
-        state_post_update(i, j, k, state_fab, dx, geom.data());
+        state_post_update(i, j, k, state_fab, time, dx, geom.data());
     });
   }
 }
 
-void AmrCoreAdv::fill_rhs (MultiFab& rhs_mf, const MultiFab& state_mf, const amrex::Geometry& geom)
+void AmrCoreAdv::fill_rhs (MultiFab& rhs_mf, const MultiFab& state_mf, const amrex::Real time, const amrex::Geometry& geom)
 {
   const auto dx = geom.CellSizeArray();
 
@@ -1194,7 +1210,31 @@ void AmrCoreAdv::fill_rhs (MultiFab& rhs_mf, const MultiFab& state_mf, const amr
     amrex::ParallelFor(bx,
     [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
-      state_rhs(i, j, k, rhs_fab, state_fab, dx, geom.data());
+      state_rhs(i, j, k, rhs_fab, state_fab, time, dx, geom.data());
+    });
+  }
+}
+
+void AmrCoreAdv::fill_state_diagnostics (MultiFab& diag_mf, const MultiFab& state_mf, const Real time_lev, const amrex::Geometry& geom) const
+{
+  const auto dx = geom.CellSizeArray();
+
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+  for ( MFIter mfi(diag_mf, TilingIfNotGPU()); mfi.isValid(); ++mfi )
+  {
+    const Box& bx = mfi.tilebox();
+    const auto ncomp = state_mf.nComp();
+
+    const auto& diag_fab = diag_mf.array(mfi);
+    const auto& state_fab = state_mf.array(mfi);
+
+    // For each grid, loop over all the valid points
+    amrex::ParallelFor(bx,
+    [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+    {
+      state_diagnostics(i, j, k, diag_fab, state_fab, time_lev, dx, geom.data());
     });
   }
 }
