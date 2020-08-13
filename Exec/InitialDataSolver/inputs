@@ -3,19 +3,19 @@ max_step = 200
 stop_time = 100.0
 
 # Problem Size & Geometry 
-amr.n_cell = 64 64 64 
+amr.n_cell = 128 128 128 
 
 geometry.is_periodic = 0 0 0 
 geometry.coord_sys = 0 
-geometry.prob_lo = -40.0 -40.0 -40.0 
-geometry.prob_hi = 40.0 40.0 40.0 
+geometry.prob_lo = -60.0 -60.0 -60.0 
+geometry.prob_hi = 60.0 60.0 60.0 
 
 # Turn on verbosity in amr 
 amr.v = 1
 
 # Refinement Parameters 
 amr.max_level = 5
-amr.max_grid_size = 32
+amr.max_grid_size = 64
 amr.ref_ratio = 2
 amr.n_error_buf = 1
 amr.blocking_factor = 8
@@ -29,7 +29,7 @@ domain_lo_bc_types = 2 2 2
 domain_hi_bc_types = 2 2 2 
 
 # Problem specific tagging for refinement 
-problem.s_error = 0.7 0.6 0.5 0.4 0.3 
+problem.s_error = 0.8 0.7 0.6 0.5 0.4 
 problem.error_comp = 0
 
 # Problem specific inputs 
