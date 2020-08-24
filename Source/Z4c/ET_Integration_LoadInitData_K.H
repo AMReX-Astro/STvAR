@@ -41,19 +41,19 @@ initialize_from_data(int i, int j, int k,
         amrex::Real P22 = 0.0;
         amrex::Real S10 = 0;
         amrex::Real S11 = 0;
-        amrex::Real S12 = 0;
+        amrex::Real S12 = 0.29999999999999999;
         amrex::Real S20 = 0;
         amrex::Real S21 = 0;
-        amrex::Real S22 = 0;
+        amrex::Real S22 = 0.29999999999999999;
         amrex::Real xc10 = -c10 + x0;
         amrex::Real xc11 = -c11 + x1;
         amrex::Real xc12 = -c12 + x2;
         amrex::Real xc20 = -c20 + x0;
         amrex::Real xc21 = -c21 + x1;
         amrex::Real xc22 = -c22 + x2;
-        amrex::Real rc1 = std::sqrt(std::pow(xc10, 2) + std::pow(xc11, 2) + std::pow(xc12, 2));
+        amrex::Real rc1 = std::max(0.0100000000000000, std::sqrt(std::pow(xc10, 2) + std::pow(xc11, 2) + std::pow(xc12, 2)));
 
-        amrex::Real rc2 = std::sqrt(std::pow(xc20, 2) + std::pow(xc21, 2) + std::pow(xc22, 2));
+        amrex::Real rc2 = std::max(0.0100000000000000, std::sqrt(std::pow(xc20, 2) + std::pow(xc21, 2) + std::pow(xc22, 2)));
 
         amrex::Real n10 = xc10/rc1;
         amrex::Real n11 = xc11/rc1;
