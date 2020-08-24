@@ -177,7 +177,6 @@ private:
     void post_update (amrex::MultiFab& state_mf, const amrex::Real time, const amrex::Geometry& geom);
     void fill_rhs (amrex::MultiFab& rhs_mf, const amrex::MultiFab& state_mf, const amrex::Real time, const amrex::Geometry& geom);
     void fill_state_diagnostics (amrex::MultiFab& diag_mf, const amrex::MultiFab& state_mf, const amrex::Real time_lev, const amrex::Geometry& geom) const;
-
     ////////////////
     // private data members
 
@@ -193,6 +192,9 @@ private:
     // after advancing a level we use "swap".
     amrex::Vector<amrex::MultiFab> grid_new;
     amrex::Vector<amrex::MultiFab> grid_old;
+
+    // array of time integrator objects at each level of refinement
+    amrex::Vector<std::unique_ptr<TimeIntegrator<MultiFab> > > integrator;
 
     // BCRec is essentially a 2*DIM integer array storing the physical boundary
     // condition types at the lo/hi walls in each direction

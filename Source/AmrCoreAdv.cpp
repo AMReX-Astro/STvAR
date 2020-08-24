@@ -32,6 +32,8 @@ AmrCoreAdv::AmrCoreAdv ()
     grid_new.resize(nlevs_max);
     grid_old.resize(nlevs_max);
 
+    integrator.resize(nlevs_max);
+
     bcs.resize(Idx::NumScalars);
 
     // boundary conditions
@@ -185,6 +187,9 @@ AmrCoreAdv::MakeNewLevelFromCoarse (int lev, Real time, const BoxArray& ba,
     t_old[lev] = time - 1.e200;
 
     FillCoarsePatch(lev, time, grid_new[lev], 0, ncomp);
+
+    // also create the time integrator for this level
+    integrator[lev] = std::make_unique<TimeIntegrator<MultiFab> >(grid_old[lev]);
 }
 
 // Remake an existing level using provided BoxArray and DistributionMapping and
@@ -207,6 +212,9 @@ AmrCoreAdv::RemakeLevel (int lev, Real time, const BoxArray& ba,
 
     t_new[lev] = time;
     t_old[lev] = time - 1.e200;
+
+    // also recreate the time integrator for this level
+    integrator[lev] = std::make_unique<TimeIntegrator<MultiFab> >(grid_old[lev]);
 }
 
 // Delete level data
@@ -256,6 +264,9 @@ void AmrCoreAdv::MakeNewLevelFromScratch (int lev, Real time, const BoxArray& ba
         state_init(i, j, k, state_arr, cur_time, geom.data());
       });
     }
+
+    // also create the time integrator for this level
+    integrator[lev] = std::make_unique<TimeIntegrator<MultiFab> >(grid_old[lev]);
 }
 
 // tag all cells for refinement
@@ -484,7 +495,18 @@ AmrCoreAdv::FillIntermediatePatch (int lev, Real time, MultiFab& mf, int icomp, 
 
         Vector<MultiFab*> cmf, fmf;
         Vector<Real> ctime, ftime;
-        GetData(lev-1, time, cmf, ctime);
+
+        // interpolate coarse data in time
+        MultiFab mf_coarse_temp(grid_old[lev-1].boxArray(), grid_old[lev-1].DistributionMap(),
+                                grid_old[lev-1].nComp(), NUM_GHOST_CELLS);
+
+        // fill mf_coarse_temp using MC Equation 39 at "time"
+        Real timestep_fraction = (time - t_old[lev-1])/dt[lev-1];
+        integrator[lev-1]->time_interpolate(grid_new[lev-1], grid_old[lev-1], timestep_fraction, mf_coarse_temp);
+
+        // we'll want to interpolate from mf_coarse_temp at "time"
+        cmf.push_back(&mf_coarse_temp);
+        ctime.push_back(time);
 
         // on lev, use the mf data and time passed to FillIntermediatePatch().
         fmf.push_back(&mf);
@@ -673,10 +695,6 @@ AmrCoreAdv::Advance (int lev, Real time, Real dt_lev, int iteration, int ncycle)
     FillPatch(lev, time, Sborder, 0, Sborder.nComp());
 
     /* Integrate from (y,t) = (Sborder, time) by dt_lev to set S_new. */
-
-    // Create integrator with the old state, new state, and old time
-    TimeIntegrator<MultiFab> integrator(Sborder, S_new, time);
-
     const auto geom_lev = geom[lev];
 
     // Create a RHS source function we will integrate
@@ -695,12 +713,11 @@ AmrCoreAdv::Advance (int lev, Real time, Real dt_lev, int iteration, int ncycle)
         FillIntermediatePatch(lev, time, S_data, 0, S_data.nComp());
     };
 
-    integrator.set_rhs(source_fun);
-    integrator.set_post_update(post_update_fun);
+    integrator[lev]->set_rhs(source_fun);
+    integrator[lev]->set_post_update(post_update_fun);
 
     // integrate forward one step to fill S_new
-    integrator.advance(dt_lev);
-
+    integrator[lev]->advance(Sborder, S_new, time, dt_lev);
 }
 
 // a wrapper for EstTimeStep
@@ -1030,6 +1047,8 @@ AmrCoreAdv::ReadCheckpointFile ()
         grid_old[lev].define(grids[lev], dmap[lev], ncomp, nghost);
         grid_new[lev].define(grids[lev], dmap[lev], ncomp, nghost);
 
+        // also create the time integrator for this level
+        integrator[lev] = std::make_unique<TimeIntegrator<MultiFab> >(grid_old[lev]);
     }
 
     // read in the MultiFab data
