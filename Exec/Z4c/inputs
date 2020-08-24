@@ -1,9 +1,9 @@
 # Stopping Criteria 
-max_step = 200
+max_step = 400
 stop_time = 100.0
 
 # Problem Size & Geometry 
-amr.n_cell = 64 64 64 
+amr.n_cell = 128 128 128 
 
 geometry.is_periodic = 0 0 0 
 geometry.coord_sys = 0 
@@ -14,12 +14,12 @@ geometry.prob_hi = 50.0 50.0 50.0
 amr.v = 1
 
 # Refinement Parameters 
-amr.max_level = 4
-amr.max_grid_size = 32
+amr.max_level = 5
+amr.max_grid_size = 64
 amr.ref_ratio = 2
 amr.n_error_buf = 1
 amr.blocking_factor = 8
-amr.regrid_int = 2
+amr.regrid_int = 1
 
 # AMR Interpolation 
 amr.interpolation_type = 6
@@ -29,12 +29,12 @@ domain_lo_bc_types = 2 2 2
 domain_hi_bc_types = 2 2 2 
 
 # Problem specific tagging for refinement 
-problem.s_error = 0.6 0.5 0.4 0.3 
+problem.s_error = 0.7 0.6 0.5 0.4 0.3 
 problem.error_comp = 0
 
 # Problem specific inputs 
 problem.elliptic = 0
-problem.cfl = 0.25
+problem.cfl = 0.1
 
 # Plotting steps 
 amr.plot_int = 1
