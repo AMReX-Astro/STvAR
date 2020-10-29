@@ -1223,13 +1223,27 @@ void AmrCoreAdv::fill_rhs (MultiFab& rhs_mf, const MultiFab& state_mf, const amr
     const auto ncomp = state_mf.nComp();
 
     const auto& rhs_fab = rhs_mf.array(mfi);
+
     const auto& state_fab = state_mf.array(mfi);
+
+    Fab stress_energy_fab; // with ghost cells?
+    Fab adm_vars_fab; // with ghost cells?
+
+    /* grown_bx = bx, grown by the number of ghost cells needed */
+
+    amrex::ParallelFor(grown_bx,
+    [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+    {
+      fill_stress_energy_fab(i, j, k, stress_energy_fab, hydro_state_fab);
+      fill_adm_vars_fab(i, j, k, adm_vars_fab, z4c_state_fab);
+    });
 
     // For each grid, loop over all the valid points
     amrex::ParallelFor(bx,
     [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
-      state_rhs(i, j, k, rhs_fab, state_fab, time, dx, geom.data());
+      spacetime_rhs(i, j, k, rhs_fab, state_fab, stress_energy_fab, time, dx, geom.data());
+      hydro_rhs(i, j, k, rhs_fab, state_fab, adm_vars_fab, time, dx, geom.data());
     });
   }
 }
