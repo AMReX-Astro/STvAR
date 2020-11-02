@@ -23,9 +23,9 @@ state_diagnostics(int i, int j, int k,
 
         amrex::Real Pi = state_fab(i, j, k, Idx::Pi);
 
-        amrex::Real dPsi0 = ((2.0/3.0)*state_fab(i + 1, j, k, Idx::Psi) - 1.0/12.0*state_fab(i + 2, j, k, Idx::Psi) - 2.0/3.0*state_fab(i - 1, j, k, Idx::Psi) + (1.0/12.0)*state_fab(i - 2, j, k, Idx::Psi))/dx[0];
-        amrex::Real dPsi1 = ((2.0/3.0)*state_fab(i, j + 1, k, Idx::Psi) - 1.0/12.0*state_fab(i, j + 2, k, Idx::Psi) - 2.0/3.0*state_fab(i, j - 1, k, Idx::Psi) + (1.0/12.0)*state_fab(i, j - 2, k, Idx::Psi))/dx[1];
-        amrex::Real dPsi2 = ((2.0/3.0)*state_fab(i, j, k + 1, Idx::Psi) - 1.0/12.0*state_fab(i, j, k + 2, Idx::Psi) - 2.0/3.0*state_fab(i, j, k - 1, Idx::Psi) + (1.0/12.0)*state_fab(i, j, k - 2, Idx::Psi))/dx[2];
+        amrex::Real dPsi0 = ((1.0/2.0)*state_fab(i + 1, j, k, Idx::Psi) - 1.0/2.0*state_fab(i - 1, j, k, Idx::Psi))/dx[0];
+        amrex::Real dPsi1 = ((1.0/2.0)*state_fab(i, j + 1, k, Idx::Psi) - 1.0/2.0*state_fab(i, j - 1, k, Idx::Psi))/dx[1];
+        amrex::Real dPsi2 = ((1.0/2.0)*state_fab(i, j, k + 1, Idx::Psi) - 1.0/2.0*state_fab(i, j, k - 1, Idx::Psi))/dx[2];
         amrex::Real m = 1;
 
         diag(i, j, k, Diag::EnDens) = 0.5*std::pow(Pi, 2) + 0.5*std::pow(Psi, 2)*std::pow(m, 2) + 0.5*std::pow(dPsi0, 2) + 0.5*std::pow(dPsi1, 2);
