@@ -1,5 +1,5 @@
 # Stopping Criteria 
-max_step = 400
+max_step = 200
 stop_time = 100.0
 
 # Problem Size & Geometry 
@@ -34,7 +34,7 @@ problem.error_comp = 0
 
 # Problem specific inputs 
 problem.elliptic = 0
-problem.cfl = 0.1
+problem.cfl = 0.25
 
 # Plotting steps 
 amr.plot_int = 1
