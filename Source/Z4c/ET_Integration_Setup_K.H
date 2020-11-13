@@ -12,6 +12,10 @@ namespace InitIdx {
          enum ETInitIndexes {u, NumScalars}; 
 };
 
+namespace ADMIdx {
+         enum ETAdmIndexes {gamLL00, gamLL01, gamLL02, gamLL11, gamLL12, gamLL22, alpha, betaU0, betaU1, betaU2, NumScalars};
+};
+
 namespace Diag { 
          enum DiagnosticIndexes {H, ML0, ML1, ML2, C, Ksclr, NumScalars}; 
 };
