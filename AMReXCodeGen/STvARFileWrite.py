@@ -97,6 +97,27 @@ state_init(int i, int j, int k,
         
 """
 
+ConvertedVariables_Header_String = """
+
+#include <AMReX_REAL.H> 
+#include <AMReX_Array4.H> 
+#include <ET_Integration_Setup_K.H> 
+
+AMREX_GPU_DEVICE 
+inline 
+void 
+fill_conv_vars_fab(int i, int j, int k, 
+        amrex::Array4<const amrex::Real> const& state_fab,
+        amrex::Array4<amrex::Real> const& rhs_fab,
+        amrex::Array4<amrex::Real> const& conv_vars_arr,
+        const amrex::Real time,
+        amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dx, 
+        const amrex::GeometryData& geom) noexcept 
+{
+        const auto domain_xlo = geom.ProbLo();
+        
+"""
+
 AMRtagging_Header_String = """
 
 #include <AMReX_REAL.H> 
@@ -169,6 +190,16 @@ def InitFromScratch_Header(version = "standard", dim = 3):
         coord_string += "        amrex::Real x" + str(i) + " = (" + ijkString[i] + " + 0.5)*geom.CellSize(" + str(i) + ") + domain_xlo[" + str(i) + "]; \n"
     Header += coord_string
     return Header
+
+def ConvertedVariables_Header(version = "standard", dim = 3):
+    IFNDEF_DEFINE = "#ifndef ET_INTEGRATION_CONVERTED_VARS_K_H" + "\n" + "#define ET_INTEGRATION_CONVERTED_VARS_K_H"
+    Header = IFNDEF_DEFINE+ConvertedVariables_Header_String
+    coord_string = ""
+    for i in range(dim):
+        coord_string += "        amrex::Real x" + str(i) + " = (" + ijkString[i] + " + 0.5)*geom.CellSize(" + str(i) + ") + domain_xlo[" + str(i) + "]; \n"
+    Header += coord_string
+    return Header
+    
     
 def AMRtagging_Header(version = "standard", dim = 3):
     IFNDEF_DEFINE = "#ifndef ET_INTEGRATION_AMR_CELL_TAG_K_H" + "\n" + "#define ET_INTEGRATION_AMR_CELL_TAG_K_H"
@@ -179,7 +210,7 @@ def AMRtagging_Header(version = "standard", dim = 3):
     Header += coord_string
     return Header
 
-def Write_Setup_File(Statenames, Initnames, Diagnames, Nghostcells = 2, version = "standard"):
+def Write_Setup_File(Statenames, Initnames, Diagnames, Convnames, Nghostcells = 2, version = "standard"):
     IFNDEF_DEFINE = "#ifndef ET_INTEGRATION_SETUP_K_H" + "\n" + "#define ET_INTEGRATION_SETUP_K_H"
     FileString = IFNDEF_DEFINE+Setup_Header_String
     
@@ -221,6 +252,19 @@ def Write_Setup_File(Statenames, Initnames, Diagnames, Nghostcells = 2, version 
     DiagNamespaceStr += "}; \n};\n\n"
     
     FileString += DiagNamespaceStr
+    
+    ConvNamespaceStr = "namespace ConvIdx { \n"
+    ConvNamespaceStr += "         enum ConvertedIndexes {"
+    
+    Conv_string = ""
+    for itr in Convnames:
+        Conv_string += itr+", "
+    Conv_string += "NumScalars"
+    
+    ConvNamespaceStr += Conv_string
+    ConvNamespaceStr += "}; \n};\n\n"
+    
+    FileString += ConvNamespaceStr
     
     FileString += "#define NUM_GHOST_CELLS "+str(Nghostcells)+"\n\n"
     FileString += "#endif"
