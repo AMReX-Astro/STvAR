@@ -12,12 +12,12 @@ namespace InitIdx {
          enum ETInitIndexes {NumScalars}; 
 };
 
-namespace ADMIdx { 
-         enum ETInitIndexes {NumScalars}; 
-};
-
 namespace Diag { 
          enum DiagnosticIndexes {chi, alpha, NumScalars}; 
+};
+
+namespace ConvIdx { 
+         enum ConvertedIndexes {NumScalars}; 
 };
 
 #define NUM_GHOST_CELLS 4
