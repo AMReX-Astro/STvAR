@@ -13,7 +13,7 @@
 #include <ET_Integration_Rhs_K.H>
 #include <ET_Integration_Diag_K.H>
 #include <ET_Integration_Post_Update_K.H>
-#include <ET_Integration_ADM_Vars_K.H>
+#include <ET_Integration_Converted_Vars_K.H>
 #include <ET_Integration_AMR_Cell_Tag_K.H>
 
 #ifdef PROBLEM_LOADS_INITDATA
