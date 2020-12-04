@@ -1219,6 +1219,9 @@ void AmrCoreAdv::fill_rhs (MultiFab& rhs_mf, const MultiFab& state_mf, /*const M
 #endif
   for ( MFIter mfi(rhs_mf, TilingIfNotGPU()); mfi.isValid(); ++mfi )
   {
+      
+    //constexpr int num_grow = NUM_GHOST_CELLS;  // with ghost cells?
+      
     const Box& bx = mfi.tilebox();
     const auto ncomp = state_mf.nComp();
     //const auto ncomp_hydro = hydro_mf.nComp();
@@ -1227,20 +1230,20 @@ void AmrCoreAdv::fill_rhs (MultiFab& rhs_mf, const MultiFab& state_mf, /*const M
 
     const auto& state_fab = state_mf.array(mfi);
       
+    //const Box& grown_bx = mfi.growntilebox(num_grow); // mfi is the MFIter object, num_grow is the integer number of grow cells
+      
     //const auto& hydro_state_fab = hydro_mf.array(mfi);  //hydro_mf will come from the hydro variables
 
-    //FArrayBox stress_energy_fab(bx, ncomp); // with ghost cells?
-    FArrayBox adm_vars_fab(bx, ADMIdx::NumScalars); // with ghost cells?
-    amrex::Array4<Real> const & adm_vars_array = adm_vars_fab.array();
+    //FArrayBox stress_energy_fab(bx, StressEnergyIdx::NumScalars); // with ghost cells?
+    FArrayBox conv_vars_fab(bx, ConvIdx::NumScalars); // with ghost cells?
+    amrex::Array4<Real> const & conv_vars_arr = conv_vars_fab.array();
 
-    //grown_bx = bx.nGrow(); // grown by the number of ghost cells needed.  Only necessary if we need derivatives.
-      
-    amrex::ParallelFor(bx, //grown_bx,
+    amrex::ParallelFor(bx,
     [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       //fill_stress_energy_fab(i, j, k, stress_energy_fab, hydro_state_fab);  
       //When we have the hydro vars in hydro_fab we will fill the stress energy tensor
-      fill_adm_vars_fab(i, j, k, state_fab, adm_vars_array);  //ADM variables are filled from Z4c in state_fab
+      fill_conv_vars_fab(i, j, k, state_fab, rhs_fab, conv_vars_arr, time, dx, geom.data());
     });
 
     // For each grid, loop over all the valid points
@@ -1248,7 +1251,7 @@ void AmrCoreAdv::fill_rhs (MultiFab& rhs_mf, const MultiFab& state_mf, /*const M
     [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
       state_rhs(i, j, k, rhs_fab, state_fab, /*stress_energy_fab,*/ time, dx, geom.data());
-      //hydro_rhs(i, j, k, rhs_fab, state_fab, adm_vars_fab, time, dx, geom.data());
+      //hydro_rhs(i, j, k, rhs_fab, state_fab, conv_vars_fab, time, dx, geom.data());
     });
   }
 }
