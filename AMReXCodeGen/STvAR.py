@@ -14,7 +14,7 @@ class CustomCXX17Printer(CXX17CodePrinter):
     
 printer = CustomCXX17Printer()
 
-def AMReXcode(expr, varnames = "", diagnames = "", initnames = "", declare_rhs = False, rhsname = "", declare_state = False, statename = "", declare_diag = False, diagname = "", declare_init = False, initname = ""):
+def AMReXcode(expr, varnames = "", diagnames = "", initnames = "", convnames = "", declare_rhs = False, rhsname = "", declare_state = False, statename = "", declare_diag = False, diagname = "", declare_init = False, initname = "", declare_conv = False, convname = ""):
     str_expr = str(printer.doprint(expr))
 
     str_expr = str_expr.replace("pi","M_PI")
@@ -27,6 +27,9 @@ def AMReXcode(expr, varnames = "", diagnames = "", initnames = "", declare_rhs =
         
     for name in initnames:
         str_expr = str_expr.replace("InitIdx" + name,"InitIdx::"+name)
+     
+    for name in convnames:
+        str_expr = str_expr.replace("ConvIdx" + name, "ConvIdx::"+name)
     
     if declare_rhs == True:
         str_expr = "rhs_fab(i, j, k, Idx::"+rhsname+ ") = " + str_expr
@@ -39,6 +42,9 @@ def AMReXcode(expr, varnames = "", diagnames = "", initnames = "", declare_rhs =
         
     if declare_init == True:
         str_expr = "initial_data(i, j, k, InitIdx::"+initname+ ") = " + str_expr
+        
+    if declare_conv == True:
+        str_expr = "conv_vars_arr(i, j, k, ConvIdx::"+convname+ ") = " + str_expr
         
     return str_expr
     
@@ -72,7 +78,8 @@ class stVar:
     declState = []
     declDiag = []
     declInit = []
-    def __init__(self, symb, expr = 0, Isymb = 0, state = False, rhs = False, diag = False, initial = False):
+    declConv = []
+    def __init__(self, symb, expr = 0, Isymb = 0, state = False, rhs = False, diag = False, initial = False, conv = False):
         self.symb = symbols(symb)
         self.expr = expr
         self.Isymb = Isymb
@@ -94,26 +101,34 @@ class stVar:
             self.Isymb = IndexedBase('initial_data')[i,j,k,Idxsymb]
             self.expr = self.Isymb
             stVar.declInit.append(str(symb))
+        if conv == True:
+            Idxsymb = symbols("ConvIdx"+str(symb))
+            self.Isymb = IndexedBase('conv_vars_arr')[i,j,k,Idxsymb]
+            self.expr = self.Isymb
+            stVar.declConv.append(str(symb))
             
     
     def AMReXSymb2Expr(self):
-        return "        amrex::Real " + str(self.symb) + " = " + AMReXcode(self.expr,stVar.declState,stVar.declDiag,stVar.declInit)+"\n\n"
+        return "        amrex::Real " + str(self.symb) + " = " + AMReXcode(self.expr,stVar.declState,stVar.declDiag,stVar.declInit,stVar.declConv)+"\n\n"
     
     def AMReXSymb2State(self):
-        return "        amrex::Real " + str(self.symb) + " = " + AMReXcode(self.Isymb,stVar.declState,stVar.declDiag,stVar.declInit)+"\n\n"
+        return "        amrex::Real " + str(self.symb) + " = " + AMReXcode(self.Isymb,stVar.declState,stVar.declDiag,stVar.declInit,stVar.declConv)+"\n\n"
     
     def AMReXSetRHS(self):
-        return "        "+AMReXcode(self.expr,stVar.declState,stVar.declDiag, stVar.declInit, declare_rhs = True, rhsname = str(self.symb))+"\n\n"
+        return "        "+AMReXcode(self.expr,stVar.declState,stVar.declDiag, stVar.declInit,stVar.declConv, declare_rhs = True, rhsname = str(self.symb))+"\n\n"
     
     def AMReXSetState(self):
-        return "        "+AMReXcode(self.expr,stVar.declState,stVar.declDiag, stVar.declInit, declare_state = True, statename = str(self.symb))+"\n\n"
+        return "        "+AMReXcode(self.expr,stVar.declState,stVar.declDiag, stVar.declInit,stVar.declConv, declare_state = True, statename = str(self.symb))+"\n\n"
     
     def AMReXSetDiag(self):
-        return "        "+AMReXcode(self.expr,stVar.declState, stVar.declDiag, stVar.declInit, declare_diag = True, diagname = str(self.symb))+"\n\n"
+        return "        "+AMReXcode(self.expr,stVar.declState, stVar.declDiag, stVar.declInit,stVar.declConv, declare_diag = True, diagname = str(self.symb))+"\n\n"
+    
+    def AMReXSetConv(self):
+        return "        "+AMReXcode(self.expr,stVar.declState, stVar.declDiag, stVar.declInit,stVar.declConv,declare_conv = True, convname = str(self.symb))+"\n\n"
             
     
 class stVarRank1(stVar):
-    def __init__(self, symb, dim = 3, state = False, rhs = False, diag = False, initial = False):
+    def __init__(self, symb, dim = 3, state = False, rhs = False, diag = False, initial = False, conv = False):
         self.symb = ixp.declarerank1(str(symb),DIM=dim)
         self.expr = ixp.zerorank1(DIM=dim)
         self.Isymb = ixp.zerorank1(DIM=dim)
@@ -140,42 +155,54 @@ class stVarRank1(stVar):
                 self.Isymb[itri] = IndexedBase('initial_data')[i,j,k,Idxsymb]
                 self.expr[itri] = self.Isymb[itri]
                 stVar.declInit.append(str(self.symb[itri]))
+        if conv == True: 
+            for itri in range(dim):
+                Idxsymb = symbols("ConvIdx" + str(self.symb[itri]))
+                self.Isymb[itri] = IndexedBase('conv_vars_arr')[i,j,k,Idxsymb]
+                self.expr[itri] = self.Isymb[itri]
+                stVar.declConv.append(str(self.symb[itri]))
                 
         self.symb = np.array(self.symb)
         
     def AMReXSymb2Expr(self):
         expr = ""
         for i in range(self.dim):
-            expr += "        amrex::Real " + str(self.symb[i]) + " = " + AMReXcode(self.expr[i],stVar.declState, stVar.declDiag,stVar.declInit)+'\n'
+            expr += "        amrex::Real " + str(self.symb[i]) + " = " + AMReXcode(self.expr[i],stVar.declState, stVar.declDiag,stVar.declInit,stVar.declConv)+'\n'
         return expr
     
     def AMReXSymb2State(self):
         expr = ""
         for i in range(self.dim):
-            expr += "        amrex::Real " + str(self.symb[i]) + " = " + AMReXcode(self.Isymb[i],stVar.declState, stVar.declDiag,stVar.declInit)+'\n'
+            expr += "        amrex::Real " + str(self.symb[i]) + " = " + AMReXcode(self.Isymb[i],stVar.declState, stVar.declDiag,stVar.declInit,stVar.declConv)+'\n'
         return expr
             
     def AMReXSetRHS(self):
         expr = ""
         for i in range(self.dim):
-            expr += "        "+AMReXcode(self.expr[i], stVar.declState, stVar.declDiag, stVar.declInit, declare_rhs = True, rhsname = str(self.symb[i]))+"\n\n"
+            expr += "        "+AMReXcode(self.expr[i], stVar.declState, stVar.declDiag, stVar.declInit,stVar.declConv, declare_rhs = True, rhsname = str(self.symb[i]))+"\n\n"
         return expr
     
     def AMReXSetState(self):
         expr = ""
         for i in range(self.dim):
-            expr += "        "+AMReXcode(self.expr[i], stVar.declState, stVar.declDiag, stVar.declInit, declare_state = True, statename = str(self.symb[i]))+"\n\n"
+            expr += "        "+AMReXcode(self.expr[i], stVar.declState, stVar.declDiag, stVar.declInit, stVar.declConv, declare_state = True, statename = str(self.symb[i]))+"\n\n"
         return expr
     
     def AMReXSetDiag(self):
         expr = ""
         for i in range(self.dim):
-            expr += "        "+AMReXcode(self.expr[i], stVar.declState, stVar.declDiag, stVar.declInit, declare_diag = True, diagname = str(self.symb[i]))+"\n\n"
+            expr += "        "+AMReXcode(self.expr[i], stVar.declState, stVar.declDiag, stVar.declInit, stVar.declConv, declare_diag = True, diagname = str(self.symb[i]))+"\n\n"
+        return expr
+    
+    def AMReXSetConv(self):
+        expr = ""
+        for i in range(self.dim):
+            expr += "        "+AMReXcode(self.expr[i], stVar.declState, stVar.declDiag, stVar.declInit, stVar.declConv, declare_conv = True, convname = str(self.symb[i]))+"\n\n"
         return expr
     
     
 class stVarRank2(stVar):
-    def __init__(self, symb, sym = 'nosym', dim = 3, state = False, rhs = False, diag = False, initial = False, resetsym = True):
+    def __init__(self, symb, sym = 'nosym', dim = 3, state = False, rhs = False, diag = False, initial = False, conv = False, resetsym = True):
         self.symb = ixp.declarerank2(str(symb), sym, DIM=dim)
         self.expr = ixp.zerorank2(DIM=dim)
         self.Isymb = ixp.zerorank2(DIM=dim)
@@ -233,6 +260,22 @@ class stVarRank2(stVar):
                 for itri in range(dim):
                     for itrj in range(dim):
                         stVar.declInit.append(str(self.symb[itri][itrj]))
+                        
+        if conv == True: 
+            for itri in range(dim):
+                for itrj in range(dim):
+                    Idxsymb = symbols("ConvIdx" + str(self.symb[itri][itrj]))
+                    self.Isymb[itri][itrj] = IndexedBase('conv_vars_arr')[i,j,k,Idxsymb]
+                    self.expr[itri][itrj] = self.Isymb[itri][itrj]
+                    
+            if sym == 'sym01':
+                for itri in range(dim):
+                    for itrj in range(itri,dim):
+                        stVar.declConv.append(str(self.symb[itri][itrj]))
+            else:
+                for itri in range(dim):
+                    for itrj in range(dim):
+                        stVar.declConv.append(str(self.symb[itri][itrj]))
         
         if resetsym == True:
                 self.symb = ixp.declarerank2(str(symb),'nosym', DIM=dim)
@@ -243,14 +286,14 @@ class stVarRank2(stVar):
         expr = ""
         for i in range(self.dim):
             for j in range(self.dim):
-                expr += "        amrex::Real " + str(self.symb[i][j]) + " = " + AMReXcode(self.expr[i][j],stVar.declState, stVar.declDiag,stVar.declInit)+'\n'
+                expr += "        amrex::Real " + str(self.symb[i][j]) + " = " + AMReXcode(self.expr[i][j],stVar.declState, stVar.declDiag, stVar.declInit, stVar.declConv)+'\n'
         return expr
     
     def AMReXSymb2State(self):
         expr = ""
         for i in range(self.dim):
             for j in range(self.dim):
-                expr += "        amrex::Real " + str(self.symb[i][j]) + " = " + AMReXcode(self.Isymb[i][j],stVar.declState, stVar.declDiag,stVar.declInit)+'\n'
+                expr += "        amrex::Real " + str(self.symb[i][j]) + " = " + AMReXcode(self.Isymb[i][j],stVar.declState, stVar.declDiag,stVar.declInit, stVar.declConv)+'\n'
         return expr
             
     def AMReXSetRHS(self):
@@ -258,11 +301,11 @@ class stVarRank2(stVar):
         if self.sym == 'nosym':
             for i in range(self.dim):
                 for j in range(self.dim):
-                    expr += "        "+AMReXcode(self.expr[i][j], stVar.declState, stVar.declDiag, stVar.declInit, declare_rhs = True, rhsname = str(self.symb[i][j]))+"\n\n"
+                    expr += "        "+AMReXcode(self.expr[i][j], stVar.declState, stVar.declDiag, stVar.declInit, stVar.declConv, declare_rhs = True, rhsname = str(self.symb[i][j]))+"\n\n"
         elif self.sym == 'sym01':
             for i in range(self.dim):
                 for j in range(i,self.dim):
-                    expr += "        "+AMReXcode(self.expr[i][j], stVar.declState, stVar.declDiag, stVar.declInit, declare_rhs = True, rhsname = str(self.symb[i][j]))+"\n\n"
+                    expr += "        "+AMReXcode(self.expr[i][j], stVar.declState, stVar.declDiag, stVar.declInit, stVar.declConv, declare_rhs = True, rhsname = str(self.symb[i][j]))+"\n\n"
         return expr
     
     def AMReXSetState(self):
@@ -270,11 +313,11 @@ class stVarRank2(stVar):
         if self.sym == 'nosym':
             for i in range(self.dim):
                 for j in range(self.dim):
-                    expr += "        "+AMReXcode(self.expr[i][j], stVar.declState, stVar.declDiag, stVar.declInit, declare_state = True, statename = str(self.symb[i][j]))+"\n\n"
+                    expr += "        "+AMReXcode(self.expr[i][j], stVar.declState, stVar.declDiag, stVar.declInit, stVar.declConv, declare_state = True, statename = str(self.symb[i][j]))+"\n\n"
         elif self.sym == 'sym01':
             for i in range(self.dim):
                 for j in range(i, self.dim):
-                    expr += "        "+AMReXcode(self.expr[i][j], stVar.declState, stVar.declDiag, stVar.declInit, declare_state = True, statename = str(self.symb[i][j]))+"\n\n"
+                    expr += "        "+AMReXcode(self.expr[i][j], stVar.declState, stVar.declDiag, stVar.declInit, stVar.declConv, declare_state = True, statename = str(self.symb[i][j]))+"\n\n"
         return expr
     
     def AMReXSetDiag(self):
@@ -282,17 +325,28 @@ class stVarRank2(stVar):
         if self.sym == 'nosym':
             for i in range(self.dim):
                 for j in range(self.dim):
-                    expr += "        "+AMReXcode(self.expr[i][j], stVar.declState, stVar.declDiag, stVar.declInit, declare_diag = True, diagname = str(self.symb[i][j]))+"\n\n"
+                    expr += "        "+AMReXcode(self.expr[i][j], stVar.declState, stVar.declDiag, stVar.declInit, stVar.declConv, declare_diag = True, diagname = str(self.symb[i][j]))+"\n\n"
         elif self.sym == 'sym01':
             for i in range(self.dim):
                 for j in range(i, self.dim):
-                    expr += "        "+AMReXcode(self.expr[i][j], stVar.declState, stVar.declDiag, stVar.declInit, declare_diag = True, diagname = str(self.symb[i][j]))+"\n\n"
-                    
-        return expr    
+                    expr += "        "+AMReXcode(self.expr[i][j], stVar.declState, stVar.declDiag, stVar.declInit, stVar.declConv, declare_diag = True, diagname = str(self.symb[i][j]))+"\n\n"
+        return expr
+    
+    def AMReXSetConv(self):
+        expr = ""
+        if self.sym == 'nosym':
+            for i in range(self.dim):
+                for j in range(self.dim):
+                    expr += "        "+AMReXcode(self.expr[i][j], stVar.declState, stVar.declDiag, stVar.declInit, stVar.declConv, declare_conv = True, convname = str(self.symb[i][j]))+"\n\n"
+        elif self.sym == 'sym01':
+            for i in range(self.dim):
+                for j in range(i, self.dim):
+                    expr += "        "+AMReXcode(self.expr[i][j], stVar.declState, stVar.declDiag, stVar.declInit, stVar.declConv, declare_conv = True, convname = str(self.symb[i][j]))+"\n\n"
+        return expr
     
 
 class stVarRank3(stVar):
-    def __init__(self, symb, sym = 'nosym', dim = 3, state = False, rhs = False, diag = False, initial = False):
+    def __init__(self, symb, sym = 'nosym', dim = 3, state = False, rhs = False, diag = False, initial = False, conv = False):
         self.symb = ixp.declarerank3(str(symb), sym, DIM=dim)
         self.expr = ixp.zerorank3(DIM=dim)
         self.Isymb = ixp.zerorank3(DIM=dim)
@@ -328,6 +382,15 @@ class stVarRank3(stVar):
                         self.Isymb[itri][itrj][itrk] = IndexedBase('initial_data')[i,j,k,Idxsymb]
                         self.expr[itri][itrj][itrk] = self.Isymb[itri][itrj][itrk]
                         stVar.declInit.append(str(self.symb[itri][itrj][itrk]))
+                        
+        if conv == True: 
+            for itri in range(dim):
+                for itrj in range(dim):
+                    for itrk in range(dim):
+                        Idxsymb = symbols("ConvIdx" + str(self.symb[itri][itrj][itrk]))
+                        self.Isymb[itri][itrj][itrk] = IndexedBase('conv_vars_arr')[i,j,k,Idxsymb]
+                        self.expr[itri][itrj][itrk] = self.Isymb[itri][itrj][itrk]
+                        stVar.declConv.append(str(self.symb[itri][itrj][itrk]))
                 
         self.symb = np.array(self.symb)
         
@@ -336,7 +399,7 @@ class stVarRank3(stVar):
         for i in range(self.dim):
             for j in range(self.dim):
                 for k in range(self.dim):
-                    expr += "        amrex::Real " + str(self.symb[i][j][k]) + " = " + AMReXcode(self.expr[i][j][k],stVar.declState, stVar.declDiag, stVar.declInit)+'\n'
+                    expr += "        amrex::Real " + str(self.symb[i][j][k]) + " = " + AMReXcode(self.expr[i][j][k],stVar.declState, stVar.declDiag, stVar.declInit, stVar.declConv)+'\n'
         return expr
     
     def AMReXSymb2State(self):
@@ -344,7 +407,7 @@ class stVarRank3(stVar):
         for i in range(self.dim):
             for j in range(self.dim):
                 for k in range(self.dim):
-                    expr += "        amrex::Real " + str(self.symb[i][j][k]) + " = " + AMReXcode(self.Isymb[i][j][k],stVar.declState, stVar.declDiag, stVar.declInit)+'\n'
+                    expr += "        amrex::Real " + str(self.symb[i][j][k]) + " = " + AMReXcode(self.Isymb[i][j][k],stVar.declState, stVar.declDiag, stVar.declInit, stVar.declConv)+'\n'
         return expr
             
     def AMReXSetRHS(self):
@@ -352,7 +415,7 @@ class stVarRank3(stVar):
         for i in range(self.dim):
             for j in range(self.dim):
                 for k in range(self.dim):
-                    expr += "        "+AMReXcode(self.expr[i][j][k], stVar.declState, stVar.declDiag, stVar.declInit, declare_rhs = True, rhsname = str(self.symb[i][j][k]))+"\n\n"
+                    expr += "        "+AMReXcode(self.expr[i][j][k], stVar.declState, stVar.declDiag, stVar.declInit, stVar.declConv, declare_rhs = True, rhsname = str(self.symb[i][j][k]))+"\n\n"
         return expr
     
     def AMReXSetState(self):
@@ -360,7 +423,7 @@ class stVarRank3(stVar):
         for i in range(self.dim):
             for j in range(self.dim):
                 for k in range(self.dim):
-                    expr += "        "+AMReXcode(self.expr[i][j][k], stVar.declState, stVar.declDiag, stVar.declInit, declare_state = True, statename = str(self.symb[i][j][k]))+"\n\n"
+                    expr += "        "+AMReXcode(self.expr[i][j][k], stVar.declState, stVar.declDiag, stVar.declInit, stVar.declConv, declare_state = True, statename = str(self.symb[i][j][k]))+"\n\n"
         return expr
     
     def AMReXSetDiag(self):
@@ -368,12 +431,20 @@ class stVarRank3(stVar):
         for i in range(self.dim):
             for j in range(self.dim):
                 for k in range(self.dim):
-                    expr += "        "+AMReXcode(self.expr[i][j][k], stVar.declState, stVar.declDiag, stVar.declDiag, stVar.declInit, declare_diag = True, diagname = str(self.symb[i][j][k]))+"\n\n"
-        return expr  
+                    expr += "        "+AMReXcode(self.expr[i][j][k], stVar.declState, stVar.declDiag, stVar.declDiag, stVar.declInit, stVar.declConv, declare_diag = True, diagname = str(self.symb[i][j][k]))+"\n\n"
+        return expr 
+    
+    def AMReXSetConv(self):
+        expr = ""
+        for i in range(self.dim):
+            for j in range(self.dim):
+                for k in range(self.dim):
+                    expr += "        "+AMReXcode(self.expr[i][j][k], stVar.declState, stVar.declDiag, stVar.declDiag, stVar.declInit, stVar.declConv, declare_conv = True, convname = str(self.symb[i][j][k]))+"\n\n"
+        return expr 
     
     
 class stVarRank4(stVar):
-    def __init__(self, symb, sym = 'none', dim = 3, state = False, rhs = False, diag = False, initial = False):
+    def __init__(self, symb, sym = 'none', dim = 3, state = False, rhs = False, diag = False, initial = False, conv = False):
         self.symb = ixp.declarerank4(str(symb),sym,DIM=dim)
         self.expr = ixp.zerorank4(DIM=dim)
         self.Isymb = ixp.zerorank4(DIM=dim)
@@ -413,6 +484,16 @@ class stVarRank4(stVar):
                             self.Isymb[itri][itrj][itrk][itrl] = IndexedBase('initial_data')[i,j,k,Idxsymb]
                             self.expr[itri][itrj][itrk][itrl] = self.Isymb[itri][itrj][itrk][itrl]
                             stVar.declInit.append(str(self.symb[itri][itrj][itrk][itrl]))
+                            
+        if conv == True: 
+            for itri in range(dim):
+                for itrj in range(dim):
+                    for itrk in range(dim):
+                        for itrl in range(dim):
+                            Idxsymb = symbols("ConvIdx" + str(self.symb[itri][itrj][itrk][itrl]))
+                            self.Isymb[itri][itrj][itrk][itrl] = IndexedBase('conv_vars_arr')[i,j,k,Idxsymb]
+                            self.expr[itri][itrj][itrk][itrl] = self.Isymb[itri][itrj][itrk][itrl]
+                            stVar.declConv.append(str(self.symb[itri][itrj][itrk][itrl]))
                 
         self.symb = np.array(self.symb)
         
@@ -422,7 +503,7 @@ class stVarRank4(stVar):
             for j in range(self.dim):
                 for k in range(self.dim):
                     for l in range(self.dim):
-                        expr += "        amrex::Real " + str(self.symb[i][j][k][l]) + " = " + AMReXcode(self.expr[i][j][k][l],stVar.declState, stVar.declDiag, stVar.declInit)+'\n'
+                        expr += "        amrex::Real " + str(self.symb[i][j][k][l]) + " = " + AMReXcode(self.expr[i][j][k][l],stVar.declState, stVar.declDiag, stVar.declInit, stVar.declConv)+'\n'
         return expr
     
     def AMReXSymb2State(self):
@@ -431,7 +512,7 @@ class stVarRank4(stVar):
             for j in range(self.dim):
                 for k in range(self.dim):
                     for l in range(self.dim):
-                        expr += "        amrex::Real " + str(self.symb[i][j][k][l]) + " = " + AMReXcode(self.Isymb[i][j][k][l],stVar.declState, stVar.declDiag, stVar.declInit)+'\n'
+                        expr += "        amrex::Real " + str(self.symb[i][j][k][l]) + " = " + AMReXcode(self.Isymb[i][j][k][l],stVar.declState, stVar.declDiag, stVar.declInit, stVar.declConv)+'\n'
         return expr
             
     def AMReXSetRHS(self):
@@ -440,7 +521,7 @@ class stVarRank4(stVar):
             for j in range(self.dim):
                 for k in range(self.dim):
                     for l in range(self.dim):
-                        expr += "        "+AMReXcode(self.expr[i][j][k][l], stVar.declState, stVar.declDiag, stVar.declInit, declare_rhs = True, rhsname = str(self.symb[i][j][k][l]))+"\n\n"
+                        expr += "        "+AMReXcode(self.expr[i][j][k][l], stVar.declState, stVar.declDiag, stVar.declInit, stVar.declConv, declare_rhs = True, rhsname = str(self.symb[i][j][k][l]))+"\n\n"
         return expr
     
     def AMReXSetState(self):
@@ -449,7 +530,7 @@ class stVarRank4(stVar):
             for j in range(self.dim):
                 for k in range(self.dim):
                     for l in range(self.dim):
-                        expr += "        "+AMReXcode(self.expr[i][j][k][l], stVar.declState, stVar.declDiag, stVar.declInit, declare_state = True, statename = str(self.symb[i][j][k][l]))+"\n\n"
+                        expr += "        "+AMReXcode(self.expr[i][j][k][l], stVar.declState, stVar.declDiag, stVar.declInit, stVar.declConv, declare_state = True, statename = str(self.symb[i][j][k][l]))+"\n\n"
         return expr
     
     def AMReXSetDiag(self):
@@ -458,8 +539,17 @@ class stVarRank4(stVar):
             for j in range(self.dim):
                 for k in range(self.dim):
                     for l in range(self.dim):
-                        expr += "        "+AMReXcode(self.expr[i][j][k][l], stVar.declState, stVar.declDiag, stVar.declInit, declare_diag = True, diagname = str(self.symb[i][j][k][l]))+"\n\n"
-        return expr 
+                        expr += "        "+AMReXcode(self.expr[i][j][k][l], stVar.declState, stVar.declDiag, stVar.declInit, stVar.declConv, declare_diag = True, diagname = str(self.symb[i][j][k][l]))+"\n\n"
+        return expr
+    
+    def AMReXSetConv(self):
+        expr = ""
+        for i in range(self.dim):
+            for j in range(self.dim):
+                for k in range(self.dim):
+                    for l in range(self.dim):
+                        expr += "        "+AMReXcode(self.expr[i][j][k][l], stVar.declState, stVar.declDiag, stVar.declInit, stVar.declConv, declare_conv = True, convname = str(self.symb[i][j][k][l]))+"\n\n"
+        return expr
     
 
     
