@@ -20,6 +20,10 @@ namespace ConvIdx {
          enum ConvertedIndexes {NumScalars}; 
 };
 
+namespace SEIdx { 
+         enum SEIndexes {NumScalars}; 
+};
+
 #define NUM_GHOST_CELLS 4
 
 #endif

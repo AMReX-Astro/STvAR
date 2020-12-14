@@ -42,10 +42,10 @@ state_diagnostics(int i, int j, int k,
         amrex::Real P22 = 0.0;
         amrex::Real S10 = 0;
         amrex::Real S11 = 0;
-        amrex::Real S12 = 0.29999999999999999;
+        amrex::Real S12 = 0.10000000000000001;
         amrex::Real S20 = 0;
         amrex::Real S21 = 0;
-        amrex::Real S22 = 0.29999999999999999;
+        amrex::Real S22 = 0.10000000000000001;
         amrex::Real xc10 = -c10 + x0;
         amrex::Real xc11 = -c11 + x1;
         amrex::Real xc12 = -c12 + x2;
