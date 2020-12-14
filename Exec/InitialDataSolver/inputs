@@ -1,9 +1,9 @@
 # Stopping Criteria 
-max_step = 200
+max_step = 500
 stop_time = 100.0
 
 # Problem Size & Geometry 
-amr.n_cell = 128 128 128 
+amr.n_cell = 64 64 64 
 
 geometry.is_periodic = 0 0 0 
 geometry.coord_sys = 0 
@@ -37,8 +37,8 @@ problem.elliptic = 0
 problem.cfl = 0.003
 
 # Plotting steps 
-amr.plot_int = 1
-amr.diag_int = 1
+amr.plot_int = 50
+amr.diag_int = 50
 amr.chk_int = 10
 
 ## integration.type can take on the following values: 

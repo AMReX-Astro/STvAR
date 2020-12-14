@@ -3,7 +3,7 @@ max_step = 200
 stop_time = 100.0
 
 # Problem Size & Geometry 
-amr.n_cell = 128 128 128 
+amr.n_cell = 64 64 64 
 
 geometry.is_periodic = 0 0 0 
 geometry.coord_sys = 0 
@@ -42,8 +42,8 @@ amr.diag_int = 1
 amr.chk_int = 10
 
 # Restart from checkpoint or use as initial condition? 
-amr.restart = chk0000060
-amr.restart_is_initial_data = 0
+amr.restart = initial_data_chk
+amr.restart_is_initial_data = 1
 
 ## integration.type can take on the following values: 
 ## 0 = Forward Euler 
