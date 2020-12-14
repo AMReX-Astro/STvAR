@@ -1224,6 +1224,9 @@ void AmrCoreAdv::fill_rhs (MultiFab& rhs_mf, const MultiFab& state_mf, /*const M
       
     const Box& bx = mfi.tilebox();
     const auto ncomp = state_mf.nComp();
+    
+    //const MultiFab hydro_mf;  //THIS IS A PLACEHOLDER... IT MUST BE FIXED LATER!!!!
+    
     //const auto ncomp_hydro = hydro_mf.nComp();
 
     const auto& rhs_fab = rhs_mf.array(mfi);
@@ -1234,14 +1237,16 @@ void AmrCoreAdv::fill_rhs (MultiFab& rhs_mf, const MultiFab& state_mf, /*const M
       
     //const auto& hydro_state_fab = hydro_mf.array(mfi);  //hydro_mf will come from the hydro variables
 
-    //FArrayBox stress_energy_fab(bx, StressEnergyIdx::NumScalars); // with ghost cells?
+    FArrayBox stress_energy_fab(bx, SEIdx::NumScalars); // with ghost cells?
+    amrex::Array4<Real> const & stress_energy_arr = stress_energy_fab.array();
+    
     FArrayBox conv_vars_fab(bx, ConvIdx::NumScalars); // with ghost cells?
     amrex::Array4<Real> const & conv_vars_arr = conv_vars_fab.array();
 
     amrex::ParallelFor(bx,
     [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
-      //fill_stress_energy_fab(i, j, k, stress_energy_fab, hydro_state_fab);  
+      fill_stress_energy_fab(i, j, k, stress_energy_arr, state_fab, time, dx, geom.data());  
       //When we have the hydro vars in hydro_fab we will fill the stress energy tensor
       fill_conv_vars_fab(i, j, k, state_fab, rhs_fab, conv_vars_arr, time, dx, geom.data());
     });
@@ -1250,7 +1255,7 @@ void AmrCoreAdv::fill_rhs (MultiFab& rhs_mf, const MultiFab& state_mf, /*const M
     amrex::ParallelFor(bx,
     [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
-      state_rhs(i, j, k, rhs_fab, state_fab, /*stress_energy_fab,*/ time, dx, geom.data());
+      state_rhs(i, j, k, rhs_fab, state_fab, stress_energy_arr, time, dx, geom.data());
       //hydro_rhs(i, j, k, rhs_fab, state_fab, conv_vars_fab, time, dx, geom.data());
     });
   }
