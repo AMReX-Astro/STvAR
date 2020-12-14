@@ -14,6 +14,7 @@ void
 state_rhs(int i, int j, int k, 
         amrex::Array4<amrex::Real> const& rhs_fab, 
         amrex::Array4<amrex::Real const> const& state_fab,
+        amrex::Array4<amrex::Real> const& stress_energy_arr,
         const amrex::Real time,
         amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dx, 
         const amrex::GeometryData& geom) noexcept 
@@ -266,9 +267,27 @@ def Write_Setup_File(Statenames, Initnames, Diagnames, Convnames, Nghostcells = 
     
     FileString += ConvNamespaceStr
     
-    FileString += "#define NUM_GHOST_CELLS "+str(Nghostcells)+"\n\n"
-    FileString += "#endif"
+    return FileString
+
+def Write_Setup_File_Custom(Customnames, customIndex):
+    CustomNamespaceStr = "namespace " + customIndex +"Idx { \n"
+    CustomNamespaceStr += "         enum " + customIndex + "Indexes {"
     
+    Custom_string = ""
+    for itr in Customnames:
+        Custom_string += itr+", "
+    Custom_string += "NumScalars"
+    
+    CustomNamespaceStr += Custom_string
+    CustomNamespaceStr += "}; \n};\n\n"
+    
+    FileString = CustomNamespaceStr
+        
+    return FileString
+
+def Write_Setup_File_NGhost(Nghostcells):
+    FileString = "#define NUM_GHOST_CELLS "+str(Nghostcells)+"\n\n"
+    FileString += "#endif"
     return FileString
 
 def Closer(version = "standard"):
