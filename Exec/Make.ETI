@@ -7,6 +7,7 @@ USE_HAMCOM  ?= FALSE
 USE_INITDAT ?= FALSE
 USE_KLEINGORDON ?= FALSE
 USE_AXIONSIM ?= FALSE
+USE_HOLOGRAPHIC ?= FALSE
 
 include $(AMREX_HOME)/Tools/GNUMake/Make.defs
 
@@ -46,6 +47,9 @@ else ifeq ($(USE_KLEINGORDON), TRUE)
 else ifeq ($(USE_AXIONSIM), TRUE)
   DEFINES += -DAXIONSIM
   PROBLEM_SOURCE = $(ETI_SOURCE_DIR)/AxionSim
+else ifeq ($(USE_HOLOGRAPHIC), TRUE)
+  DEFINES += -DHOLOGRAPHIC
+  PROBLEM_SOURCE = $(ETI_SOURCE_DIR)/InitialDataHolographicVortex
 endif
 
 # Does this problem include custom initialization from external data?
