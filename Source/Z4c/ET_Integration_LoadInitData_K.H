@@ -136,15 +136,5 @@ initialize_from_data(int i, int j, int k,
 
         state_fab(i, j, k, Idx::betaU2) = 0;
 
-        state_fab(i, j, k, Idx::rho) = 0;
-
-        state_fab(i, j, k, Idx::epsE) = 0;
-
-        state_fab(i, j, k, Idx::vel30) = 0;
-
-        state_fab(i, j, k, Idx::vel31) = 0;
-
-        state_fab(i, j, k, Idx::vel32) = 0;
-
 }
 #endif
