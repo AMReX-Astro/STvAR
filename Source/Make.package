@@ -2,5 +2,6 @@ CEXE_sources += main.cpp
 CEXE_sources += AmrCoreAdv.cpp
 CEXE_headers += AmrCoreAdv.H
 CEXE_headers += bc_fill.H
+CEXE_sources += bc_fill.cpp
 CEXE_headers += ET_Integration.H
 CEXE_sources += ET_Integration.cpp

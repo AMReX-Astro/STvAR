@@ -416,7 +416,7 @@ AmrCoreAdv::FillPatch (int lev, Real time, MultiFab& mf, int icomp, int ncomp)
         }
         else
         {
-            CpuBndryFuncFab bndry_func(AmrCoreFillCpu);  // Without EXT_DIR, we can pass a nullptr.
+            CpuBndryFuncFab bndry_func(&AmrCoreFillCpu);  // Without EXT_DIR, we can pass a nullptr.
             PhysBCFunct<CpuBndryFuncFab> physbc(geom[lev],bcs,bndry_func);
             //! make sure this is passing the right bc
             amrex::FillPatchSingleLevel(mf, time, smf, stime, 0, icomp, ncomp, 
@@ -444,7 +444,7 @@ AmrCoreAdv::FillPatch (int lev, Real time, MultiFab& mf, int icomp, int ncomp)
         }
         else
         {
-            CpuBndryFuncFab bndry_func(AmrCoreFillCpu);  // Without EXT_DIR, we can pass a nullptr.
+            CpuBndryFuncFab bndry_func(&AmrCoreFillCpu);  // Without EXT_DIR, we can pass a nullptr.
             PhysBCFunct<CpuBndryFuncFab> cphysbc(geom[lev-1],bcs,bndry_func);
             PhysBCFunct<CpuBndryFuncFab> fphysbc(geom[lev],bcs,bndry_func);
 
@@ -482,7 +482,7 @@ AmrCoreAdv::FillIntermediatePatch (int lev, Real time, MultiFab& mf, int icomp, 
         }
         else
         {
-            CpuBndryFuncFab bndry_func(AmrCoreFillCpu);  // Without EXT_DIR, we can pass a nullptr.
+            CpuBndryFuncFab bndry_func(&AmrCoreFillCpu);  // Without EXT_DIR, we can pass a nullptr.
             PhysBCFunct<CpuBndryFuncFab> physbc(geom[lev],bcs,bndry_func);
             //! make sure this is passing the right bc
             amrex::FillPatchSingleLevel(mf, time, smf, stime, 0, icomp, ncomp,
@@ -526,7 +526,7 @@ AmrCoreAdv::FillIntermediatePatch (int lev, Real time, MultiFab& mf, int icomp, 
         }
         else
         {
-            CpuBndryFuncFab bndry_func(AmrCoreFillCpu);  // Without EXT_DIR, we can pass a nullptr.
+            CpuBndryFuncFab bndry_func(&AmrCoreFillCpu);  // Without EXT_DIR, we can pass a nullptr.
             PhysBCFunct<CpuBndryFuncFab> cphysbc(geom[lev-1],bcs,bndry_func);
             PhysBCFunct<CpuBndryFuncFab> fphysbc(geom[lev],bcs,bndry_func);
 
@@ -570,7 +570,7 @@ AmrCoreAdv::FillCoarsePatch (int lev, Real time, MultiFab& mf, int icomp, int nc
     }
     else
     {
-        CpuBndryFuncFab bndry_func(AmrCoreFillCpu);  // Without EXT_DIR, we can pass a nullptr.
+        CpuBndryFuncFab bndry_func(&AmrCoreFillCpu);  // Without EXT_DIR, we can pass a nullptr.
         PhysBCFunct<CpuBndryFuncFab> cphysbc(geom[lev-1],bcs,bndry_func);
         PhysBCFunct<CpuBndryFuncFab> fphysbc(geom[lev],bcs,bndry_func);
 
