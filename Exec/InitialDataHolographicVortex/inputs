@@ -1,0 +1,73 @@
+# Stopping Criteria 
+max_step = 20
+stop_time = 100.0
+
+# Problem Size & Geometry 
+amr.n_cell = 64 64 64 
+
+geometry.is_periodic = 0 0 0 
+geometry.coord_sys = 0 
+geometry.prob_lo = -20.0 -20.0 0.0 
+geometry.prob_hi = 20.0 20.0 1.0 
+
+# Turn on verbosity in amr 
+amr.v = 1
+
+# Refinement Parameters 
+amr.max_level = 0
+amr.max_grid_size = 64
+amr.ref_ratio = 2
+amr.n_error_buf = 1
+amr.blocking_factor = 8
+amr.regrid_int = 8
+
+# AMR Interpolation 
+amr.interpolation_type = 6
+
+# Problem specific boundary conditions 
+domain_lo_bc_types = 2 2 2 
+domain_hi_bc_types = 2 2 2 
+
+# Problem specific tagging for refinement 
+problem.s_error = 0
+problem.error_comp = 0
+
+# Problem specific inputs 
+problem.elliptic = 0
+problem.cfl = 0.25
+
+# Plotting steps 
+amr.plot_int = 10
+amr.diag_int = 10
+amr.chk_int = 10
+
+# Restart from checkpoint or use as initial condition? 
+amr.restart = initial_data_chk
+amr.restart_is_initial_data = 1
+
+## integration.type can take on the following values: 
+## 0 = Forward Euler 
+## 1 = Explicit Runge Kutta 
+integration.type = 1 
+
+## Explicit Runge-Kuta parameters 
+# 
+## integration.rk.type can take the following values:
+### 0 = User-specified Butcher Tableau
+### 1 = Forward Euler
+### 2 = Trapezoid Method
+### 3 = SSPRK3 Method
+### 4 = RK4 Method 
+integration.rk.type = 4
+
+## If using a user-specified Butcher Tableau, then
+## set nodes, weights, and table entries here:
+#
+## The Butcher Tableau is read as a flattened,
+## lower triangular matrix (but including the diagonal)
+## in row major format. 
+integration.rk.weights = 1
+integration.rk.nodes = 0
+integration.rk.tableau = 0.0
+
+amrex.fpe_trap_invalid = 1
