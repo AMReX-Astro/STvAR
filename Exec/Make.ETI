@@ -3,10 +3,11 @@ USE_MAXWELL ?= FALSE
 USE_ADM     ?= FALSE
 USE_BSSN    ?= FALSE
 USE_Z4C     ?= FALSE
-USE_HAMCOM  ?= FALSE
+USE_READQS  ?= FALSE
 USE_INITDAT ?= FALSE
 USE_KLEINGORDON ?= FALSE
 USE_AXIONSIM ?= FALSE
+USE_HOLOVORT ?= FALSE
 
 include $(AMREX_HOME)/Tools/GNUMake/Make.defs
 
@@ -34,9 +35,9 @@ else ifeq ($(USE_BSSN), TRUE)
 else ifeq ($(USE_Z4C), TRUE)
   DEFINES += -DZ4C
   PROBLEM_SOURCE = $(ETI_SOURCE_DIR)/Z4c
-else ifeq ($(USE_HAMCOM), TRUE)
-  DEFINES += -DHAMCOM
-  PROBLEM_SOURCE = $(ETI_SOURCE_DIR)/HamCom
+else ifeq ($(USE_READQS), TRUE)
+  DEFINES += -DREADQS
+  PROBLEM_SOURCE = $(ETI_SOURCE_DIR)/ReadQs
 else ifeq ($(USE_INITDAT), TRUE)
   DEFINES += -DINITDAT
   PROBLEM_SOURCE = $(ETI_SOURCE_DIR)/InitialDataSolver
@@ -46,6 +47,9 @@ else ifeq ($(USE_KLEINGORDON), TRUE)
 else ifeq ($(USE_AXIONSIM), TRUE)
   DEFINES += -DAXIONSIM
   PROBLEM_SOURCE = $(ETI_SOURCE_DIR)/AxionSim
+else ifeq ($(USE_HOLOVORT), TRUE)
+  DEFINES += -DHOLOVORT
+  PROBLEM_SOURCE = $(ETI_SOURCE_DIR)/InitialDataHolographicVortex
 endif
 
 # Does this problem include custom initialization from external data?
