@@ -1,0 +1,8 @@
+CEXE_headers += ET_Integration_Setup_K.H
+CEXE_headers += ET_Integration_Variables.H
+CEXE_headers += ET_Integration_Diagnostic_Variables.H
+CEXE_headers += ET_Integration_Init_K.H
+CEXE_headers += ET_Integration_Rhs_K.H
+CEXE_headers += ET_Integration_Diag_K.H
+CEXE_headers += ET_Integration_Post_Update_K.H
+CEXE_headers += ET_Integration_AMR_Cell_Tag_K.H
