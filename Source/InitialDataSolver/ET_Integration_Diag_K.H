@@ -24,28 +24,28 @@ state_diagnostics(int i, int j, int k,
 
         amrex::Real r = std::sqrt(std::pow(x0, 2) + std::pow(x1, 2) + std::pow(x2, 2));
 
-        amrex::Real c10 = 1.168642873;
+        amrex::Real c10 = 4.891; //1.168642873;
         amrex::Real c11 = 0.0;
         amrex::Real c12 = 0.0;
-        amrex::Real c20 = -1.168642873;
+        amrex::Real c20 = -4.891; //-1.168642873;
         amrex::Real c21 = 0.0;
         amrex::Real c22 = 0.0;
-        amrex::Real M1 = 0.45300000000000001;
+        amrex::Real M1 = 0.4856; //0.45300000000000001;
 
-        amrex::Real M2 = 0.45300000000000001;
+        amrex::Real M2 = 0.4856; //0.45300000000000001;
 
         amrex::Real P10 = 0.0;
-        amrex::Real P11 = 0.33319174979999999;
+        amrex::Real P11 = 0.0969; //0.33319174979999999;
         amrex::Real P12 = 0.0;
         amrex::Real P20 = 0.0;
-        amrex::Real P21 = -0.33319174979999999;
+        amrex::Real P21 = -0.0969; //-0.33319174979999999;
         amrex::Real P22 = 0.0;
         amrex::Real S10 = 0;
         amrex::Real S11 = 0;
-        amrex::Real S12 = 0.29999999999999999;
+        amrex::Real S12 = 0;
         amrex::Real S20 = 0;
         amrex::Real S21 = 0;
-        amrex::Real S22 = 0.29999999999999999;
+        amrex::Real S22 = 0;
         amrex::Real xc10 = -c10 + x0;
         amrex::Real xc11 = -c11 + x1;
         amrex::Real xc12 = -c12 + x2;
