@@ -16,6 +16,6 @@ state_is_tagged(int i, int j, int k,
         const amrex::GeometryData& geom) noexcept 
 {
 
-        return state_fab(i, j, k, Idx::Q6) < error_threshold;
+        return std::sqrt(std::pow(state_fab(i, j, k, Idx::PhiRe),2)+std::pow(state_fab(i, j, k, Idx::PhiIm),2)) < error_threshold;
 }
 #endif

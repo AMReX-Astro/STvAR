@@ -5,7 +5,7 @@
 #include <AMReX_Array4.H> 
 
 namespace Idx { 
-         enum ETIndexes {Q6, NumScalars}; 
+         enum ETIndexes {PhiRe, PiPhiRe, PhiIm, PiPhiIm, AT, PiAT, A0, A1, PiA0, PiA1, Psi, alpha, gambar00, gambar01, gambar02, gambar11, gambar12, gambar22, NumScalars};
 };
 
 namespace InitIdx { 

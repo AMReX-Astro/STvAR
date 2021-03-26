@@ -1,1 +1,1 @@
-names = {"Q6"};
+names = {"PhiRe", "PiPhiRe", "PhiIm", "PiPhiIm", "AT", "PiAT", "A0", "A1", "PiA0", "PiA1", "Psi", "alpha", "gambar00", "gambar01", "gambar02", "gambar11", "gambar12", "gambar22"};

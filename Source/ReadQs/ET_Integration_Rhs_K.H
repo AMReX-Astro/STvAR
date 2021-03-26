@@ -22,7 +22,6 @@ state_rhs(int i, int j, int k,
         amrex::Real x2 = (k + 0.5)*geom.CellSize(2) + domain_xlo[2]; 
         
 
-        rhs_fab(i, j, k, Idx::Q6) = 0;
 
 }
 #endif
