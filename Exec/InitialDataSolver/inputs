@@ -1,5 +1,5 @@
 # Stopping Criteria 
-max_step = 200
+max_step = 2000
 stop_time = 100.0
 
 # Problem Size & Geometry 
@@ -7,15 +7,15 @@ amr.n_cell = 128 128 128
 
 geometry.is_periodic = 0 0 0 
 geometry.coord_sys = 0 
-geometry.prob_lo = -50.0 -50.0 -50.0 
-geometry.prob_hi = 50.0 50.0 50.0 
+geometry.prob_lo = -75.0 -75.0 -75.0 
+geometry.prob_hi = 75.0 75.0 75.0 
 
 # Turn on verbosity in amr 
 amr.v = 1
 
 # Refinement Parameters 
-amr.max_level = 5
-amr.max_grid_size = 64
+amr.max_level = 4
+amr.max_grid_size = 32
 amr.ref_ratio = 2
 amr.n_error_buf = 1
 amr.blocking_factor = 8
@@ -29,17 +29,21 @@ domain_lo_bc_types = 2 2 2
 domain_hi_bc_types = 2 2 2 
 
 # Problem specific tagging for refinement 
-problem.s_error = 0.7 0.6 0.5 0.4 0.3 
+problem.s_error = 0.7 0.6 0.5 0.4
 problem.error_comp = 0
 
 # Problem specific inputs 
 problem.elliptic = 0
-problem.cfl = 0.003
+problem.cfl = 0.01
 
 # Plotting steps 
-amr.plot_int = 1
-amr.diag_int = 1
-amr.chk_int = 10
+amr.plot_int = 100
+amr.diag_int = 100
+amr.chk_int = 100
+
+# Restart from checkpoint or use as initial condition? 
+amr.restart = chk0000100
+amr.restart_is_initial_data = 0
 
 ## integration.type can take on the following values: 
 ## 0 = Forward Euler 
