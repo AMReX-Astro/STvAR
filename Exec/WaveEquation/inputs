@@ -1,51 +1,73 @@
-plot_int = 1000
-n_cell = 256
-max_grid_size = 64
+# Stopping Criteria 
+max_step = 400
+stop_time = 100.0
 
-# Periodicity and Domain Boundary Conditions
-#
-# For a given dimension, if is_periodic[i] = 1,
-# then the lo/hi BC type should be BCType::int_dir.
-#
-# Here are the supported boundary conditions in AMReX:
-# BCType::reflect_odd  = -1
-# BCType::int_dir      =  0
-# BCType::reflect_even =  1
-# BCType::foextrap     =  2
-# BCType::ext_dir      =  3
-# BCType::hoextrap     =  4
-is_periodic = 1 1 1
-domain_lo_bc_types = 0 0 0
-domain_hi_bc_types = 0 0 0
+# Problem Size & Geometry 
+amr.n_cell = 64 64 64 
 
-# CFL
-cfl = 1.0
+geometry.is_periodic = 0 0 0 
+geometry.coord_sys = 0 
+geometry.prob_lo = -20.9805 -20.9805 -20.9805 
+geometry.prob_hi = 20.9805 20.9805 20.9805 
 
-# Stopping Criteria
-nsteps = 10000
-end_time = 1.0
+# Turn on verbosity in amr 
+amr.v = 1
 
-## integration.type can take on the following values:
-## 0 = Forward Euler
-## 1 = Explicit Runge Kutta
-integration.type = 0
+# Refinement Parameters 
+amr.max_level = 0
+amr.max_grid_size = 32
+amr.ref_ratio = 2
+amr.n_error_buf = 1
+amr.blocking_factor = 8
+amr.regrid_int = 1
 
-## Explicit Runge-Kuta parameters
-#
+# AMR Interpolation 
+amr.interpolation_type = 6
+
+# Problem specific boundary conditions 
+domain_lo_bc_types = 1 1 1
+domain_hi_bc_types = 1 1 1 
+
+# Problem specific tagging for refinement 
+problem.s_error = 0 #3 2.5
+problem.error_comp = 0
+
+# Problem specific inputs 
+problem.elliptic = 0
+problem.cfl = 0.1
+
+# Plotting steps 
+amr.plot_int = 1
+amr.diag_int = 1
+amr.chk_int = 100
+
+# Restart from checkpoint or use as initial condition? 
+#amr.restart = chk0000500
+#amr.restart_is_initial_data = 0
+
+## integration.type can take on the following values: 
+## 0 = Forward Euler 
+## 1 = Explicit Runge Kutta 
+integration.type = 1 
+
+## Explicit Runge-Kuta parameters 
+# 
 ## integration.rk.type can take the following values:
 ### 0 = User-specified Butcher Tableau
 ### 1 = Forward Euler
 ### 2 = Trapezoid Method
 ### 3 = SSPRK3 Method
-### 4 = RK4 Method
-integration.rk.type = 0
+### 4 = RK4 Method 
+integration.rk.type = 4
 
 ## If using a user-specified Butcher Tableau, then
 ## set nodes, weights, and table entries here:
 #
 ## The Butcher Tableau is read as a flattened,
 ## lower triangular matrix (but including the diagonal)
-## in row major format.
+## in row major format. 
 integration.rk.weights = 1
 integration.rk.nodes = 0
 integration.rk.tableau = 0.0
+
+amrex.fpe_trap_invalid = 1
