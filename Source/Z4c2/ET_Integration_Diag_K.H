@@ -311,7 +311,7 @@ state_diagnostics(int i, int j, int k,
 
         amrex::Real Ksclr = Khat + 2*theta;
 
-        amrex::Real detgam = gam_LL_00*gam_LL_11*gam_LL_22 - gam_LL_00*std::pow(gam_LL_12, 2) - std::pow(gam_LL_01, 2)*gam_LL_22 + 2*gam_LL_01*gam_LL_02*gam_LL_12 - std::pow(gam_LL_02, 2)*gam_LL_11;
+        /*amrex::Real detgam = gam_LL_00*gam_LL_11*gam_LL_22 - gam_LL_00*std::pow(gam_LL_12, 2) - std::pow(gam_LL_01, 2)*gam_LL_22 + 2*gam_LL_01*gam_LL_02*gam_LL_12 - std::pow(gam_LL_02, 2)*gam_LL_11;
 
         amrex::Real x = x0;
 
@@ -779,16 +779,16 @@ state_diagnostics(int i, int j, int k,
 
         amrex::Real Psi4im = (-nmnmim_UUUU_0011*rank4Part_LLLL_0101 - nmnmim_UUUU_0012*rank4Part_LLLL_0201 - nmnmim_UUUU_0021*rank4Part_LLLL_0102 - nmnmim_UUUU_0022*rank4Part_LLLL_0202 + nmnmim_UUUU_0101*rank4Part_LLLL_0101 + nmnmim_UUUU_0102*rank4Part_LLLL_0102 + nmnmim_UUUU_0102*rank4Part_LLLL_0201 + nmnmim_UUUU_0112*rank4Part_LLLL_0112 - nmnmim_UUUU_0121*rank4Part_LLLL_0112 - nmnmim_UUUU_0122*rank4Part_LLLL_0212 + nmnmim_UUUU_0202*rank4Part_LLLL_0202 + nmnmim_UUUU_0212*rank4Part_LLLL_0212 - nmnmim_UUUU_1001*rank4Part_LLLL_0101 - nmnmim_UUUU_1002*rank4Part_LLLL_0102 + nmnmim_UUUU_1010*rank4Part_LLLL_0101 - nmnmim_UUUU_1012*rank4Part_LLLL_0112 - nmnmim_UUUU_1012*rank4Part_LLLL_1201 + nmnmim_UUUU_1020*rank4Part_LLLL_0102 + nmnmim_UUUU_1021*rank4Part_LLLL_0112 - nmnmim_UUUU_1022*rank4Part_LLLL_1202 + nmnmim_UUUU_1102*rank4Part_LLLL_1201 - nmnmim_UUUU_1122*rank4Part_LLLL_1212 + nmnmim_UUUU_1202*rank4Part_LLLL_1202 + nmnmim_UUUU_1212*rank4Part_LLLL_1212 - nmnmim_UUUU_2001*rank4Part_LLLL_0201 - nmnmim_UUUU_2002*rank4Part_LLLL_0202 + nmnmim_UUUU_2010*rank4Part_LLLL_0201 + nmnmim_UUUU_2011*rank4Part_LLLL_1201 - nmnmim_UUUU_2012*rank4Part_LLLL_0212 + nmnmim_UUUU_2020*rank4Part_LLLL_0202 + nmnmim_UUUU_2021*rank4Part_LLLL_0212 + nmnmim_UUUU_2021*rank4Part_LLLL_1202 - nmnmim_UUUU_2101*rank4Part_LLLL_1201 - nmnmim_UUUU_2102*rank4Part_LLLL_1202 - nmnmim_UUUU_2112*rank4Part_LLLL_1212 + nmnmim_UUUU_2121*rank4Part_LLLL_1212 + 0.25*rank2Part_LL_00*(-nmnmim_UUUU_0033 + nmnmim_UUUU_0303 - nmnmim_UUUU_3003 + nmnmim_UUUU_3030) + 0.25*rank2Part_LL_01*(-nmnmim_UUUU_0133 + nmnmim_UUUU_1303 + nmnmim_UUUU_3031 - nmnmim_UUUU_3103) + 0.25*rank2Part_LL_01*(nmnmim_UUUU_0313 - nmnmim_UUUU_1033 - nmnmim_UUUU_3013 + nmnmim_UUUU_3031) + 0.25*rank2Part_LL_02*(-nmnmim_UUUU_0233 + nmnmim_UUUU_2303 + nmnmim_UUUU_3032 - nmnmim_UUUU_3203) + 0.25*rank2Part_LL_02*(nmnmim_UUUU_0323 - nmnmim_UUUU_2033 - nmnmim_UUUU_3023 + nmnmim_UUUU_3032) + 0.25*rank2Part_LL_11*(-nmnmim_UUUU_1133 + nmnmim_UUUU_1313 - nmnmim_UUUU_3113 + nmnmim_UUUU_3131) + 0.25*rank2Part_LL_12*(-nmnmim_UUUU_1233 + nmnmim_UUUU_2313 + nmnmim_UUUU_3132 - nmnmim_UUUU_3213) + 0.25*rank2Part_LL_12*(nmnmim_UUUU_1323 - nmnmim_UUUU_2133 - nmnmim_UUUU_3123 + nmnmim_UUUU_3132) + 0.25*rank2Part_LL_22*(-nmnmim_UUUU_2233 + nmnmim_UUUU_2323 - nmnmim_UUUU_3223 + nmnmim_UUUU_3232) - 0.5*rank3Part_LLL_001*(-nmnmim_UUUU_0013 + nmnmim_UUUU_3010) + 0.5*rank3Part_LLL_001*(-nmnmim_UUUU_0103 + nmnmim_UUUU_3001) - 0.5*rank3Part_LLL_002*(-nmnmim_UUUU_0023 + nmnmim_UUUU_3020) + 0.5*rank3Part_LLL_002*(-nmnmim_UUUU_0203 + nmnmim_UUUU_3002) - 0.5*rank3Part_LLL_012*(-nmnmim_UUUU_0123 + nmnmim_UUUU_3021) + 0.5*rank3Part_LLL_012*(-nmnmim_UUUU_0213 + nmnmim_UUUU_3012) - 0.5*rank3Part_LLL_101*(-nmnmim_UUUU_1013 + nmnmim_UUUU_3011) + 0.5*rank3Part_LLL_101*(-nmnmim_UUUU_1103 + nmnmim_UUUU_3101) - 0.5*rank3Part_LLL_102*(-nmnmim_UUUU_1023 + nmnmim_UUUU_3021) + 0.5*rank3Part_LLL_102*(-nmnmim_UUUU_1203 + nmnmim_UUUU_3102) - 0.5*rank3Part_LLL_112*(-nmnmim_UUUU_1123 + nmnmim_UUUU_3121) + 0.5*rank3Part_LLL_112*(-nmnmim_UUUU_1213 + nmnmim_UUUU_3112) - 0.5*rank3Part_LLL_201*(-nmnmim_UUUU_2013 + nmnmim_UUUU_3012) + 0.5*rank3Part_LLL_201*(-nmnmim_UUUU_2103 + nmnmim_UUUU_3102) - 0.5*rank3Part_LLL_202*(-nmnmim_UUUU_2023 + nmnmim_UUUU_3022) + 0.5*rank3Part_LLL_202*(-nmnmim_UUUU_2203 + nmnmim_UUUU_3202) - 0.5*rank3Part_LLL_212*(-nmnmim_UUUU_2123 + nmnmim_UUUU_3122) + 0.5*rank3Part_LLL_212*(-nmnmim_UUUU_2213 + nmnmim_UUUU_3212))*(rcoord > 0);
         
-        diag(i, j, k, Diag::Psi4im) = Psi4im;
+        diag(i, j, k, Diag::Psi4im) = Psi4im;*/
         
         diag(i, j, k, Diag::AbsKhat) = Khat;
         diag(i, j, k, Diag::AbsKsclr) = Khat + 2*theta;
         diag(i, j, k, Diag::AbsAlpha) = std::fabs(1-alpha);
         
         
-        diag(i, j, k, Diag::rPsi4Real) = rcoord*std::fabs(Psi4re);
-        diag(i, j, k, Diag::rPsi4Imaginary) = rcoord*std::fabs(Psi4im);
-        diag(i, j, k, Diag::rModPsi4) = rcoord*std::sqrt(Psi4re*Psi4re + Psi4im*Psi4im);
+        //diag(i, j, k, Diag::rPsi4Real) = rcoord*std::fabs(Psi4re);
+        //diag(i, j, k, Diag::rPsi4Imaginary) = rcoord*std::fabs(Psi4im);
+        //diag(i, j, k, Diag::rModPsi4) = rcoord*std::sqrt(Psi4re*Psi4re + Psi4im*Psi4im);
         
 }
 #endif
