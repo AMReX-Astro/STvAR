@@ -693,7 +693,7 @@ state_rhs(int i, int j, int k,
 
         rhs_fab(i, j, k, Idx::alpha) = AdvDbetaalpha - Khat*std::pow(alpha, 2)*mul + 0.29999999999999999*dKODalpha;
 
-        amrex::Real eta = 2.0;
+        amrex::Real eta = 0.25;
 
         rhs_fab(i, j, k, Idx::beta_U_0) = AdvDbetabeta_U_0 + Gamtilde_U_0*std::pow(alpha, 2)*mus - beta_U_0*eta + 0.29999999999999999*dKODbeta_U_0;
         rhs_fab(i, j, k, Idx::beta_U_1) = AdvDbetabeta_U_1 + Gamtilde_U_1*std::pow(alpha, 2)*mus - beta_U_1*eta + 0.29999999999999999*dKODbeta_U_1;
