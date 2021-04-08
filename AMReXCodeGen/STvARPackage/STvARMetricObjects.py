@@ -422,12 +422,12 @@ def Z4cRicciScalar(chi, metric):
         print("Rank must be LL type")
     
     inversemetric = stvarrank2(ssp.unparse_name_rank("inv" + metric.rootname, 'UU'), sym = metric.sym, dim = Dim)
-    Z4cRicciTensor = stvarrank2(ssp.unparse_name_rank("Z4cRicci" + chi.rootname + metric.rootname, 'LL'), sym = 'sym01', dim = Dim)
+    Z4cRicciTensor = stvarrank2(ssp.unparse_name_rank("Z4cRicciFrom" + chi.rootname + metric.rootname, 'LL'), sym = 'sym01', dim = Dim)
     Z4cRicciScalar = stvar("Z4cRicciScalar" + chi.rootname + metric.rootname)
     
     for i in range(Dim):
         for j in range(Dim):
-            Z4cRicciScalar.expr[i][j] += inversemetric.symb[i][j]*Z4cRicciTensor.symb[i][j]
+            Z4cRicciScalar.expr += chi.symb*inversemetric.symb[i][j]*Z4cRicciTensor.symb[i][j]
      
     return Z4cRicciScalar
     
