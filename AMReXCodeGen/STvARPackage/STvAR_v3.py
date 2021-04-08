@@ -144,7 +144,7 @@ class stvarrank1:
     def setisymb(self, prefix = ""):
         expr = ""
         for itri in range(self.dim):
-            if self.expr[itri] != 0: 
+            if self.isymb[itri] != 0: 
                 if prefix == "":
                     expr += "        " + amrexcode(self.isymb[itri],stvar.gridvars) + " = " + amrexcode(self.expr[itri],stvar.gridvars)+";\n"
                 else:
