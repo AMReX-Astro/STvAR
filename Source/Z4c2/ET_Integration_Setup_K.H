@@ -9,11 +9,11 @@ namespace Idx {
 };
 
 namespace InitIdx { 
-         enum ETInitIndexes {u, NumScalars}; 
+         enum ETInitIndexes {u, psi, chi, alphafunc, betafunc, Atilde_LL_00, Atilde_LL_01, Atilde_LL_02, Atilde_LL_11, Atilde_LL_12, Atilde_LL_22, NumScalars}; 
 };
 
 namespace Diag { 
-         enum DiagnosticIndexes {Psi4re, Psi4im, AbsKhat, AbsKsclr, AbsAlpha, AbsChi, rPsi4Real, rPsi4Imaginary, rModPsi4, NumScalars}; 
+         enum DiagnosticIndexes {H, NumScalars}; 
 };
 
 #define NUM_GHOST_CELLS 4

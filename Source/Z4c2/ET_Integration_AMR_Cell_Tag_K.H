@@ -9,6 +9,7 @@ AMREX_GPU_DEVICE
 inline 
 bool
 state_is_tagged(int i, int j, int k, 
+        int lev,
         amrex::Array4<amrex::Real const> const& state_fab,
         amrex::Real error_threshold,
         const amrex::Real time,
@@ -22,7 +23,10 @@ state_is_tagged(int i, int j, int k,
         amrex::Real x1 = (j + 0.5)*geom.CellSize(1) + domain_xlo[1]; 
         amrex::Real x2 = (k + 0.5)*geom.CellSize(2) + domain_xlo[2]; 
         amrex::Real alpha = state_fab(i, j, k, Idx::alpha);
-
-        return std::fabs(alpha) < error_threshold;
+        
+        amrex::Real r = std::sqrt(x0*x0 + x1*x1 + x2*x2);
+        
+        return (lev <= 1)*(r < error_threshold) || (lev > 1)*(std::fabs(alpha) < error_threshold);
+       
 }
 #endif
