@@ -5,7 +5,7 @@
 #include <AMReX_Array4.H> 
 
 namespace Idx { 
-         enum ETIndexes {u, NumScalars}; 
+         enum ETIndexes {u, psi, chi, alphafunc, betafunc, Atilde_LL_00, Atilde_LL_01, Atilde_LL_02, Atilde_LL_11, Atilde_LL_12, Atilde_LL_22, NumScalars}; 
 };
 
 namespace InitIdx { 
@@ -13,9 +13,9 @@ namespace InitIdx {
 };
 
 namespace Diag { 
-         enum DiagnosticIndexes {chi, alpha, NumScalars}; 
+         enum DiagnosticIndexes {Hpsi, Hchi, Hu, NumScalars}; 
 };
 
-#define NUM_GHOST_CELLS 4
+#define NUM_GHOST_CELLS 2
 
 #endif

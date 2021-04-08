@@ -1,1 +1,1 @@
-names = {"chi", "alpha"};
+names = {"Hpsi", "Hchi", "Hu"};
