@@ -23,21 +23,21 @@ initialize_from_data(int i, int j, int k,
 
         amrex::Real r = std::sqrt(std::pow(x0, 2) + std::pow(x1, 2) + std::pow(x2, 2));
 
-        amrex::Real c10 = 1.168642873;
+        amrex::Real c10 = 4.891;
         amrex::Real c11 = 0.0;
         amrex::Real c12 = 0.0;
-        amrex::Real c20 = -1.168642873;
+        amrex::Real c20 = -4.891;
         amrex::Real c21 = 0.0;
         amrex::Real c22 = 0.0;
-        amrex::Real M1 = 0.45300000000000001;
+        amrex::Real M1 = 0.48559999999999998;
 
-        amrex::Real M2 = 0.45300000000000001;
+        amrex::Real M2 = 0.48559999999999998;
 
         amrex::Real P10 = 0.0;
-        amrex::Real P11 = 0.33319174979999999;
+        amrex::Real P11 = 0.0969;
         amrex::Real P12 = 0.0;
         amrex::Real P20 = 0.0;
-        amrex::Real P21 = -0.33319174979999999;
+        amrex::Real P21 = -0.0969;
         amrex::Real P22 = 0.0;
         amrex::Real S10 = 0;
         amrex::Real S11 = 0;
@@ -51,9 +51,9 @@ initialize_from_data(int i, int j, int k,
         amrex::Real xc20 = -c20 + x0;
         amrex::Real xc21 = -c21 + x1;
         amrex::Real xc22 = -c22 + x2;
-        amrex::Real rc1 = std::max(0.0100000000000000, std::sqrt(std::pow(xc10, 2) + std::pow(xc11, 2) + std::pow(xc12, 2)));
+        amrex::Real rc1 = std::max(0.00100000000000000, std::sqrt(std::pow(xc10, 2) + std::pow(xc11, 2) + std::pow(xc12, 2)));
 
-        amrex::Real rc2 = std::max(0.0100000000000000, std::sqrt(std::pow(xc20, 2) + std::pow(xc21, 2) + std::pow(xc22, 2)));
+        amrex::Real rc2 = std::max(0.00100000000000000, std::sqrt(std::pow(xc20, 2) + std::pow(xc21, 2) + std::pow(xc22, 2)));
 
         amrex::Real n10 = xc10/rc1;
         amrex::Real n11 = xc11/rc1;
