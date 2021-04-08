@@ -320,7 +320,7 @@ AmrCoreAdv::ErrorEst (int lev, TagBoxArray& tags, Real time, int ngrow)
             amrex::ParallelFor(tilebox,
             [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
             {          
-                tagarr(i, j, k) = state_is_tagged(i, j, k, state_fab, error_threshold, time, dx, geom.data()) ? tagval : clearval;
+                tagarr(i, j, k) = state_is_tagged(i, j, k, lev, state_fab, error_threshold, time, dx, geom.data()) ? tagval : clearval;
             });
         }
     }
