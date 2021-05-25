@@ -26,7 +26,9 @@ state_is_tagged(int i, int j, int k,
         
         amrex::Real r = std::sqrt(x0*x0 + x1*x1 + x2*x2);
         
-        return (lev <= 1)*(r < error_threshold) || (lev > 1)*(std::fabs(alpha) < error_threshold);
+        //return (r < error_threshold);
+        
+        return (lev <= 2)*(r < error_threshold) || (lev > 2)*(std::fabs(alpha) < error_threshold);
        
 }
 #endif

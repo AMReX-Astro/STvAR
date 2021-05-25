@@ -1,1 +1,1 @@
-names = {"H"};
+names = {"Psi4re", "Psi4im", "ModPsi4", "AbsAlpha", "Ksclr"};

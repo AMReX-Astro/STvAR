@@ -675,7 +675,7 @@ state_rhs(int i, int j, int k,
 
         rhs_fab(i, j, k, Idx::alpha) = AdvDbetaalpha + KOSigma*dKODalpha - Khat*std::pow(alpha, 2)*mul;
 
-        amrex::Real eta = 2.0;
+        amrex::Real eta = 0.25;
 
         rhs_fab(i, j, k, Idx::beta_U_0) = AdvDbetabeta_U_0 + Gamtilde_U_0*std::pow(alpha, 2)*mus + KOSigma*dKODbeta_U_0 - beta_U_0*eta;
         rhs_fab(i, j, k, Idx::beta_U_1) = AdvDbetabeta_U_1 + Gamtilde_U_1*std::pow(alpha, 2)*mus + KOSigma*dKODbeta_U_1 - beta_U_1*eta;
