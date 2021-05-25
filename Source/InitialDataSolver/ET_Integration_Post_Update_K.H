@@ -26,20 +26,20 @@ state_post_update(int i, int j, int k,
 
         amrex::Real bareMm = 0.48559999999999998;
 
-        amrex::Real cp_U_0 = 4.891;
-        amrex::Real cp_U_1 = 0;
+        amrex::Real cp_U_0 = 0; 
+        amrex::Real cp_U_1 = 4.891;
         amrex::Real cp_U_2 = 0;
 
-        amrex::Real cm_U_0 = -4.891;
-        amrex::Real cm_U_1 = 0;
+        amrex::Real cm_U_0 = 0;
+        amrex::Real cm_U_1 = -4.891;
         amrex::Real cm_U_2 = 0;
 
-        amrex::Real Pp_U_0 = 0;
-        amrex::Real Pp_U_1 = 0.0969;
+        amrex::Real Pp_U_0 = -0.0969;
+        amrex::Real Pp_U_1 = 0;
         amrex::Real Pp_U_2 = 0;
 
-        amrex::Real Pm_U_0 = 0;
-        amrex::Real Pm_U_1 = -0.0969;
+        amrex::Real Pm_U_0 = 0.0969;
+        amrex::Real Pm_U_1 = 0;
         amrex::Real Pm_U_2 = 0;
 
         amrex::Real xpc_U_0 = -cp_U_0 + x_U_0;

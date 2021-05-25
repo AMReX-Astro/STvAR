@@ -27,7 +27,9 @@ state_is_tagged(int i, int j, int k,
         
         amrex::Real alpha = std::pow(state_fab(i, j, k, Idx::psi),-2);
         
-        return (lev <= 1)*(r < error_threshold) || (lev > 1)*(std::fabs(alpha) < error_threshold);
+        //return (r < error_threshold);
+        
+        return (lev <= 2)*(r < error_threshold) || (lev > 2)*(std::fabs(alpha) < error_threshold);
         
 }
 #endif
