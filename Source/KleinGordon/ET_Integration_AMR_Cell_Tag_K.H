@@ -9,6 +9,7 @@ AMREX_GPU_DEVICE
 inline 
 bool
 state_is_tagged(int i, int j, int k, 
+        int lev,
         amrex::Array4<amrex::Real const> const& state_fab,
         amrex::Real error_threshold,
         const amrex::Real time,
