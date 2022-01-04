@@ -1,4 +1,1 @@
-names = {"alpha", "betax", "betay", "betaz",
-         "gxx", "gxy", "gxz", "gyx", "gyy", "gyz", "gzx", "gzy", "gzz",
-         "ginvxx", "ginvxy", "ginvxz", "ginvyx", "ginvyy", "ginvyz", "ginvzx", "ginvzy", "ginvzz",
-         "Kxx", "Kxy", "Kxz", "Kyx", "Kyy", "Kyz", "Kzx", "Kzy", "Kzz"};
+names = {"chi", "phi", "gamtilde_LL_00", "gamtilde_LL_01", "gamtilde_LL_02", "gamtilde_LL_11", "gamtilde_LL_12", "gamtilde_LL_22", "K", "Atilde_LL_00", "Atilde_LL_01", "Atilde_LL_02", "Atilde_LL_11", "Atilde_LL_12", "Atilde_LL_22", "theta", "Gamhat_U_0", "Gamhat_U_1", "Gamhat_U_2", "alpha", "beta_U_0", "beta_U_1", "beta_U_2", "B_U_0", "B_U_1", "B_U_2"};
