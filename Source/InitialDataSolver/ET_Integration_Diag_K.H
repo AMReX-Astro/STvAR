@@ -90,4 +90,23 @@ state_diagnostics(int i, int j, int k,
         diag(i, j, k, Diag::Hu) = -8*(betafunc/std::pow(alphafunc*(u + 1) + 1, 7) + dDDu_LL_00 + dDDu_LL_11 + dDDu_LL_22)/std::pow(psi, 5);
         
 }
+
+AMREX_GPU_DEVICE 
+inline 
+amrex::Real
+sum_C_constraint(const int i, const int j, const int k, 
+        amrex::Array4<amrex::Real> const& state_fab,
+        amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> const& dx, 
+        const amrex::GeometryData& geom) noexcept 
+{
+    
+        const auto domain_xlo = geom.ProbLo();
+        
+        amrex::Real x_U_0 = (i + 0.5)*geom.CellSize(0) + domain_xlo[0]; 
+        amrex::Real x_U_1 = (j + 0.5)*geom.CellSize(1) + domain_xlo[1]; 
+        amrex::Real x_U_2 = (k + 0.5)*geom.CellSize(2) + domain_xlo[2]; 
+        
+        return 0;
+        
+}
 #endif
