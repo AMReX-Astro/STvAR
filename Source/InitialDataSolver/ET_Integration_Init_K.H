@@ -17,6 +17,28 @@ state_init(int i, int j, int k,
         amrex::Real x_U_0 = (i + 0.5)*geom.CellSize(0) + domain_xlo[0]; 
         amrex::Real x_U_1 = (j + 0.5)*geom.CellSize(1) + domain_xlo[1]; 
         amrex::Real x_U_2 = (k + 0.5)*geom.CellSize(2) + domain_xlo[2]; 
+        /*
+        amrex::Real bareMp = 0.5;
+
+        amrex::Real bareMm = 0.5;
+
+        amrex::Real cp_U_0 = 0; 
+        amrex::Real cp_U_1 = 0;
+        amrex::Real cp_U_2 = 1.1515;
+
+        amrex::Real cm_U_0 = 0;
+        amrex::Real cm_U_1 = 0;
+        amrex::Real cm_U_2 = -1.1515;
+
+        amrex::Real Pp_U_0 = 0;
+        amrex::Real Pp_U_1 = 0;
+        amrex::Real Pp_U_2 = 0;
+
+        amrex::Real Pm_U_0 = 0;
+        amrex::Real Pm_U_1 = 0;
+        amrex::Real Pm_U_2 = 0;
+        */
+        /*Initial Data for binary BH spiral*/
         
         amrex::Real bareMp = 0.48559999999999998;
 
@@ -37,6 +59,7 @@ state_init(int i, int j, int k,
         amrex::Real Pm_U_0 = 0.0969;
         amrex::Real Pm_U_1 = 0;
         amrex::Real Pm_U_2 = 0;
+        
 
         amrex::Real Pp = std::sqrt(std::pow(Pp_U_0, 2) + std::pow(Pp_U_1, 2) + std::pow(Pp_U_2, 2));
 
