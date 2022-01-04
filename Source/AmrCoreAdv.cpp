@@ -77,6 +77,8 @@ AmrCoreAdv::Evolve ()
     int last_plot_file_step = 0;
     int last_chk_file_step = 0;
     int last_diag_file_step = 0;
+    
+    std::vector<Real> CsqrdVec;
 
     for (int step = istep[0]; step < max_step && cur_time < stop_time; ++step)
     {
@@ -86,7 +88,7 @@ AmrCoreAdv::Evolve ()
 
         int lev = 0;
         int iteration = 1;
-        timeStep(lev, cur_time, iteration);
+        timeStep(lev, cur_time, iteration, CsqrdVec);
 
         cur_time += dt[0];
 
@@ -136,6 +138,12 @@ AmrCoreAdv::Evolve ()
     if (diag_int > 0 && istep[0] > last_diag_file_step) {
         ComputeAndWriteDiagnosticFile();
     }
+    
+    amrex::Print() << CsqrdVec.size() << std::endl;
+    
+    std::ofstream Cconstraint("Cconstraint.dat");
+    for (const auto &e : CsqrdVec) Cconstraint << e << "\n";
+    Cconstraint.close();
 }
 
 // initializes multilevel data
@@ -342,6 +350,8 @@ AmrCoreAdv::ReadParameters ()
 
     {
         ParmParse pp("amr"); // Traditionally, these have prefix, amr.
+        
+        pp.getarr("n_cell", numcells);
 
         pp.query("interpolation_type", interpolation_type);
 
@@ -613,7 +623,7 @@ AmrCoreAdv::GetData (int lev, Real time, Vector<MultiFab*>& data, Vector<Real>& 
 // advance a level by dt
 // includes a recursive call for finer levels
 void
-AmrCoreAdv::timeStep (int lev, Real time, int iteration)
+AmrCoreAdv::timeStep (int lev, Real time, int iteration, std::vector<Real>& CsqrdV)
 {
     if (regrid_int > 0)  // We may need to regrid
     {
@@ -653,7 +663,7 @@ AmrCoreAdv::timeStep (int lev, Real time, int iteration)
     }
 
     // advance a single level for a single time step, updates flux registers
-    Advance(lev, time, dt[lev], iteration, nsubsteps[lev]);
+    Advance(lev, time, dt[lev], iteration, nsubsteps[lev], CsqrdV);
 
     ++istep[lev];
 
@@ -668,7 +678,7 @@ AmrCoreAdv::timeStep (int lev, Real time, int iteration)
         // recursive call for next-finer level
         for (int i = 1; i <= nsubsteps[lev+1]; ++i)
         {
-            timeStep(lev+1, time+(i-1)*dt[lev+1], i);
+            timeStep(lev+1, time+(i-1)*dt[lev+1], i, CsqrdV);
         }
 
         AverageDownTo(lev); // average lev+1 down to lev
@@ -677,7 +687,7 @@ AmrCoreAdv::timeStep (int lev, Real time, int iteration)
 
 // advance a single level for a single time step, updates flux registers
 void
-AmrCoreAdv::Advance (int lev, Real time, Real dt_lev, int iteration, int ncycle)
+AmrCoreAdv::Advance (int lev, Real time, Real dt_lev, int iteration, int ncycle, std::vector<Real>& CsqrdV)
 {
     constexpr int num_grow = NUM_GHOST_CELLS;
 
@@ -718,6 +728,14 @@ AmrCoreAdv::Advance (int lev, Real time, Real dt_lev, int iteration, int ncycle)
 
     // integrate forward one step to fill S_new
     integrator[lev]->advance(Sborder, S_new, time, dt_lev);
+    /*
+    Real testCsqrd = SumC(S_new, geom_lev);
+    
+    if((istep[0]%diag_int == 0) && (istep[0] != 0))
+    {
+        amrex::Print() << testCsqrd << std::endl;
+        CsqrdV.push_back(testCsqrd);
+    }*/
 }
 
 // a wrapper for EstTimeStep
@@ -860,8 +878,10 @@ AmrCoreAdv::ComputeAndWriteDiagnosticFile () const
     for (int lev = 0; lev <= finest_level; ++lev) {  
         const amrex::Geometry& geom = Geom(lev);
         fill_state_diagnostics(grid_diag[lev], grid_new[lev], t_new[lev], geom);
+ 
         
     }
+    
     
     const auto& diagnames = DiagFileVarNames();
 
@@ -1232,6 +1252,41 @@ void AmrCoreAdv::fill_rhs (MultiFab& rhs_mf, const MultiFab& state_mf, const amr
       state_rhs(i, j, k, rhs_fab, state_fab, time, dx, geom.data());
     });
   }
+}
+
+Real AmrCoreAdv::SumC (MultiFab& state_mf, const amrex::Geometry& geom)
+{
+    
+    const auto dx = geom.CellSizeArray();
+    
+    ReduceOps<ReduceOpSum> reduce_operations;
+    ReduceData<Real> reduce_data(reduce_operations);
+    using ReduceTuple = typename decltype(reduce_data)::Type;
+
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+
+  for ( MFIter mfi(state_mf, TilingIfNotGPU()); mfi.isValid(); ++mfi )
+  {
+    const Box& bx = mfi.tilebox();
+    const auto ncomp = state_mf.nComp();
+
+    const auto& state_fab = state_mf.array(mfi); 
+
+    // For each grid, loop over all the valid points
+    reduce_operations.eval(bx, reduce_data,
+    [=] AMREX_GPU_DEVICE (const int i, const int j, const int k) -> ReduceTuple
+    {
+        return {sum_C_constraint(i,j,k, state_fab, dx, geom.data())/(numcells[0]*numcells[1]*numcells[2])};
+    });
+  }
+    ReduceTuple reduced_values = reduce_data.value();
+    // MPI reduction
+    ParallelDescriptor::ReduceRealSum(amrex::get<0>(reduced_values));
+    Real action = amrex::get<0>(reduced_values);
+    
+    return action;
 }
 
 void AmrCoreAdv::fill_state_diagnostics (MultiFab& diag_mf, const MultiFab& state_mf, const Real time_lev, const amrex::Geometry& geom) const

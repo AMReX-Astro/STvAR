@@ -124,10 +124,10 @@ private:
 
     // advance a level by dt
     // includes a recursive call for finer levels
-    void timeStep (int lev, amrex::Real time, int iteration);
+    void timeStep (int lev, amrex::Real time, int iteration, std::vector<Real>& CsqrdV);
 
     // advance a single level for a single time step
-    void Advance (int lev, amrex::Real time, amrex::Real dt_lev, int iteration, int ncycle);
+    void Advance (int lev, amrex::Real time, amrex::Real dt_lev, int iteration, int ncycle, std::vector<Real>& CsqrdV);
 
     // a wrapper for EstTimeStep(0
     void ComputeDt ();
@@ -176,6 +176,9 @@ private:
     // Single level functions called by advance()
     void post_update (amrex::MultiFab& state_mf, const amrex::Real time, const amrex::Geometry& geom);
     void fill_rhs (amrex::MultiFab& rhs_mf, const amrex::MultiFab& state_mf, const amrex::Real time, const amrex::Geometry& geom);
+    
+    amrex::Real SumC (MultiFab& state_mf,  const amrex::Geometry& geom);
+    
     void fill_state_diagnostics (amrex::MultiFab& diag_mf, const amrex::MultiFab& state_mf, const amrex::Real time_lev, const amrex::Geometry& geom) const;
     ////////////////
     // private data members
@@ -219,7 +222,9 @@ private:
 
     // advective cfl number - dt = cfl*dx/umax
     amrex::Real cfl = 0.7;
-
+    
+    Vector<int> numcells;
+    
     // how often each level regrids the higher levels of refinement
     // (after a level advances that many time steps)
     int regrid_int = 2;
