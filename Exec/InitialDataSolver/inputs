@@ -3,7 +3,7 @@ max_step = 2000
 stop_time = 10000.0
 
 # Problem Size & Geometry 
-amr.n_cell = 256 256 256 
+amr.n_cell = 256 256 256
 
 geometry.is_periodic = 0 0 0 
 geometry.coord_sys = 0 
@@ -15,7 +15,7 @@ amr.v = 1
 
 # Refinement Parameters 
 amr.max_level = 8
-amr.max_grid_size = 128
+amr.max_grid_size = 16
 amr.ref_ratio = 2
 amr.n_error_buf = 1
 amr.blocking_factor = 8
@@ -29,21 +29,21 @@ domain_lo_bc_types = 2 2 2
 domain_hi_bc_types = 2 2 2 
 
 # Problem specific tagging for refinement 
-problem.s_error = 256.0 128.0 64.0 32.0 0.8 0.7 0.6 0.5 #0.8 0.7 0.6 0.5
+problem.s_error = 256.0 128.0 64.0 32.0 0.8 0.7 0.6 0.5  #0.8 0.7 0.6 0.5
 problem.error_comp = 0
 
 # Problem specific inputs 
 problem.elliptic = 0
-problem.cfl = 0.01
+problem.cfl = 0.002
 
 # Plotting steps 
-amr.plot_int = 100
-amr.diag_int = 100
-amr.chk_int = 100
+amr.plot_int = 10
+amr.diag_int = -1
+amr.chk_int = 10
 
 # Restart from checkpoint or use as initial condition? 
-#amr.restart = chk0001000
-#amr.restart_is_initial_data = 0
+amr.restart = chk0001790
+amr.restart_is_initial_data = 0
 
 ## integration.type can take on the following values: 
 ## 0 = Forward Euler 
