@@ -1,1 +1,1 @@
-names = {"Psi4re", "Psi4im", "ModPsi4", "AbsAlpha", "Ksclr"};
+names = {"gamtilde_LL_00sqrd", "gam_LL_00sqrd", "Rsclr", "sqrtKsqrd", "K", "H", "M", "Z", "Csqrd", "C"};
