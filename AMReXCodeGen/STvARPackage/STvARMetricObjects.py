@@ -309,7 +309,7 @@ def Z4cRicciTildeTensorLL(metric, GamU, dstring = 'dD'):
         for j in range(Dim):
             for k in range(Dim):
                 Z4cRicciTildeTensorLL.expr[i][j] += 1/2*(metric.symb[k][i]*dsymb(GamU.symb[k], dstring + str(j))+metric.symb[k][j]*dsymb(GamU.symb[k],dstring + str(i)))
-                Z4cRicciTildeTensorLL.expr[i][j] += 1/2*ChristoffelDU.symb[k]*(ChristoffelULL.symb[i][j][k]+ChristoffelULL.symb[j][i][k])
+                Z4cRicciTildeTensorLL.expr[i][j] += 1/2*ChristoffelDU.symb[k]*(ChristoffelLLL.symb[i][j][k]+ChristoffelLLL.symb[j][i][k])
                 for l in range(Dim):
                     Z4cRicciTildeTensorLL.expr[i][j] += -1/2*inversemetric.symb[k][l]*dsymb(metric.symb[i][j], dstring + 'D'+str(k)+str(l))
                     for m in range(Dim):
