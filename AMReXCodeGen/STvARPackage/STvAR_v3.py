@@ -3,8 +3,8 @@ import numpy as np
 import sympy as sp
 from sympy import symbols, IndexedBase, Indexed, Idx
 
-from sympy.printing.cxxcode import *
-from sympy.printing.fcode import FCodePrinter
+from sympy.printing.cxx import *
+from sympy.printing.fortran import FCodePrinter
 
 class CustomCXX17Printer(CXX17CodePrinter):
     def _print_Indexed(self, expr):
@@ -35,12 +35,12 @@ class barevar:
         self.varname = varname
         self.vartype = vartype
         self.varprefix = varprefix
-
+        
 class stvar:
     gridvars = []
     vartypes = []
-    def __init__(self, symb, expr=0, isymb=0, gridvar = False, addtolist = True, vartype = "", varprefix = ""):
-        self.symb = symbols(symb)
+    def __init__(self, symb, expr=0, isymb=0, gridvar = False, addtolist = True, vartype = "", varprefix = "", isreal = False):
+        self.symb = symbols(symb, real = isreal)
         self.expr = expr
         self.isymb = isymb
         self.vartype = vartype
@@ -56,7 +56,7 @@ class stvar:
         if gridvar == True:
             var = barevar(str(self.symb), self.vartype, self.varprefix)
             Idxsymb = symbols(self.vartype+str(self.symb))
-            self.isymb = IndexedBase(self.varprefix)[i,j,k,Idxsymb]
+            self.isymb = IndexedBase(self.varprefix, real = isreal)[i,j,k,Idxsymb]
             if addtolist:
                 stvar.gridvars.append(var)
                 if self.vartype not in stvar.vartypes:
@@ -97,7 +97,7 @@ class stvar:
         return stvarout
     
 class stvarrank1:
-    def __init__(self, symb, expr=0, isymb=0, gridvar = False, addtolist = True, vartype = "", varprefix = "", dim = 3):
+    def __init__(self, symb, expr=0, isymb=0, gridvar = False, addtolist = True, vartype = "", varprefix = "", isreal = False, dim = 3):
         self.symb = idx.declarerank1(str(symb),DIM=dim)
         self.expr = idx.zerorank1(DIM=dim)
         self.isymb = idx.zerorank1(DIM=dim)
@@ -117,7 +117,7 @@ class stvarrank1:
             for itri in range(dim):
                 var = barevar(str(self.symb[itri]), self.vartype, self.varprefix)
                 Idxsymb = symbols(self.vartype+str(self.symb[itri]))
-                self.isymb[itri] = IndexedBase(self.varprefix)[i,j,k,Idxsymb]
+                self.isymb[itri] = IndexedBase(self.varprefix, real = isreal)[i,j,k,Idxsymb]
                 if addtolist:
                     stvar.gridvars.append(var)
                     if self.vartype not in stvar.vartypes:
@@ -185,7 +185,7 @@ class stvarrank1:
         return stvarout
     
 class stvarrank2:
-    def __init__(self, symb, expr=0, isymb=0, gridvar = False, addtolist = True, vartype = "", varprefix = "", dim = 3, sym = 'nosym', resetsym = True):
+    def __init__(self, symb, expr=0, isymb=0, gridvar = False, addtolist = True, vartype = "", varprefix = "", isreal = False, dim = 3, sym = 'nosym', resetsym = True):
         self.symb = idx.declarerank2(str(symb), sym, DIM=dim)
         self.expr = idx.zerorank2(DIM=dim)
         self.isymb = idx.zerorank2(DIM=dim)
@@ -208,12 +208,12 @@ class stvarrank2:
                     var = barevar(str(self.symb[itri][itrj]), self.vartype, self.varprefix)
                     if str(self.symb[itri][itrj])[0] == '-':
                         Idxsymb = symbols(self.vartype+str(self.symb[itri][itrj])[1:])
-                        self.isymb[itri][itrj] = -IndexedBase(self.varprefix)[i,j,k,Idxsymb]
+                        self.isymb[itri][itrj] = -IndexedBase(self.varprefix,real = isreal)[i,j,k,Idxsymb]
                     elif self.symb[itri][itrj] == 0:
                         self.isymb[itri][itrj] = 0
                     else:
                         Idxsymb = symbols(self.vartype+str(self.symb[itri][itrj]))
-                        self.isymb[itri][itrj] = IndexedBase(self.varprefix)[i,j,k,Idxsymb]
+                        self.isymb[itri][itrj] = IndexedBase(self.varprefix, real = isreal)[i,j,k,Idxsymb]
                     if addtolist:
                         if idx.reducebysymmetry2(itri,itrj,self.sym):
                             stvar.gridvars.append(var)
@@ -299,7 +299,7 @@ class stvarrank2:
         return stvarout
     
 class stvarrank3:
-    def __init__(self, symb, expr=0, isymb=0, gridvar = False, addtolist = True, vartype = "", varprefix = "", dim = 3, sym = 'nosym', resetsym = True):
+    def __init__(self, symb, expr=0, isymb=0, gridvar = False, addtolist = True, vartype = "", varprefix = "", isreal = False, dim = 3, sym = 'nosym', resetsym = True):
         self.symb = idx.declarerank3(str(symb), symmetry_option = sym, DIM=dim)
         self.expr = idx.zerorank3(DIM=dim)
         self.isymb = idx.zerorank3(DIM=dim)
@@ -323,12 +323,12 @@ class stvarrank3:
                         var = barevar(str(self.symb[itri][itrj][itrk]), self.vartype, self.varprefix)
                         if str(self.symb[itri][itrj][itrk])[0] == '-':
                             Idxsymb = symbols(self.vartype+str(self.symb[itri][itrj][itrk])[1:])
-                            self.isymb[itri][itrj][itrk] = -IndexedBase(self.varprefix)[i,j,k,Idxsymb]
+                            self.isymb[itri][itrj][itrk] = -IndexedBase(self.varprefix, real = isreal)[i,j,k,Idxsymb]
                         elif self.symb[itri][itrj][itrk] == 0:
                             self.isymb[itri][itrj][itrk] = 0
                         else:
                             Idxsymb = symbols(self.vartype+str(self.symb[itri][itrj][itrk]))
-                            self.isymb[itri][itrj][itrk] = IndexedBase(self.varprefix)[i,j,k,Idxsymb]
+                            self.isymb[itri][itrj][itrk] = IndexedBase(self.varprefix, real = isreal)[i,j,k,Idxsymb]
                         if addtolist:
                             if idx.reducebysymmetry3(itri, itrj, itrk, self.sym):
                                 stvar.gridvars.append(var)
@@ -382,7 +382,7 @@ class stvarrank3:
         return expr
     
 class stvarrank4:
-    def __init__(self, symb, expr=0, isymb=0, gridvar = False, addtolist = True, vartype = "", varprefix = "", dim = 3, sym = 'nosym', resetsym = True):
+    def __init__(self, symb, expr=0, isymb=0, gridvar = False, addtolist = True, vartype = "", varprefix = "", isreal = False, dim = 3, sym = 'nosym', resetsym = True):
         self.symb = idx.declarerank4(str(symb), symmetry_option = sym, DIM=dim)
         self.expr = idx.zerorank4(DIM=dim)
         self.isymb = idx.zerorank4(DIM=dim)
@@ -407,12 +407,12 @@ class stvarrank4:
                             var = barevar(str(self.symb[itri][itrj][itrk][itrl]), self.vartype, self.varprefix)
                             if str(self.symb[itri][itrj][itrk])[0] == '-':
                                 Idxsymb = symbols(self.vartype+str(self.symb[itri][itrj][itrk][itrl])[1:])
-                                self.isymb[itri][itrj][itrk][itrl] = -IndexedBase(self.varprefix)[i,j,k,Idxsymb]
+                                self.isymb[itri][itrj][itrk][itrl] = -IndexedBase(self.varprefix, real = isreal)[i,j,k,Idxsymb]
                             elif self.symb[itri][itrj][itrk][itrl] == 0:
                                 self.isymb[itri][itrj][itrk][itrl] = 0
                             else:
                                 Idxsymb = symbols(self.vartype+str(self.symb[itri][itrj][itrk][itrl]))
-                                self.isymb[itri][itrj][itrk][itrl] = IndexedBase(self.varprefix)[i,j,k,Idxsymb]
+                                self.isymb[itri][itrj][itrk][itrl] = IndexedBase(self.varprefix, real = isreal)[i,j,k,Idxsymb]
                             if addtolist:
                                 if idx.reducebysymmetry4(itri, itrj, itrk, itrl, self.sym):
                                     stvar.gridvars.append(var)
