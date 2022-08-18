@@ -74,7 +74,7 @@ INCLUDE_LOCATIONS += $(PROBLEM_SOURCE)
 
 include $(AMREX_HOME)/Src/Base/Make.package
 
-AMReXdirs             := Base Boundary AmrCore Particle
+AMReXdirs             := Base Boundary AmrCore
 AMReXpack             += $(foreach dir, $(AMReXdirs), $(AMREX_HOME)/Src/$(dir)/Make.package)
 
 include $(AMReXpack)
