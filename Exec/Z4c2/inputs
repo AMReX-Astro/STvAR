@@ -42,8 +42,8 @@ amr.diag_int = 1
 amr.chk_int = 10
 
 # Restart from checkpoint or use as initial condition? 
-amr.restart = initial_data_chk
-amr.restart_is_initial_data = 1
+#amr.restart = initial_data_chk
+#amr.restart_is_initial_data = 0
 
 ## integration.type can take on the following values: 
 ## 0 = Forward Euler 
