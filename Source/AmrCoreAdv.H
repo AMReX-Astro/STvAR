@@ -88,6 +88,15 @@ public:
     // overrides the pure virtual function in AmrCore
     virtual void ErrorEst (int lev, amrex::TagBoxArray& tags, amrex::Real time, int ngrow) override;
 
+    // Single level functions called by advance()
+    void post_update (amrex::MultiFab& state_mf, const amrex::Real time, const amrex::Geometry& geom);
+
+    void fill_rhs (amrex::MultiFab& rhs_mf, const amrex::MultiFab& state_mf, const amrex::Real time, const amrex::Geometry& geom);
+
+    amrex::Real SumC (MultiFab& state_mf,  const amrex::Geometry& geom);
+
+    void fill_state_diagnostics (amrex::MultiFab& diag_mf, const amrex::MultiFab& state_mf, const amrex::Real time_lev, const amrex::Geometry& geom) const;
+
 private:
 
     ////////////////
@@ -173,13 +182,6 @@ private:
     // utility to skip to next line in Header
     static void GotoNextLine (std::istream& is);
 
-    // Single level functions called by advance()
-    void post_update (amrex::MultiFab& state_mf, const amrex::Real time, const amrex::Geometry& geom);
-    void fill_rhs (amrex::MultiFab& rhs_mf, const amrex::MultiFab& state_mf, const amrex::Real time, const amrex::Geometry& geom);
-    
-    amrex::Real SumC (MultiFab& state_mf,  const amrex::Geometry& geom);
-    
-    void fill_state_diagnostics (amrex::MultiFab& diag_mf, const amrex::MultiFab& state_mf, const amrex::Real time_lev, const amrex::Geometry& geom) const;
     ////////////////
     // private data members
 
@@ -223,7 +225,7 @@ private:
     // advective cfl number - dt = cfl*dx/umax
     amrex::Real cfl = 0.7;
     
-    Vector<int> numcells;
+    amrex::GpuArray<int, 3> numcells;
     
     // how often each level regrids the higher levels of refinement
     // (after a level advances that many time steps)

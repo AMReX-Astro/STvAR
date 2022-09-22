@@ -254,6 +254,7 @@ void AmrCoreAdv::MakeNewLevelFromScratch (int lev, Real time, const BoxArray& ba
 
     const auto& geom = Geom(lev);
     const auto dx = geom.CellSizeArray();
+    auto gdata = geom.data();
 
     // Loop over grids at this level
 #ifdef _OPENMP
@@ -269,7 +270,7 @@ void AmrCoreAdv::MakeNewLevelFromScratch (int lev, Real time, const BoxArray& ba
       amrex::ParallelFor(bx,
       [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
       {
-        state_init(i, j, k, state_arr, cur_time, geom.data());
+        state_init(i, j, k, state_arr, cur_time, gdata);
       });
     }
 
@@ -288,6 +289,7 @@ AmrCoreAdv::ErrorEst (int lev, TagBoxArray& tags, Real time, int ngrow)
     
     const amrex::Geometry& geom = Geom(lev);
     const auto dx = geom.CellSizeArray();
+    auto gdata = geom.data();
 
     // only do this during the first call to ErrorEst
     if (first)
@@ -328,7 +330,7 @@ AmrCoreAdv::ErrorEst (int lev, TagBoxArray& tags, Real time, int ngrow)
             amrex::ParallelFor(tilebox,
             [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
             {          
-                tagarr(i, j, k) = state_is_tagged(i, j, k, lev, state_fab, error_threshold, time, dx, geom.data()) ? tagval : clearval;
+                tagarr(i, j, k) = state_is_tagged(i, j, k, lev, state_fab, error_threshold, time, dx, gdata) ? tagval : clearval;
             });
         }
     }
@@ -351,7 +353,9 @@ AmrCoreAdv::ReadParameters ()
     {
         ParmParse pp("amr"); // Traditionally, these have prefix, amr.
         
-        pp.getarr("n_cell", numcells);
+	Vector<int> numcells_v;
+        pp.getarr("n_cell", numcells_v);
+	for (int i = 0; i < 3; ++i) numcells[i] = numcells_v[i];
 
         pp.query("interpolation_type", interpolation_type);
 
@@ -1175,6 +1179,7 @@ AmrCoreAdv::InitializeLevelFromData(int lev, const MultiFab& initial_data)
 {
     const auto& geom = Geom(lev);
     const auto dx = geom.CellSizeArray();
+    auto gdata = geom.data();
 #ifdef PROBLEM_LOADS_INITDATA
     auto& state_mf = grid_new[lev];
 
@@ -1190,7 +1195,7 @@ AmrCoreAdv::InitializeLevelFromData(int lev, const MultiFab& initial_data)
         // Call a user-supplied function to initialize the state data
         // from the input data file.
         ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) {
-            initialize_from_data(i, j, k, state_fab, idata, dx, geom.data());
+            initialize_from_data(i, j, k, state_fab, idata, dx, gdata);
         });
     }
 #else
@@ -1210,6 +1215,7 @@ void AmrCoreAdv::post_update (MultiFab& state_mf, const amrex::Real time, const 
 {
     const auto dx = geom.CellSizeArray();
     int ncomp = state_mf.nComp();
+    auto gdata = geom.data();
     
 #ifdef _OPENMP
 #pragma omp parallel
@@ -1219,13 +1225,13 @@ void AmrCoreAdv::post_update (MultiFab& state_mf, const amrex::Real time, const 
     const Box& bx = mfi.tilebox();
     const auto ncomp = state_mf.nComp();
 
-    const auto& state_fab = state_mf.array(mfi);
+    const auto state_fab = state_mf.array(mfi);
 
     // For each grid, loop over all the valid points
     amrex::ParallelFor(bx,
     [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
-        state_post_update(i, j, k, state_fab, time, dx, geom.data());
+       state_post_update(i, j, k, state_fab, time, dx, gdata);
     });
   }
 }
@@ -1233,6 +1239,7 @@ void AmrCoreAdv::post_update (MultiFab& state_mf, const amrex::Real time, const 
 void AmrCoreAdv::fill_rhs (MultiFab& rhs_mf, const MultiFab& state_mf, const amrex::Real time, const amrex::Geometry& geom)
 {
   const auto dx = geom.CellSizeArray();
+  auto gdata = geom.data();
 
 #ifdef _OPENMP
 #pragma omp parallel
@@ -1249,7 +1256,7 @@ void AmrCoreAdv::fill_rhs (MultiFab& rhs_mf, const MultiFab& state_mf, const amr
     amrex::ParallelFor(bx,
     [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
-      state_rhs(i, j, k, rhs_fab, state_fab, time, dx, geom.data());
+      state_rhs(i, j, k, rhs_fab, state_fab, time, dx, gdata);
     });
   }
 }
@@ -1258,6 +1265,7 @@ Real AmrCoreAdv::SumC (MultiFab& state_mf, const amrex::Geometry& geom)
 {
     
     const auto dx = geom.CellSizeArray();
+    auto gdata = geom.data();
     
     ReduceOps<ReduceOpSum> reduce_operations;
     ReduceData<Real> reduce_data(reduce_operations);
@@ -1276,9 +1284,9 @@ Real AmrCoreAdv::SumC (MultiFab& state_mf, const amrex::Geometry& geom)
 
     // For each grid, loop over all the valid points
     reduce_operations.eval(bx, reduce_data,
-    [=] AMREX_GPU_DEVICE (const int i, const int j, const int k) -> ReduceTuple
+    [=,numcells=numcells] AMREX_GPU_DEVICE (const int i, const int j, const int k) -> ReduceTuple
     {
-        return {sum_C_constraint(i,j,k, state_fab, dx, geom.data())/(numcells[0]*numcells[1]*numcells[2])};
+        return {sum_C_constraint(i,j,k, state_fab, dx, gdata)/(numcells[0]*numcells[1]*numcells[2])};
     });
   }
     ReduceTuple reduced_values = reduce_data.value();
@@ -1292,6 +1300,7 @@ Real AmrCoreAdv::SumC (MultiFab& state_mf, const amrex::Geometry& geom)
 void AmrCoreAdv::fill_state_diagnostics (MultiFab& diag_mf, const MultiFab& state_mf, const Real time_lev, const amrex::Geometry& geom) const
 {
   const auto dx = geom.CellSizeArray();
+  auto gdata = geom.data();
 
 #ifdef _OPENMP
 #pragma omp parallel
@@ -1308,7 +1317,7 @@ void AmrCoreAdv::fill_state_diagnostics (MultiFab& diag_mf, const MultiFab& stat
     amrex::ParallelFor(bx,
     [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
     {
-      state_diagnostics(i, j, k, diag_fab, state_fab, time_lev, dx, geom.data());
+      state_diagnostics(i, j, k, diag_fab, state_fab, time_lev, dx, gdata);
     });
   }
 }
