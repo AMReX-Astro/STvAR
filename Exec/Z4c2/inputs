@@ -1,14 +1,14 @@
 # Stopping Criteria 
-max_step = 1000
+max_step = 20000
 stop_time = 10000.0
 
 # Problem Size & Geometry 
-amr.n_cell = 256 8 8
+amr.n_cell = 64 64 64
 
-geometry.is_periodic = 0 0 0 
+geometry.is_periodic = 1 1 1 
 geometry.coord_sys = 0 
-geometry.prob_lo = -512.0 -512.0 -512.0
-geometry.prob_hi = 512.0 512.0 512.0
+geometry.prob_lo = -10.0 -10.0 -10.0
+geometry.prob_hi = 10.0 10.0 10.0
 
 # Turn on verbosity in amr 
 amr.v = 1
@@ -37,8 +37,8 @@ problem.elliptic = 0
 problem.cfl = 0.25 #0.0333333
 
 # Plotting steps 
-amr.plot_int = 1
-amr.diag_int = 1
+amr.plot_int = 10
+amr.diag_int = 10
 amr.chk_int = 10
 
 # Restart from checkpoint or use as initial condition? 
