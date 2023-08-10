@@ -641,9 +641,10 @@ state_rhs(int i, int j, int k,
 
         amrex::Real KOSigma = 0.1; //32000000000000001;
 
-        rhs_fab(i, j, k, Idx::chi) = AdvDbetachi + KOSigma*dKODchi + 0.66666666666666663*chi*(alpha*(Khat + 2*theta) - divTildebeta);
-
-        rhs_fab(i, j, k, Idx::gamtilde_LL_00) = AdvDbetagamtilde_LL_00 - 2*Atilde_LL_00*alpha + KOSigma*dKODgamtilde_LL_00 + 1.3333333333333335*dDbeta_UL_00*gamtilde_LL_00 + 2*dDbeta_UL_10*gamtilde_LL_01 - 0.66666666666666663*dDbeta_UL_11*gamtilde_LL_00 + 2*dDbeta_UL_20*gamtilde_LL_02 - 0.66666666666666663*dDbeta_UL_22*gamtilde_LL_00;
+        rhs_fab(i, j, k, Idx::chi) = AdvDbetachi + KOSigma*dKODchi + 2.0/3.0*chi*(alpha*(Khat + 2*theta) - divTildebeta);
+        
+        rhs_fab(i, j, k, Idx::gamtilde_LL_00) = 0*AdvDbetagamtilde_LL_00 - 2*Atilde_LL_00*alpha + 0*KOSigma*dKODgamtilde_LL_00 + 1.3333333333333335*dDbeta_UL_00*gamtilde_LL_00 + 2*dDbeta_UL_10*gamtilde_LL_01 - 0.66666666666666663*dDbeta_UL_11*gamtilde_LL_00 + 2*dDbeta_UL_20*gamtilde_LL_02 - 0.66666666666666663*dDbeta_UL_22*gamtilde_LL_00;
+        
         rhs_fab(i, j, k, Idx::gamtilde_LL_01) = AdvDbetagamtilde_LL_01 - 2*Atilde_LL_01*alpha + KOSigma*dKODgamtilde_LL_01 + 0.33333333333333337*dDbeta_UL_00*gamtilde_LL_01 + dDbeta_UL_01*gamtilde_LL_00 + dDbeta_UL_10*gamtilde_LL_11 + 0.33333333333333337*dDbeta_UL_11*gamtilde_LL_01 + dDbeta_UL_20*gamtilde_LL_12 + dDbeta_UL_21*gamtilde_LL_02 - 0.66666666666666663*dDbeta_UL_22*gamtilde_LL_01;
         rhs_fab(i, j, k, Idx::gamtilde_LL_02) = AdvDbetagamtilde_LL_02 - 2*Atilde_LL_02*alpha + KOSigma*dKODgamtilde_LL_02 + 0.33333333333333337*dDbeta_UL_00*gamtilde_LL_02 + dDbeta_UL_02*gamtilde_LL_00 + dDbeta_UL_10*gamtilde_LL_12 - 0.66666666666666663*dDbeta_UL_11*gamtilde_LL_02 + dDbeta_UL_12*gamtilde_LL_01 + dDbeta_UL_20*gamtilde_LL_22 + 0.33333333333333337*dDbeta_UL_22*gamtilde_LL_02;
         rhs_fab(i, j, k, Idx::gamtilde_LL_11) = AdvDbetagamtilde_LL_11 - 2*Atilde_LL_11*alpha + KOSigma*dKODgamtilde_LL_11 - 0.66666666666666663*dDbeta_UL_00*gamtilde_LL_11 + 2*dDbeta_UL_01*gamtilde_LL_01 + 1.3333333333333335*dDbeta_UL_11*gamtilde_LL_11 + 2*dDbeta_UL_21*gamtilde_LL_12 - 0.66666666666666663*dDbeta_UL_22*gamtilde_LL_11;

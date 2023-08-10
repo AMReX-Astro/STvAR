@@ -940,7 +940,7 @@ state_diagnostics(int i, int j, int k,
         amrex::Real Ksqrd = K_LL_00*K_UU_00 + 2*K_LL_01*K_UU_01 + 2*K_LL_02*K_UU_02 + K_LL_11*K_UU_11 + 2*K_LL_12*K_UU_12 + K_LL_22*K_UU_22;
         
         diag(i, j, k, Diag::gamtilde_LL_00sqrd) = std::pow(gamtilde_LL_00, 2);
-        diag(i, j, k, Diag::gam_LL_00sqrd) = std::pow(gam_LL_00, 2);
+        diag(i, j, k, Diag::gam_LL_00sqrd) = gam_LL_00;
         diag(i, j, k, Diag::Rsclr) = std::abs(Rsclr);
         diag(i, j, k, Diag::sqrtKsqrd) = std::abs(std::sqrt(Ksqrd));
         diag(i, j, k, Diag::K) = Khat + 2*theta;

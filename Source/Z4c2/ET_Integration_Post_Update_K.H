@@ -20,7 +20,7 @@ state_post_update(int i, int j, int k,
         amrex::Real x_U_1 = (j + 0.5)*geom.CellSize(1) + domain_xlo[1]; 
         amrex::Real x_U_2 = (k + 0.5)*geom.CellSize(2) + domain_xlo[2];
 
-        amrex::Real alpha = state_fab(i, j, k, Idx::alpha);
+        /*amrex::Real alpha = state_fab(i, j, k, Idx::alpha);
         
         amrex::Real chi = state_fab(i, j, k, Idx::chi);
 
@@ -68,7 +68,7 @@ state_post_update(int i, int j, int k,
 
         state_fab(i, j, k, Idx::chi) = std::max(0.00100000000000000, chi);
 
-        state_fab(i, j, k, Idx::alpha) = std::max(0.00100000000000000, alpha);
+        state_fab(i, j, k, Idx::alpha) = std::max(0.00100000000000000, alpha);*/
         
 }
 #endif

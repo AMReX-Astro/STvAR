@@ -18,6 +18,7 @@ state_init(int i, int j, int k,
         amrex::Real x_U_1 = (j + 0.5)*geom.CellSize(1) + domain_xlo[1]; 
         amrex::Real x_U_2 = (k + 0.5)*geom.CellSize(2) + domain_xlo[2]; 
         /*Head on BH*/
+        
         amrex::Real bareMp = 0.5;
 
         amrex::Real bareMm = 0.5;
@@ -127,6 +128,7 @@ state_init(int i, int j, int k,
         state_fab(i, j, k, Idx::beta_U_0) = 0;
         state_fab(i, j, k, Idx::beta_U_1) = 0;
         state_fab(i, j, k, Idx::beta_U_2) = 0;
+        
         /*
         amrex::Real up0 = std::pow(bareMp, 4) + 10*std::pow(bareMp, 3)*rpc + 40*std::pow(bareMp, 2)*std::pow(rpc, 2) + 80*bareMp*std::pow(rpc, 3) + 80*std::pow(rpc, 4);
 
@@ -239,8 +241,8 @@ state_init(int i, int j, int k,
         */
         /*Unshifted Gauge wave Test*/
         /*
-        amrex::Real A = 0.01;
-        amrex::Real d = 1.28;
+        amrex::Real A = 0.05;
+        amrex::Real d = 1.0;
         amrex::Real b = A*std::sin(2*M_PI*x_U_0/d);
         amrex::Real dtb = -(2*M_PI*A/d)*std::cos(2*M_PI*x_U_0/d);
         amrex::Real dxb = (2*M_PI*A/d)*std::cos(2*M_PI*x_U_0/d);
